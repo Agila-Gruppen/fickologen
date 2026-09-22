@@ -1,0 +1,505 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #FAF7F1;
+  --surface: #FFFFFF;
+  --surface-muted: #F4EFE6;
+  --sidebar-bg: #F6F2EA;
+  --border: #EAE3D7;
+  --text: #33312D;
+  --text-muted: #7A7468;
+  --heading: #211F1A;
+  --sage: #7C9885;
+  --sage-dark: #5F7A69;
+  --sage-tint: #E7EFE8;
+  --peach: #E8B792;
+  --peach-tint: #FBEDE0;
+  --terracotta: #C57A5F;
+  --terracotta-tint: #F6E6DF;
+  --shadow-soft: 0 2px 10px rgba(58, 55, 51, 0.04);
+  --shadow-soft-lg: 0 16px 40px rgba(58, 55, 51, 0.10);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-btn: 14px;
+  --radius-pill: 999px;
+}
+
+html, body, [class*="css"] {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text);
+}
+
+/* !important: Streamlit's own markdown-container styles target h1/h2/h3 with
+   higher specificity ([data-testid="stMarkdownContainer"] h1, etc.) and would
+   otherwise silently win over these plain tag selectors. */
+h1, h2, h3, .fk-heading {
+  font-family: 'Sora', 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--heading) !important;
+}
+
+/* ---------- App shell ---------- */
+.stApp {
+  background: var(--bg);
+}
+
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+header[data-testid="stHeader"] {
+  background: transparent;
+}
+div[data-testid="stAppDeployButton"] { display: none; }
+
+.block-container {
+  padding-top: 2.75rem;
+  padding-bottom: 4rem;
+  max-width: 760px;
+}
+
+/* soft ambient glow behind the logo/eyebrow only - fades out before the heading */
+.fk-glow {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 440px;
+  height: 260px;
+  background: radial-gradient(ellipse at center, rgba(124,152,133,0.14) 0%, rgba(232,183,146,0.08) 45%, rgba(250,247,241,0) 72%);
+  filter: blur(14px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- Sidebar ---------- */
+section[data-testid="stSidebar"] {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+}
+section[data-testid="stSidebar"] > div {
+  padding-top: 1.5rem;
+}
+
+.fk-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.25rem 1.4rem 0.25rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.fk-brand-mark {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+.fk-brand-text .fk-brand-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--heading);
+  display: block;
+}
+.fk-brand-text .fk-brand-tagline {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.05rem;
+}
+
+a.fk-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.9rem;
+  margin-bottom: 0.15rem;
+  border-radius: 10px;
+  text-decoration: none !important;
+  color: var(--text-muted) !important;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-left: 2px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+a.fk-nav-link:hover {
+  background: rgba(124, 152, 133, 0.10);
+  color: var(--text) !important;
+}
+a.fk-nav-link.active {
+  background: var(--sage-tint);
+  color: var(--sage-dark) !important;
+  font-weight: 600;
+  border-left: 2px solid var(--sage);
+}
+.fk-nav-icon { font-size: 1rem; opacity: 0.9; }
+
+.fk-sidebar-spacer { height: 1.4rem; }
+
+.fk-sidebar-footer {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Crisis button, targeted via Streamlit's auto key-class */
+div[class*="st-key-crisis_btn"] button {
+  background: var(--terracotta-tint) !important;
+  color: var(--terracotta) !important;
+  border: 1px solid rgba(197, 122, 95, 0.3) !important;
+  border-radius: var(--radius-pill) !important;
+  font-weight: 500 !important;
+  font-size: 0.83rem !important;
+  padding: 0.5rem 0.9rem !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+div[class*="st-key-crisis_btn"] button:hover {
+  background: var(--terracotta) !important;
+  color: #FFFFFF !important;
+  border-color: var(--terracotta) !important;
+  transform: none !important;
+}
+
+/* ---------- Buttons (general) ---------- */
+.stButton > button {
+  border-radius: var(--radius-btn);
+  padding: 0.55rem 1.35rem;
+  font-weight: 500;
+  font-size: 0.92rem;
+  border: none;
+  box-shadow: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.stButton > button:hover {
+  transform: translateY(-1px);
+}
+.stButton > button[kind="primary"] {
+  background: var(--sage);
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px rgba(95, 122, 105, 0.28);
+}
+.stButton > button[kind="primary"]:hover {
+  background: var(--sage-dark);
+  box-shadow: 0 8px 22px rgba(95, 122, 105, 0.34);
+}
+.stButton > button[kind="secondary"] {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.stButton > button[kind="secondary"]:hover {
+  border-color: var(--sage);
+  color: var(--sage-dark);
+}
+
+/* ---------- Cards ---------- */
+.fk-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem 1.9rem;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 1.2rem;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.fk-card:hover {
+  box-shadow: var(--shadow-soft-lg);
+  border-color: rgba(124, 152, 133, 0.3);
+}
+.fk-card-icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.6rem;
+  display: inline-block;
+}
+.fk-card-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--heading);
+  margin: 0 0 0.4rem 0;
+}
+.fk-card-text {
+  color: var(--text-muted) !important;
+  font-size: 0.93rem;
+  line-height: 1.65;
+  margin: 0 0 0.9rem 0 !important;
+}
+
+.fk-badge {
+  display: inline-block;
+  background: var(--peach-tint);
+  color: #9C6B3F;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.7rem;
+  border-radius: var(--radius-pill);
+  margin-bottom: 0.7rem;
+}
+
+/* ---------- Hero (Home) ---------- */
+.fk-hero {
+  position: relative;
+  text-align: center;
+  padding: 0.5rem 0 0.2rem 0;
+  z-index: 1;
+}
+.fk-hero-logo {
+  width: 252px;
+  height: 252px;
+  max-width: 70%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 0.5rem auto;
+  position: relative;
+  z-index: 1;
+}
+.fk-hero-eyebrow {
+  color: var(--sage-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.fk-hero h1 {
+  font-size: 2.35rem;
+  line-height: 1.22;
+  margin-bottom: 0.5rem;
+}
+/* !important on margin: Streamlit's own p{margin:...} rule for markdown
+   content otherwise beats this and zeroes out the auto centering. */
+.fk-hero-sub {
+  color: var(--text-muted) !important;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  max-width: 480px;
+  margin: 0 auto 0.3rem auto !important;
+}
+
+/* ---------- Composer (big LLM-style prompt box) ---------- */
+div[class*="st-key-fk_composer"] {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  padding: 0.5rem 0.6rem 0.5rem 1.4rem;
+  box-shadow: var(--shadow-soft-lg);
+  margin: 0.9rem 0 0.6rem 0;
+}
+div[class*="st-key-fk_composer"] [data-testid="stTextAreaRootElement"],
+div[class*="st-key-fk_composer"] textarea {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+div[class*="st-key-fk_composer"] textarea {
+  resize: none !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1rem !important;
+  line-height: 1.55 !important;
+  padding: 0.65rem 0.2rem !important;
+  color: var(--text) !important;
+}
+div[class*="st-key-fk_composer"] textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+div[class*="st-key-fk_composer"] textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.85;
+}
+div[class*="st-key-fk_composer"] div[data-testid="stForm"] {
+  border: none !important;
+  padding: 0 !important;
+}
+div[class*="st-key-fk_composer"] .stButton > button,
+div[class*="st-key-fk_composer"] button[kind="formSubmit"],
+div[class*="st-key-fk_composer"] button[kind="secondaryFormSubmit"] {
+  background: var(--sage) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  padding: 0 !important;
+  font-size: 1.05rem !important;
+  box-shadow: none !important;
+}
+div[class*="st-key-fk_composer"] .stButton > button:hover {
+  background: var(--sage-dark) !important;
+}
+
+.fk-composer-hint {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin: 0 0 0.9rem 0;
+}
+
+div[class*="st-key-fk_chips_row"] {
+  margin-bottom: 0.3rem;
+}
+div[class*="st-key-fk_chip_"] button {
+  background: var(--surface-muted) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-pill) !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  padding: 0.4rem 0.95rem !important;
+  box-shadow: none !important;
+}
+div[class*="st-key-fk_chip_"] button:hover {
+  border-color: var(--sage) !important;
+  color: var(--sage-dark) !important;
+  background: var(--sage-tint) !important;
+}
+
+/* ---------- Chat ---------- */
+.fk-reflect-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0.2rem 0 0.4rem 0.15rem;
+}
+
+div[data-testid="stChatMessage"] {
+  background: transparent;
+  padding: 0.15rem 0;
+  margin-bottom: 0.9rem;
+}
+
+.fk-bubble {
+  line-height: 1.68;
+  font-size: 0.96rem;
+}
+.fk-bubble-bot {
+  padding: 0;
+  color: var(--text) !important;
+  max-width: 100%;
+}
+.fk-bubble-user {
+  background: var(--sage-tint);
+  border: 1px solid rgba(124, 152, 133, 0.22);
+  border-radius: var(--radius-lg);
+  border-top-right-radius: 6px;
+  padding: 0.85rem 1.1rem;
+  max-width: 100%;
+  color: var(--text) !important;
+}
+
+.fk-chat-intro {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1.6rem;
+}
+
+/* Native chat input (used on the Chat page) restyled to match the composer */
+div[data-testid="stChatInput"] {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft-lg);
+  background: var(--surface);
+}
+div[data-testid="stChatInput"] > div,
+div[data-testid="stChatInput"] textarea {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+div[data-testid="stChatInput"] textarea {
+  font-family: 'Inter', sans-serif !important;
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+div[data-testid="stChatInput"] textarea::placeholder {
+  color: var(--text-muted) !important;
+  -webkit-text-fill-color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+/* Note: this is a real <button>, not a div - no tag qualifier here. */
+[data-testid="stChatInputSubmitButton"] {
+  background: var(--sage) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+}
+[data-testid="stChatInputSubmitButton"]:hover {
+  background: var(--sage-dark) !important;
+}
+[data-testid="stChatInputSubmitButton"] svg {
+  fill: #FFFFFF !important;
+}
+/* Disabled (empty input) state otherwise falls back to Streamlit's default
+   muddy tan/gray, which reads as broken against our palette. */
+[data-testid="stChatInputSubmitButton"]:disabled {
+  background: var(--sage-tint) !important;
+  color: var(--sage) !important;
+  opacity: 1 !important;
+}
+[data-testid="stChatInputSubmitButton"]:disabled svg {
+  fill: var(--sage) !important;
+}
+
+/* ---------- Timeline (Treatment) ---------- */
+.fk-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1.1rem 0 0.4rem 0;
+}
+.fk-week {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+.fk-week.fk-week-active {
+  background: var(--sage);
+  color: #fff;
+  border-color: var(--sage);
+}
+
+/* ---------- Safety page ---------- */
+.fk-safety-section {
+  margin-bottom: 1.6rem;
+}
+.fk-safety-section h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+.fk-safety-section p {
+  color: var(--text-muted) !important;
+  line-height: 1.75;
+  font-size: 0.95rem;
+}
+
+/* ---------- Misc ---------- */
+.fk-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+.fk-section-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 600;
+  margin: 1.6rem 0 0.9rem 0;
+  color: var(--heading);
+}
