@@ -9,10 +9,10 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 NAV_ITEMS = [
     ("home", "Hem", "🏡"),
     ("chat", "Chatt", "💬"),
-    ("diary", "Dagbok", "📓"),
-    ("treatment", "Behandling", "🌱"),
+    # ("diary", "Dagbok", "📓"),
+    # ("treatment", "Behandling", "🌱"),
     ("history", "Tidigare chattar", "🕰️"),
-    ("saved", "Sparade lösningar", "💡"),
+    # ("saved", "Sparade lösningar", "💡"),
     ("safety", "Trygghet & integritet", "🛡️"),
 ]
 
