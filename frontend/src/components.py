@@ -11,7 +11,7 @@ NAV_ITEMS = [
     ("chat", "Chatt", "💬"),
     # ("diary", "Dagbok", "📓"),
     # ("treatment", "Behandling", "🌱"),
-    ("history", "Tidigare chattar", "🕰️"),
+    # ("history", "Tidigare chattar", "🕰️"),
     # ("saved", "Sparade lösningar", "💡"),
     ("safety", "Trygghet & integritet", "🛡️"),
 ]
