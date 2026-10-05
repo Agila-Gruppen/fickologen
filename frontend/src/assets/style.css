@@ -137,6 +137,41 @@ a.fk-nav-link.active {
 }
 .fk-nav-icon { font-size: 1rem; opacity: 0.9; }
 
+/* Sidebar nav buttons, targeted via Streamlit's auto key-class */
+div[class*="st-key-nav_"],
+div[class*="st-key-navactive_"] {
+  margin-bottom: -0.75rem;
+}
+div[class*="st-key-nav_"] button,
+div[class*="st-key-navactive_"] button {
+  justify-content: flex-start !important;
+  gap: 0.65rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.9rem !important;
+  min-height: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border: none !important;
+  border-left: 2px solid transparent !important;
+  box-shadow: none !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+div[class*="st-key-nav_"] button p,
+div[class*="st-key-navactive_"] button p {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+div[class*="st-key-nav_"] button:hover {
+  background: rgba(124, 152, 133, 0.10) !important;
+  color: var(--text) !important;
+}
+div[class*="st-key-navactive_"] button {
+  background: var(--sage-tint) !important;
+  color: var(--sage-dark) !important;
+  border-left: 2px solid var(--sage) !important;
+}
+div[class*="st-key-navactive_"] button p { font-weight: 600; }
+
 .fk-sidebar-spacer { height: 1.4rem; }
 
 .fk-sidebar-footer {
