@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routes.users import router as UserRouter
 from routes.auth import router as AuthRouter
+from routes.chat import router as ChatRouter
 
 from config.database import init_db
 
@@ -40,6 +41,7 @@ async def startup_event():
 
 app.include_router(UserRouter)
 app.include_router(AuthRouter)
+app.include_router(ChatRouter)
 
 @app.get("/")
 async def root():

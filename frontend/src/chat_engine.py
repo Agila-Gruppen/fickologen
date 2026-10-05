@@ -1,21 +1,20 @@
-"""Shared conversation state and Gemini-backed replies.
+"""Shared conversation state; replies come from the backend's /chat route.
 
 The Chat and Home views share one conversation stored in session state.
 Sending a message only records it; the Chat view then asks for the reply via
-`generate_pending_reply` so it can show a spinner while Gemini answers.
+`generate_pending_reply` so it can show a spinner while the backend answers.
 """
-import hmac
 import os
-from pathlib import Path
 
+import httpx
 import streamlit as st
 from dotenv import load_dotenv
-from google import genai
 
 load_dotenv()
 
-MODEL = "gemini-3.5-flash-lite"
-PROMPT_PATH = Path(__file__).resolve().parents[2] / "chat-engine" / "prompt_v1.txt"
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
+# Generous: the backend waits for the language model before answering.
+TIMEOUT_SECONDS = 60
 
 GREETING = (
     "Hej, vad bra att du är här. Det här är en plats där du kan skriva precis som "
@@ -29,27 +28,25 @@ ERROR_REPLY = (
 )
 
 
-@st.cache_resource
-def _client() -> genai.Client:
-    return genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+class BackendUnavailable(Exception):
+    """The backend could not be reached or answered with an unexpected error."""
 
 
-@st.cache_data
-def _system_prompt() -> str:
-    return PROMPT_PATH.read_text(encoding="utf-8")
+def _post(path: str, password: str, json: dict | None = None) -> httpx.Response:
+    return httpx.post(
+        f"{BACKEND_URL}{path}",
+        json=json,
+        headers={"X-Chat-Password": password},
+        timeout=TIMEOUT_SECONDS,
+    )
 
 
 def _history() -> list[dict]:
-    """Conversation in Gemini's format, without the greeting and failed replies."""
-    messages = [m for m in st.session_state["fk_messages"] if not m.get("error")]
-    while messages and messages[0]["role"] != "user":
-        messages = messages[1:]
+    """Conversation to send to the backend, without failed replies."""
     return [
-        {
-            "role": "user" if m["role"] == "user" else "model",
-            "parts": [{"text": m["content"]}],
-        }
-        for m in messages
+        {"role": m["role"], "content": m["content"]}
+        for m in st.session_state["fk_messages"]
+        if not m.get("error")
     ]
 
 
@@ -76,31 +73,31 @@ def has_pending_reply() -> bool:
 
 
 def is_unlocked() -> bool:
-    return st.session_state.get("fk_unlocked", False)
+    return "fk_password" in st.session_state
 
 
 def try_unlock(password: str) -> bool:
-    """Unlock the chat for this session if the password matches CHAT_PASSWORD."""
-    expected = os.environ.get("CHAT_PASSWORD", "")
-    # Fail closed: without a configured password nobody gets through.
-    if expected and hmac.compare_digest(password.encode(), expected.encode()):
-        st.session_state["fk_unlocked"] = True
-    return is_unlocked()
+    """Unlock the chat for this session if the backend accepts the password."""
+    try:
+        resp = _post("/chat/unlock", password)
+    except httpx.HTTPError as exc:
+        raise BackendUnavailable(str(exc)) from exc
+    if resp.status_code == 401:
+        return False
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    st.session_state["fk_password"] = password
+    return True
 
 
 def generate_pending_reply() -> None:
     if not has_pending_reply() or not is_unlocked():
         return
     try:
-        resp = _client().models.generate_content(
-            model=MODEL,
-            contents=_history(),
-            config={"system_instruction": _system_prompt()},
-        )
-        reply = {"role": "assistant", "content": resp.text or ERROR_REPLY}
-        if not resp.text:
-            reply["error"] = True
-    except Exception as exc:  # missing key, network, quota, ...
-        print(f"[chat_engine] Gemini call failed: {exc!r}")
+        resp = _post("/chat/", st.session_state["fk_password"], {"messages": _history()})
+        resp.raise_for_status()
+        reply = {"role": "assistant", "content": resp.json()["reply"]}
+    except Exception as exc:  # backend down, model failure, ...
+        print(f"[chat_engine] Backend call failed: {exc!r}")
         reply = {"role": "assistant", "content": ERROR_REPLY, "error": True}
     st.session_state["fk_messages"].append(reply)
