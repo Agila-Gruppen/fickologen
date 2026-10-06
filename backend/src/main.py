@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes.users import router as UserRouter
-from routes.auth import router as AuthRouter
-from routes.chat import router as ChatRouter
+from .routes.users import router as UserRouter
+from .routes.auth import router as AuthRouter
+from .routes.chat import router as ChatRouter
 
-from config.database import init_db
+from .config.database import init_db
 
 
 app = FastAPI(
