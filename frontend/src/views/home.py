@@ -49,15 +49,15 @@ def render() -> None:
         send_user_message(prompt_value)
         go_to("chat")
 
-    st.markdown('<div class="fk-divider"></div>', unsafe_allow_html=True)
-
-    _, mid, _ = st.columns([1, 1, 1])
-    with mid:
-        if st.button("Utforska funktioner", type="secondary", use_container_width=True):
-            st.session_state["show_features"] = True
-
-    if st.session_state.get("show_features", False):
-        _render_feature_overview()
+    # st.markdown('<div class="fk-divider"></div>', unsafe_allow_html=True)
+    #
+    # _, mid, _ = st.columns([1, 1, 1])
+    # with mid:
+    #     if st.button("Utforska funktioner", type="secondary", use_container_width=True):
+    #         st.session_state["show_features"] = True
+    #
+    # if st.session_state.get("show_features", False):
+    #     _render_feature_overview()
 
 
 def _render_composer():

@@ -11,7 +11,7 @@ NAV_ITEMS = [
     ("chat", "Chatt", "💬"),
     # ("diary", "Dagbok", "📓"),
     # ("treatment", "Behandling", "🌱"),
-    ("history", "Tidigare chattar", "🕰️"),
+    # ("history", "Tidigare chattar", "🕰️"),
     # ("saved", "Sparade lösningar", "💡"),
     ("safety", "Trygghet & integritet", "🛡️"),
 ]
@@ -85,14 +85,12 @@ def render_sidebar() -> None:
             unsafe_allow_html=True,
         )
 
-        links_html = ""
+        # Buttons rather than <a href> links: a link reloads the page, which
+        # starts a new Streamlit session and wipes the chat and its unlock.
         for key, label, icon in NAV_ITEMS:
-            active_class = " active" if key == current else ""
-            links_html += (
-                f'<a class="fk-nav-link{active_class}" href="?view={key}" target="_self">'
-                f'<span class="fk-nav-icon">{icon}</span><span>{label}</span></a>'
-            )
-        st.markdown(links_html, unsafe_allow_html=True)
+            state = "navactive" if key == current else "nav"
+            if st.button(label, icon=icon, key=f"{state}_{key}", use_container_width=True):
+                go_to(key)
 
         st.markdown('<div class="fk-sidebar-spacer"></div>', unsafe_allow_html=True)
         st.markdown('<div class="fk-sidebar-footer">', unsafe_allow_html=True)
