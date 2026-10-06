@@ -4,8 +4,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 
-from schemas.chat import ChatRequest, ChatResponse, ChatSource
-from services.chat import generate_reply
+from ..schemas.chat import ChatRequest, ChatResponse, ChatSource
+from ..services.chat import generate_reply
 
 
 router = APIRouter(

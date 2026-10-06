@@ -5,8 +5,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from google import genai
 
-from schemas.chat import ChatMessage
-from services.retrieval import ContextChunk, retrieve_context
+from ..schemas.chat import ChatMessage
+from .retrieval import ContextChunk, retrieve_context
 
 load_dotenv()
 
