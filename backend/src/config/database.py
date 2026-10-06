@@ -38,6 +38,6 @@ def init_db():
     Initialize the database by creating all tables.
     This should be called when the application starts.
     """
-    from models.user import User  # Import models here to avoid circular imports
+    from ..models.user import User  # Import models here to avoid circular imports
     Base.metadata.create_all(bind=engine)
     print("Database tables created successfully!")

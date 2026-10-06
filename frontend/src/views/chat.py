@@ -3,6 +3,7 @@ import html
 import streamlit as st
 
 from chat_engine import (
+    BackendUnavailable,
     generate_pending_reply,
     get_messages,
     has_pending_reply,
@@ -45,7 +46,12 @@ def _password_dialog() -> None:
         )
         submitted = st.form_submit_button("Lås upp chatten", type="primary", use_container_width=True)
     if submitted:
-        if try_unlock(password):
+        try:
+            unlocked = try_unlock(password)
+        except BackendUnavailable:
+            st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
+            return
+        if unlocked:
             st.rerun()
         st.error("Fel lösenord. Försök igen.")
 

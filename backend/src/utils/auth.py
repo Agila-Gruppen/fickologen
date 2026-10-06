@@ -2,7 +2,7 @@ import jwt
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import Cookie, HTTPException, status
-from schemas.auth import CurrentUser
+from ..schemas.auth import CurrentUser
 
 # Secret key for JWT - in production, use environment variable!
 SECRET_KEY = "your-secret-key-change-this-in-production"
