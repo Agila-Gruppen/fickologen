@@ -4,17 +4,10 @@ The Chat and Home views share one conversation stored in session state.
 Sending a message only records it; the Chat view then asks for the reply via
 `generate_pending_reply` so it can show a spinner while the backend answers.
 """
-import os
-
 import httpx
 import streamlit as st
-from dotenv import load_dotenv
 
-load_dotenv()
-
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
-# Generous: the backend waits for the language model before answering.
-TIMEOUT_SECONDS = 60
+from api import BACKEND_URL, TIMEOUT_SECONDS, BackendUnavailable
 
 GREETING = (
     "Hej, vad bra att du är här. Det här är en plats där du kan skriva precis som "
@@ -26,10 +19,6 @@ ERROR_REPLY = (
     "Försök gärna igen om en liten stund.\n\nOm du behöver stöd direkt kan du "
     "ringa 1177 eller Självmordslinjen på 90101."
 )
-
-
-class BackendUnavailable(Exception):
-    """The backend could not be reached or answered with an unexpected error."""
 
 
 def _post(path: str, password: str, json: dict | None = None) -> httpx.Response:

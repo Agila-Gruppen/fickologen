@@ -1,8 +1,12 @@
 """Shared UI building blocks for the Fickologen prototype."""
 import base64
+import html
 from pathlib import Path
 
 import streamlit as st
+
+import auth
+from api import BackendUnavailable
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 
@@ -69,6 +73,89 @@ def _crisis_dialog() -> None:
     st.caption("Du är inte ensam om det här, även om det känns så just nu.")
 
 
+def _submit_account_form(action, *args) -> None:
+    """Run a log in / sign up action and show its outcome inside the dialog."""
+    try:
+        error = action(*args)
+    except BackendUnavailable:
+        st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
+        return
+    if error:
+        st.error(error)
+        return
+    st.rerun()
+
+
+@st.dialog("Ditt konto")
+def _account_dialog() -> None:
+    login_tab, signup_tab = st.tabs(["Logga in", "Skapa konto"])
+
+    with login_tab:
+        with st.form("fk_login_form", border=False):
+            username = st.text_input("Användarnamn", key="fk_login_username")
+            password = st.text_input("Lösenord", type="password", key="fk_login_password")
+            submitted = st.form_submit_button("Logga in", type="primary", use_container_width=True)
+        if submitted:
+            _submit_account_form(auth.log_in, username, password)
+
+    with signup_tab:
+        with st.form("fk_signup_form", border=False):
+            username = st.text_input(
+                "Användarnamn",
+                key="fk_signup_username",
+                help="3–50 tecken: bokstäver, siffror och understreck.",
+            )
+            password = st.text_input(
+                "Lösenord",
+                type="password",
+                key="fk_signup_password",
+                help="Minst 6 tecken.",
+            )
+            password_again = st.text_input("Upprepa lösenordet", type="password", key="fk_signup_password_again")
+            submitted = st.form_submit_button("Skapa konto", type="primary", use_container_width=True)
+        if submitted:
+            _submit_account_form(auth.sign_up, username, password, password_again)
+
+
+def _render_account() -> None:
+    """Account box at the bottom of the sidebar (pinned there by the CSS)."""
+    user = auth.current_user()
+    with st.container(key="fk_account"):
+        if user:
+            username = html.escape(user["username"])
+            st.markdown(
+                f"""
+                <div class="fk-account">
+                    <span class="fk-account-avatar">{username[:1].upper()}</span>
+                    <span class="fk-account-text">
+                        <span class="fk-account-label">Inloggad som</span>
+                        <span class="fk-account-name">{username}</span>
+                        <span class="fk-account-label">Konto-ID {user["user_id"]}</span>
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Logga ut", key="logout_btn", use_container_width=True):
+                auth.log_out()
+                st.rerun()
+        else:
+            st.markdown(
+                """
+                <div class="fk-account">
+                    <span class="fk-account-avatar">?</span>
+                    <span class="fk-account-text">
+                        <span class="fk-account-name">Inte inloggad</span>
+                        <span class="fk-account-label">Logga in eller skapa ett konto</span>
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Logga in / skapa konto", key="login_btn", use_container_width=True):
+                _account_dialog()
+
+
 def render_sidebar() -> None:
     current = get_current_view()
     with st.sidebar:
@@ -97,6 +184,8 @@ def render_sidebar() -> None:
         if st.button("🆘 Behöver du akut stöd?", key="crisis_btn", use_container_width=True):
             _crisis_dialog()
         st.markdown("</div>", unsafe_allow_html=True)
+
+        _render_account()
 
 
 def page_header(eyebrow: str, title: str, subtitle: str = "") -> None:
