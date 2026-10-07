@@ -4,32 +4,27 @@ The Chat and Home views share one conversation stored in session state.
 Sending a message only records it; the Chat view then asks for the reply via
 `generate_pending_reply` so it can show a spinner while the backend answers.
 """
-import os
-
 import httpx
 import streamlit as st
-from dotenv import load_dotenv
 
-load_dotenv()
-
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
-# Generous: the backend waits for the language model before answering.
-TIMEOUT_SECONDS = 60
+from api import BACKEND_URL, TIMEOUT_SECONDS, BackendUnavailable
 
 GREETING = (
     "Hej, vad bra att du är här. Det här är en plats där du kan skriva precis som "
     "tankarna kommer – jag finns med och läser, i din takt."
 )
 
+# Which backend engine answers. "router" is the new routing engine.
+ENGINES = {
+    "router": "Ny motor (routing)",
+    "legacy": "Gammal motor (en mall)",
+}
+
 ERROR_REPLY = (
     "Jag lyckades inte svara just nu – något gick fel på min sida, inte på din. "
     "Försök gärna igen om en liten stund.\n\nOm du behöver stöd direkt kan du "
     "ringa 1177 eller Självmordslinjen på 90101."
 )
-
-
-class BackendUnavailable(Exception):
-    """The backend could not be reached or answered with an unexpected error."""
 
 
 def _post(path: str, password: str, json: dict | None = None) -> httpx.Response:
@@ -48,6 +43,14 @@ def _history() -> list[dict]:
         for m in st.session_state["fk_messages"]
         if not m.get("error")
     ]
+
+
+def get_engine() -> str:
+    return st.session_state.get("fk_engine", "router")
+
+
+def set_engine(engine: str) -> None:
+    st.session_state["fk_engine"] = engine
 
 
 def ensure_started() -> None:
@@ -94,9 +97,22 @@ def generate_pending_reply() -> None:
     if not has_pending_reply() or not is_unlocked():
         return
     try:
-        resp = _post("/chat/", st.session_state["fk_password"], {"messages": _history()})
+        resp = _post(
+            "/chat/",
+            st.session_state["fk_password"],
+            {"messages": _history(), "engine": get_engine()},
+        )
         resp.raise_for_status()
-        reply = {"role": "assistant", "content": resp.json()["reply"]}
+        data = resp.json()
+        reply = {
+            "role": "assistant",
+            "content": data["reply"],
+            # How the backend handled the message, shown when tech info is switched on.
+            "engine": data.get("engine"),
+            "category": data.get("category"),
+            "via": data.get("via"),
+            "llm_used": data.get("llm_used"),
+        }
     except Exception as exc:  # backend down, model failure, ...
         print(f"[chat_engine] Backend call failed: {exc!r}")
         reply = {"role": "assistant", "content": ERROR_REPLY, "error": True}

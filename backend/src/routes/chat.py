@@ -55,9 +55,11 @@ async def chat(chat_request: ChatRequest):
 
     Args:
         chat_request: ChatRequest with the conversation, ending with a user message
+            and, optionally, which engine to use ("router" by default, or "legacy")
 
     Returns:
-        ChatResponse with the reply and any sources it was grounded in
+        ChatResponse with the reply, any sources it was grounded in, and how the
+        router handled the message
 
     Raises:
         HTTPException: 400 if the last message is not from the user
@@ -71,7 +73,7 @@ async def chat(chat_request: ChatRequest):
         )
 
     try:
-        reply, chunks = await generate_reply(chat_request.messages)
+        result = await generate_reply(chat_request.messages, chat_request.engine)
     except Exception as exc:  # missing key, network, quota, ...
         print(f"Chat failed: {exc!r}")
         raise HTTPException(
@@ -80,6 +82,10 @@ async def chat(chat_request: ChatRequest):
         )
 
     return ChatResponse(
-        reply=reply,
-        sources=[ChatSource(source=chunk.source, text=chunk.text) for chunk in chunks]
+        reply=result.reply,
+        sources=[ChatSource(source=chunk.source, text=chunk.text) for chunk in result.chunks],
+        engine=chat_request.engine,
+        category=result.category,
+        via=result.via,
+        llm_used=result.llm_used,
     )

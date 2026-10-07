@@ -1,24 +1,29 @@
-import os
-from dotenv import load_dotenv
-from google import genai
+"""Terminalprototyp med routing. Kör: python chat-engine/prototype.py"""
+import logging
 
-load_dotenv()
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+import llm
+from router import SessionState, route
 
-with open("chat-engine/prompt_v1.txt", encoding="utf-8") as f:
-    SYSTEM_PROMPT = f.read()
 
-print("Fickologen-prototyp. Skriv 'exit' för att avsluta.\n")
-history = []
-while True:
-    user_msg = input("Du: ")
-    if user_msg.lower() == "exit":
-        break
-    history.append({"role": "user", "parts": [{"text": user_msg}]})
-    resp = client.models.generate_content(
-        model="gemini-3.5-flash-lite",
-        contents=history,
-        config={"system_instruction": SYSTEM_PROMPT},
-    )
-    print(f"\nBot: {resp.text}\n")
-    history.append({"role": "model", "parts": [{"text": resp.text}]})
+def main():
+    logging.basicConfig(level=logging.WARNING, format="[varning] %(message)s")
+    logging.getLogger("google_genai").setLevel(logging.ERROR)  # tysta ofarliga SDK-varningar
+    state = SessionState()
+    historik = []
+    print("Fickologen-prototyp v2 (med routing). Skriv 'exit' för att avsluta.\n")
+    while True:
+        meddelande = input("Du: ").strip()
+        if meddelande.lower() == "exit":
+            break
+        if not meddelande:
+            meddelande = "."
+        svar = route(meddelande, historik, state,
+                     classify_fn=llm.classify, generate_fn=llm.generate)
+        print(f"\n[debug: {svar.category} via {svar.source}, llm={svar.llm_used}]")
+        print(f"Bot: {svar.text}\n")
+        historik.append({"role": "user", "text": meddelande})
+        historik.append({"role": "bot", "text": svar.text})
+
+
+if __name__ == "__main__":
+    main()
