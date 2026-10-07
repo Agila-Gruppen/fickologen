@@ -1,4 +1,4 @@
-"""Account handling: sign up, log in and log out against the backend.
+"""Account handling: sign up, log in, log out and account data against the backend.
 
 The backend sets its JWT as an HTTP-only cookie. Streamlit talks to the backend
 server-side, so the token is kept in session state together with the user.
@@ -17,6 +17,15 @@ MIN_PASSWORD_LENGTH = 6
 def _post(path: str, json: dict) -> httpx.Response:
     try:
         return httpx.post(f"{BACKEND_URL}{path}", json=json, timeout=TIMEOUT_SECONDS)
+    except httpx.HTTPError as exc:
+        raise BackendUnavailable(str(exc)) from exc
+
+
+def _authed_request(method: str, path: str) -> httpx.Response:
+    """Call the backend as the logged-in user by sending the stored token as its cookie."""
+    headers = {"Cookie": f"access_token={st.session_state.get('fk_token', '')}"}
+    try:
+        return httpx.request(method, f"{BACKEND_URL}{path}", headers=headers, timeout=TIMEOUT_SECONDS)
     except httpx.HTTPError as exc:
         raise BackendUnavailable(str(exc)) from exc
 
@@ -64,3 +73,34 @@ def sign_up(username: str, password: str, password_again: str) -> str | None:
 def log_out() -> None:
     st.session_state.pop("fk_user", None)
     st.session_state.pop("fk_token", None)
+
+
+SESSION_EXPIRED = "Din inloggning har gått ut. Logga in igen för att fortsätta."
+
+
+def my_data() -> tuple[dict | None, str | None]:
+    """Everything stored about the logged-in user.
+
+    Returns (data, None) on success, or (None, error message). An expired
+    login logs the user out.
+    """
+    resp = _authed_request("GET", "/users/me")
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None
+
+
+def delete_account() -> str | None:
+    """Delete the account and all its data, then log out. Returns an error message, or None."""
+    resp = _authed_request("DELETE", "/users/me")
+    if resp.status_code == 401:
+        log_out()
+        return SESSION_EXPIRED
+    # 404: the account is already gone, which is what the user asked for.
+    if not resp.is_success and resp.status_code != 404:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    log_out()
+    return None

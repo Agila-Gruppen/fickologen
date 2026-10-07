@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, field_validator
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class UserBase(BaseModel):
@@ -27,3 +29,17 @@ class UserCreate(UserBase):
         if len(v) < 6:
             raise ValueError('Password must be at least 6 characters long')
         return v
+
+
+class UserData(BaseModel):
+    """
+    Schema for the data stored about a user.
+    Lets users see what is saved about them. The password is stored
+    only as a hash and is never returned.
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    created_at: datetime
+    updated_at: datetime

@@ -259,6 +259,7 @@ div[class*="st-key-crisis_btn"] button:hover {
   color: var(--text-muted);
 }
 div[class*="st-key-login_btn"] button,
+div[class*="st-key-mydata_btn"] button,
 div[class*="st-key-logout_btn"] button {
   font-size: 0.83rem !important;
   padding: 0.45rem 0.9rem !important;
@@ -588,6 +589,86 @@ div[data-testid="stChatInput"] textarea::placeholder {
   color: var(--text-muted) !important;
   line-height: 1.75;
   font-size: 0.95rem;
+}
+
+/* ---------- Dialogs ---------- */
+/* Pin the dialog to the site palette so it never follows a dark browser theme. */
+div[role="dialog"] {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-soft-lg) !important;
+}
+div[role="dialog"] p,
+div[role="dialog"] label,
+div[role="dialog"] span {
+  color: inherit;
+}
+div[role="dialog"] button[aria-label="Close"] {
+  color: var(--text-muted) !important;
+}
+
+/* ---------- My data dialog ---------- */
+.fk-data-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  padding: 0.2rem 1.1rem;
+  margin-bottom: 0.9rem;
+}
+.fk-data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.fk-data-row:last-child {
+  border-bottom: none;
+}
+.fk-data-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.fk-data-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.fk-data-note {
+  background: var(--sage-tint);
+  border: 1px solid rgba(124, 152, 133, 0.22);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 1rem;
+  color: var(--sage-dark);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Delete account button: terracotta like the crisis button, to signal care */
+div[class*="st-key-delete_account_btn"] button {
+  background: var(--terracotta-tint) !important;
+  color: var(--terracotta) !important;
+  border: 1px solid rgba(197, 122, 95, 0.3) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+div[class*="st-key-delete_account_btn"] button:hover:not(:disabled) {
+  background: var(--terracotta) !important;
+  color: #FFFFFF !important;
+  border-color: var(--terracotta) !important;
+}
+div[class*="st-key-delete_account_btn"] button:disabled {
+  background: var(--surface-muted) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border) !important;
+  opacity: 0.7;
+  transform: none !important;
 }
 
 /* ---------- Misc ---------- */
