@@ -1,6 +1,7 @@
 """Shared UI building blocks for the Fickologen prototype."""
 import base64
 import html
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -117,9 +118,73 @@ def _account_dialog() -> None:
             _submit_account_form(auth.sign_up, username, password, password_again)
 
 
+def _format_timestamp(value: str) -> str:
+    try:
+        return datetime.fromisoformat(value).strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        return value
+
+
+@st.dialog("Din sparade data")
+def _my_data_dialog() -> None:
+    try:
+        data, error = auth.my_data()
+    except BackendUnavailable:
+        st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
+        return
+    if error:
+        st.error(error)
+        return
+
+    rows = [
+        ("Användarnamn", html.escape(data["username"])),
+        ("Konto-ID", data["id"]),
+        ("Lösenord", "Sparas bara krypterat"),
+        ("Konto skapat", _format_timestamp(data["created_at"])),
+        ("Senast ändrat", _format_timestamp(data["updated_at"])),
+    ]
+    rows_html = "".join(
+        f'<div class="fk-data-row"><span class="fk-data-label">{label}</span>'
+        f'<span class="fk-data-value">{value}</span></div>'
+        for label, value in rows
+    )
+    st.markdown(
+        f"""
+        <p class="fk-card-text">Det här är allt Fickologen har sparat om dig – inget mer.</p>
+        <div class="fk-data-list">{rows_html}</div>
+        <div class="fk-data-note">
+            🔒 Ditt lösenord går inte att läsa, inte ens för oss. Dina chattar sparas
+            inte – de försvinner när du stänger eller laddar om sidan.
+        </div>
+        <hr class="fk-divider" />
+        <div class="fk-section-title" style="margin-top:0.4rem;">Radera konto</div>
+        <p class="fk-card-text">
+            Ditt konto och all data som hör till det raderas för gott.
+            Det går inte att ångra.
+        </p>
+        """,
+        unsafe_allow_html=True,
+    )
+    confirmed = st.checkbox("Jag förstår att det inte går att ångra", key="fk_delete_confirm")
+    if st.button("Radera mitt konto", key="delete_account_btn", disabled=not confirmed, use_container_width=True):
+        try:
+            error = auth.delete_account()
+        except BackendUnavailable:
+            st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
+            return
+        if error:
+            st.error(error)
+            return
+        # Shown by _render_account after the rerun closes the dialog.
+        st.session_state["fk_account_deleted"] = True
+        st.rerun()
+
+
 def _render_account() -> None:
     """Account box at the bottom of the sidebar (pinned there by the CSS)."""
     user = auth.current_user()
+    if st.session_state.pop("fk_account_deleted", False):
+        st.toast("Ditt konto och all tillhörande data är raderat.")
     with st.container(key="fk_account"):
         if user:
             username = html.escape(user["username"])
@@ -136,6 +201,8 @@ def _render_account() -> None:
                 """,
                 unsafe_allow_html=True,
             )
+            if st.button("Min data", key="mydata_btn", use_container_width=True):
+                _my_data_dialog()
             if st.button("Logga ut", key="logout_btn", use_container_width=True):
                 auth.log_out()
                 st.rerun()
