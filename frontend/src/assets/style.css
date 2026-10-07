@@ -603,3 +603,41 @@ div[data-testid="stChatInput"] textarea::placeholder {
   margin: 1.6rem 0 0.9rem 0;
   color: var(--heading);
 }
+
+/* ---------- Demo settings (expander, radio, checkbox, tech caption) ----------
+   Explicit colors so the labels stay readable even when Streamlit falls back to
+   its dark theme (for example when .streamlit/config.toml is not picked up). */
+[data-testid="stExpander"] {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+}
+[data-testid="stExpander"] summary,
+[data-testid="stExpander"] summary * {
+  background: transparent !important;
+  color: var(--text) !important;
+}
+[data-testid="stExpander"] label,
+[data-testid="stExpander"] label *,
+[data-testid="stExpander"] [data-testid="stWidgetLabel"] * {
+  color: var(--text) !important;
+}
+[data-testid="stExpander"] [data-baseweb="checkbox"] > span:first-of-type {
+  background: var(--surface) !important;
+  border: 2px solid var(--sage) !important;
+}
+[data-testid="stExpander"] [data-baseweb="checkbox"]:has(input:checked) > span:first-of-type {
+  background: var(--sage) !important;
+  border-color: var(--sage) !important;
+}
+[data-testid="stExpander"] [data-baseweb="radio"] > div:first-child {
+  background: var(--surface) !important;
+  border-color: var(--sage) !important;
+}
+[data-testid="stExpander"] [data-baseweb="radio"]:has(input:checked) > div:first-child {
+  background: var(--sage) !important;
+  border-color: var(--sage) !important;
+}
+[data-testid="stCaptionContainer"] {
+  color: var(--text-muted) !important;
+}
