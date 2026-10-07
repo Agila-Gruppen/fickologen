@@ -1,11 +1,16 @@
+import os
 import jwt
 from datetime import datetime, timedelta
 from typing import Optional
+
+from dotenv import load_dotenv
 from fastapi import Cookie, HTTPException, status
+
 from ..schemas.auth import CurrentUser
 
-# Secret key for JWT - in production, use environment variable!
-SECRET_KEY = "your-secret-key-change-this-in-production"
+load_dotenv()
+
+SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
