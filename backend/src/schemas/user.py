@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserBase(BaseModel):
-    username : str = Field(..., min_length=3, max_length=50, description="User's username")
+    username: str = Field(..., min_length=3, max_length=50, description="User's username")
 
     @field_validator('username')
     @classmethod
@@ -18,9 +19,19 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """
     Schema for creating a new user.
-    Requires username and password.
+    Required: username, password, email.
+    Optional: first_name, last_name, birth_year, phone, gender, city.
+    role and can_chat are NOT accepted here (safe default: user without chat access).
     """
     password: str = Field(..., min_length=6, description="User's password (minimum 6 characters)")
+    email: Optional[EmailStr] = Field(None, description="User's email (recommended)")
+
+    first_name: Optional[str] = Field(None, max_length=100)
+    last_name: Optional[str] = Field(None, max_length=100)
+    birth_year: Optional[int] = Field(None, ge=1900, le=2026)
+    phone: Optional[str] = Field(None, max_length=32)
+    gender: Optional[str] = Field(None, max_length=32)
+    city: Optional[str] = Field(None, max_length=100)
 
     @field_validator('password')
     @classmethod
@@ -41,5 +52,22 @@ class UserData(BaseModel):
 
     id: int
     username: str
+    email: Optional[EmailStr] = None
+    role: str
+    can_chat: bool
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    birth_year: Optional[int] = None
+    phone: Optional[str] = None
+    gender: Optional[str] = None
+    city: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+
+class AdminUserUpdate(BaseModel):
+    """
+    Schema for admin updates to a user. Only role and can_chat can be changed here.
+    """
+    role: Optional[Literal["user", "admin"]] = None
+    can_chat: Optional[bool] = None
