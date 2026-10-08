@@ -4,8 +4,11 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import Cookie, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
+from ..config.database import get_db
+from ..models.user import User
 from ..schemas.auth import CurrentUser
 
 load_dotenv()
@@ -70,7 +73,7 @@ def get_current_user(access_token: Optional[str] = Cookie(None)) -> CurrentUser:
         CurrentUser with user_id and email
 
     Raises:
-        HTTPException: 401 if token is missing or invalid
+        HTTPException: 401 if token is missing, invalid, or has an unexpected payload
     """
     if not access_token:
         raise HTTPException(
@@ -87,7 +90,38 @@ def get_current_user(access_token: Optional[str] = Cookie(None)) -> CurrentUser:
             detail="Invalid or expired token. Please login again."
         )
 
-    return CurrentUser(
-        user_id=payload.get("user_id"),
-        username=payload.get("username")
-    )
+    user_id = payload.get("user_id")
+    username = payload.get("username")
+    if not isinstance(user_id, int) or not isinstance(username, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload. Please login again."
+        )
+
+    return CurrentUser(user_id=user_id, username=username)
+
+
+def get_current_admin(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    """
+    Dependency that returns the logged-in user as a User row, but only if role == 'admin'.
+
+    Raises:
+        HTTPException: 401 if not logged in
+        HTTPException: 403 if logged in but not admin
+        HTTPException: 404 if the user row no longer exists
+    """
+    user = db.query(User).filter(User.id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account not found"
+        )
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return user

@@ -17,6 +17,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config.database import Base
 from src.models.user import User  # noqa: F401
+from src.models.conversation import Conversation  # noqa: F401
+from src.models.message import Message  # noqa: F401
+from src.models.diary_entry import DiaryEntry  # noqa: F401
+from src.models.cbt_progress import CbtProgress  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
