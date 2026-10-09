@@ -143,8 +143,8 @@ FASTA_SVAR = {
     ),
     "VALD_MOT_ANDRA": (
         "Det du skriver låter allvarligt, och det är bra att du sätter ord på det. "
+        f"Om du riskerar eller redan har skadat någon, eller om någon någon i fara just nu: ring {H['akut']}.\n"
         "Jag är en AI och kan inte hjälpa dig med det här på rätt sätt, men en människa kan det.\n\n"
-        f"Riskerar du att skada någon, eller är någon i fara just nu: ring {H['akut']}.\n"
         "Känner du att du håller på att tappa kontrollen: ta avstånd från situationen "
         f"eller personen om du kan, och kontakta {H['vard']} för att få prata med någon redan idag.\n\n"
         "Om det är tankar som kommer av sig själva och som du inte vill ha, är det "
