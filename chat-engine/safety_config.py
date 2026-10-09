@@ -56,7 +56,7 @@ OVRIGT: allt annat (småprat, off-topic, kritik av boten, vill prata med en män
 # HÅRD lista: träff => krishandler direkt, utan LLM. Hellre falsklarm än missad
 # kris. OBS: personer med social ångest säger ofta "jag vill dö av skam", så
 # "vill dö av ..." är undantaget (avgörs av klassificeraren). Ett fristående
-# "jag vill dö" larmar dock. Diskutera den avvägningen med klinisk granskare.
+# "jag vill dö" larmar dock.
 HARD_PRIORITET = ["SJALVSKADA", "VALD_MOT_ANDRA", "VALD_MOT_MIG",
                   "OVERGREPP_TIDIGARE", "SEXUELLA_TANKAR_BARN", "OROAD_FOR_ANNAN"]
 
@@ -143,7 +143,7 @@ FASTA_SVAR = {
     ),
     "VALD_MOT_ANDRA": (
         "Det du skriver låter allvarligt, och det är bra att du sätter ord på det. "
-        f"Om du riskerar eller redan har skadat någon, eller om någon någon i fara just nu: ring {H['akut']}.\n"
+        f"Om du riskerar eller redan har skadat någon, eller om någon är i fara just nu: ring {H['akut']}.\n"
         "Jag är en AI och kan inte hjälpa dig med det här på rätt sätt, men en människa kan det.\n\n"
         "Känner du att du håller på att tappa kontrollen: ta avstånd från situationen "
         f"eller personen om du kan, och kontakta {H['vard']} för att få prata med någon redan idag.\n\n"
