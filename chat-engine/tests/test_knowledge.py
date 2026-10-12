@@ -104,6 +104,18 @@ def test_tom_fil_och_fil_utan_rubriker_kraschar_inte():
     assert len(enda) == 1 and enda[0].id == "y#intro"
 
 
+def test_tabell_med_etiketter_blir_lista():
+    from convert_docx import table_to_list
+    assert table_to_list([["A", "Rädsla"], ["B", "Undvikande"]]) == ["- A: Rädsla", "- B: Undvikande"]
+
+
+def test_tabell_med_rubrikrad_blir_lista_med_kolumnnamn_och_tomma_rader_hoppas_over():
+    from convert_docx import table_to_list
+    rader = [["Slutna frågor", "Öppna frågor"], ["Gillar du sport?", "Vad gör du på fritiden?"], ["", ""]]
+    assert table_to_list(rader) == ["- Slutna frågor: Gillar du sport?; Öppna frågor: Vad gör du på fritiden?"]
+    assert table_to_list([]) == []
+
+
 if __name__ == "__main__":
     antal_fel = 0
     tester = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]

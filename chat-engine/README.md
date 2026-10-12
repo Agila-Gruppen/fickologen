@@ -70,6 +70,8 @@ Gemini nere, blockerat eller tomt svar ger en vänlig reservtext med 112/1177. B
 | `llm.py` | All kod som pratar med Gemini (byter vi leverantör ändras bara denna) |
 | `prototype.py` | Terminalchatt med debugrad |
 | `tests/test_router.py` | 26 tester med fejkad Gemini |
+| `knowledge/` | **Kunskapsmaterial för RAG** (PLAN-118): spec, konverterare från Word till markdown, och uppdelare i sökbara bitar. Se `knowledge/README.md`. |
+| `tests/test_backend_wiring.py`, `tests/test_knowledge.py` | Tester av backendkopplingen respektive materialuppdelningen |
 
 ## Köra och testa
 
@@ -82,10 +84,12 @@ Använd bara **påhittad data** när ni provar mot Gemini (gratisnivån kan anv�
 
 ## RAG: vad som är kvar
 
-Routern är förberedd. `route()` tar en `retrieve_fn` som anropas **bara** i KBT-hanteraren (aldrig vid kris), och `build_system_prompt(modul, kontext)` lägger in underlaget med regeln "hitta inte på". Kvar (PLAN-113):
+Routern är förberedd. `route()` tar en `retrieve_fn` som anropas **bara** i KBT-hanteraren (aldrig vid kris), och `build_system_prompt(modul, kontext)` lägger in underlaget med regeln "hitta inte på".
 
-1. Få fram texten ur de 9 modulerna och kontrollera att vi får använda den.
-2. Dela upp texten i bitar med metadata (modul, kapitel).
+**Klart (PLAN-118):** texten ur de 9 modulerna konverteras till markdown och delas upp i sökbara bitar (`knowledge/`). **Kvar (PLAN-113):**
+
+1. Bestämma var materialet ligger för servern (utanför git eller incheckat) och säkerställa att vi får använda det.
+2. (klart, se ovan)
 3. Välja embedding-modell (Gemini eller lokal) och testa svenska.
 4. Bygga ChromaDB-index, och se till att det överlever omstart på Railway.
 5. Fylla i `retrieve_context()` i `backend/src/services/retrieval.py`. Returnera inget vid låg likhet.

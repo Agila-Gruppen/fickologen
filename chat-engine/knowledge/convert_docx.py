@@ -32,6 +32,29 @@ DROP_LINES = re.compile(
 # Efter dessa rader kommer ett svarsfält, och allt till nästa rubrik hoppas över.
 ANSWER_FIELD = {"redigera ditt svar"}
 
+# Tabeller släpps normalt INTE igenom (många är ifyllda blanketter). Undantag: tabeller
+# under dessa rubriker (början av rubriken räcker) är programmets egen kunskap och
+# skrivs om till listor. Varje rad här har granskats för hand mot dokumentet.
+KEEP_TABLES_UNDER = (
+    "vad är social fobi",
+    "beteendeexperiment",
+    "varför har det inte fungerat tidigare",
+    "övning 15: icke-verbal kommunikation",
+    "öppna och slutna frågor",
+    "hitta en balans mellan passivitet",
+)
+
+
+def table_to_list(rows: list[list[str]]) -> list[str]:
+    """Skriver om en tabell som markdown-lista. Rader utan rubrikrad ('A | text') får etikett."""
+    rows = [[c for c in row] for row in rows if any(c.strip() for c in row)]
+    if not rows:
+        return []
+    if all(len(r) == 2 and len(r[0]) <= 3 for r in rows):
+        return [f"- {r[0]}: {r[1]}" for r in rows]
+    header, body = rows[0], rows[1:]
+    return ["- " + "; ".join(f"{h}: {c}" for h, c in zip(header, r) if c) for r in body]
+
 
 def clean(text: str) -> str:
     text = text.replace("\u00ad", "").replace("\u200b", "").replace("\xa0", " ")
@@ -54,12 +77,18 @@ def convert(docx: Path) -> tuple[str, dict]:
         images = len([n for n in z.namelist() if n.startswith("word/media/")])
     body = root.find(f"{W}body")
     lines: list[str] = []
-    stats = {"tabeller": 0, "tabeller_under": [], "bilder": images, "borttagna_rader": 0, "borttagna_avsnitt": []}
+    stats = {"tabeller": 0, "tabeller_behållna": 0, "tabeller_under": [], "bilder": images, "borttagna_rader": 0, "borttagna_avsnitt": []}
     current_heading = "(början)"
     skipping_until_heading = False
     seen_heading = False  # allt före första rubriken är webbplattformens meny och titelrad
     for child in body:
         if child.tag == f"{W}tbl":
+            if current_heading.lower().startswith(KEEP_TABLES_UNDER):
+                rows = [[" ".join(paragraph_text(p) for p in cell.iter(f"{W}p")).strip()
+                         for cell in row.findall(f"{W}tc")] for row in child.findall(f"{W}tr")]
+                lines += ["", *table_to_list(rows), ""]
+                stats["tabeller_behållna"] += 1
+                continue
             stats["tabeller"] += 1
             stats["tabeller_under"].append(current_heading)
             continue
@@ -134,7 +163,7 @@ def main() -> None:
         doc_id, header = front_matter(f.name)
         (OUT_DIR / f"{doc_id}.md").write_text(header + md, encoding="utf-8")
         report.append(
-            f"{doc_id}: {len(md.split())} ord | tabeller borttagna: {stats['tabeller']} | "
+            f"{doc_id}: {len(md.split())} ord | tabeller borttagna: {stats['tabeller']}, omskrivna till listor: {stats['tabeller_behållna']} | "
             f"bilder ignorerade: {stats['bilder']} | rader borttagna: {stats['borttagna_rader']} | "
             f"avsnitt borttagna: {len(stats['borttagna_avsnitt'])}"
         )

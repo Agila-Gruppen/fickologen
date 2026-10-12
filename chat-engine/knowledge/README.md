@@ -60,11 +60,11 @@ Modulerna är kopierade från en webbplattform och innehåller sådant som aldri
 |---|---|
 | Menytext, "Logga ut", **deltagar-ID** | Plattformsrester. ID:t är en personuppgift. |
 | Svarsfält ("Redigera ditt svar") och avsnitten "Kontakt med behandlare" och "Berätta om följande" | Formulär. De kan innehålla en persons egna svar och meddelanden. |
-| **Alla tabeller** (100 st) | Många är **ifyllda blanketter** med personers egna svar (datum, rädslor, ångestnivåer). Kontrollera i rapporten under vilka rubriker tabeller fanns. En tabell med riktig kunskap (till exempel "tidigare mot ny exponering") skrivs i så fall in som en lista för hand. |
+| **Tabeller** (100 st, utom 6) | Många är **ifyllda blanketter** med personers egna svar (datum, rädslor, mål, ångestnivåer). Bara 6 tabeller med programmets egen kunskap släpps igenom, omskrivna som listor: se `KEEP_TABLES_UNDER` i `convert_docx.py` (varje rad granskad för hand). Vill du lägga till en tabell, lägg dess rubrik där. |
 | Bilder (70 st) | Går inte att söka i. |
 | Sidfötter ("Kom ihåg!", "Bra jobbat med modulen!") och plattformsinstruktioner ("klicka på spara") | Inte kunskap. |
 
-Resultat på de nio modulerna: **271 bitar**, median **198 ord**, minst 40 och störst 491. Fördelning: 247 begrepp, 22 övningar, 2 exempel.
+Resultat på de nio modulerna: **275 bitar**, median **199 ord**, minst 40 och störst 491. Fördelning: 251 begrepp, 22 övningar, 2 exempel.
 
 ## Materialet ligger utanför git
 
@@ -88,4 +88,4 @@ python chat-engine/tests/test_knowledge.py
 2. Var indexet ska bo på Railway (volym, bygga om vid start, eller förberäknat).
 3. `retrieve_context()` i `backend/src/services/retrieval.py`: sök, och returnera inget vid svag träff.
 4. En testmängd med 15–20 frågor och förväntat avsnitt.
-5. Granska `_rapport.txt` och lägg in eventuella viktiga tabeller som listor.
+5. (klart) Tabellerna är granskade, se `KEEP_TABLES_UNDER`.
