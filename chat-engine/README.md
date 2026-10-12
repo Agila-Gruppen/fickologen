@@ -86,14 +86,7 @@ Använd bara **påhittad data** när ni provar mot Gemini (gratisnivån kan anv�
 
 Routern är förberedd. `route()` tar en `retrieve_fn` som anropas **bara** i KBT-hanteraren (aldrig vid kris), och `build_system_prompt(modul, kontext)` lägger in underlaget med regeln "hitta inte på".
 
-**Klart (PLAN-118):** texten ur de 9 modulerna konverteras till markdown och delas upp i sökbara bitar (`knowledge/`). **Kvar (PLAN-113):**
-
-1. Bestämma var materialet ligger för servern (utanför git eller incheckat) och säkerställa att vi får använda det.
-2. (klart, se ovan)
-3. Välja embedding-modell (Gemini eller lokal) och testa svenska.
-4. Bygga ChromaDB-index, och se till att det överlever omstart på Railway.
-5. Fylla i `retrieve_context()` i `backend/src/services/retrieval.py`. Returnera inget vid låg likhet.
-6. Skriva en utvärderingsmängd (frågor med förväntat avsnitt).
+**Klart:** PLAN-118 (materialet konverteras och delas i bitar) och bygget av sökningen (PLAN-113: krypterat paket, sökning, inläggning och utvärdering), se `knowledge/README.md`. **Kvar:** köra inläggningen lokalt (`knowledge/ingest.py`), lägga `KNOWLEDGE_KEY` i Railway och justera `MIN_SCORE` med `knowledge/evaluate.py`. Saknas paketet eller nyckeln är kunskapen avstängd och chatten fungerar som förut.
 
 Inget i routern behöver ändras för det.
 

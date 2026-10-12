@@ -67,8 +67,8 @@ def _to_gemini_contents(messages: list[ChatMessage]) -> list[dict]:
 
 
 async def _generate_reply_legacy(messages: list[ChatMessage]) -> ChatResult:
-    """The original engine: one prompt template for every message."""
-    chunks = retrieve_context(messages[-1].content)
+    """The original engine: one prompt template for every message, no knowledge material."""
+    chunks: list[ContextChunk] = []  # kept as it was before RAG, so the two engines can be compared
     response = await _client().aio.models.generate_content(
         model=MODEL,
         contents=_to_gemini_contents(messages),
