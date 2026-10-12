@@ -81,10 +81,25 @@ def unpack(blob: bytes, key: str) -> KnowledgeStore:
     return KnowledgeStore(records=payload["records"], dim=payload["dim"], model=payload["model"], vectors=vectors)
 
 
+def _read_key() -> str | None:
+    """KNOWLEDGE_KEY ur miljön, annars ur chat-engine/.env eller .env i repots rot (om dotenv finns)."""
+    key = os.environ.get("KNOWLEDGE_KEY")
+    if key:
+        return key
+    try:
+        from dotenv import load_dotenv
+        here = Path(__file__).parent
+        for env_file in (here.parent / ".env", here.parent.parent / ".env"):
+            load_dotenv(env_file)
+    except ImportError:
+        pass
+    return os.environ.get("KNOWLEDGE_KEY")
+
+
 def load_store(path: str | Path | None = None, key: str | None = None) -> KnowledgeStore | None:
     """Läser paketet. Returnerar None (och loggar varför) om kunskapen inte kan användas."""
     path = Path(path or os.environ.get("KNOWLEDGE_FILE") or DEFAULT_PATH)
-    key = key or os.environ.get("KNOWLEDGE_KEY")
+    key = key or _read_key()
     if not path.exists():
         log.warning("Kunskapspaket saknas (%s): kunskapen är avstängd", path)
         return None

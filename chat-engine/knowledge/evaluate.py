@@ -1,6 +1,7 @@
 """Mäter hur bra sökningen är, med frågorna i eval_questions.json (PLAN-113).
 
-    python chat-engine/knowledge/evaluate.py
+    python chat-engine/knowledge/evaluate.py                    # mäter sökningen
+    python chat-engine/knowledge/evaluate.py --klassificering   # kontrollerar också att kunskapsfrågor klassas som KBT_DELNING
 
 Kräver att material.enc och KNOWLEDGE_KEY finns, samt GEMINI_API_KEY (ett anrop per fråga).
 Frågor med tom lista under "moduler" är medvetet orelaterade: de ska INTE ge några träffar.
@@ -15,8 +16,8 @@ HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 
-import knowledge_retriever  # noqa: E402
-import knowledge_store  # noqa: E402
+import knowledge_retriever
+import knowledge_store
 
 
 def module_of(hit_id: str) -> int:
@@ -75,6 +76,13 @@ def main() -> None:
     print(f"Högsta toppoäng bland orelaterade frågor: {report['högsta_orelaterad']:.2f}")
     if report["förslag_min_score"] is not None:
         print(f"Förslag på MIN_SCORE i knowledge_retriever.py: {report['förslag_min_score']}")
+    if "--klassificering" in sys.argv:
+        relevant = [q["fråga"] for q in questions if q["moduler"]]
+        fel = [f for f in relevant if llm.classify(f, [], []) != "KBT_DELNING"]
+        print()
+        print(f"Kunskapsfrågor som klassades fel (ska vara KBT_DELNING): {len(fel)}/{len(relevant)}")
+        for f in fel:
+            print("  -", f)
 
 
 if __name__ == "__main__":

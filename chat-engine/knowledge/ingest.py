@@ -25,8 +25,8 @@ HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 
-import chunker  # noqa: E402
-import knowledge_store  # noqa: E402
+import chunker
+import knowledge_store
 
 DATA_DIR = HERE / "data"
 CACHE_FILE = DATA_DIR / "_embeddings_cache.json"

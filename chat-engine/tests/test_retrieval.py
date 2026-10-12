@@ -13,11 +13,11 @@ for p in (REPO, REPO / "chat-engine", REPO / "chat-engine" / "knowledge"):
     sys.path.insert(0, str(p))
 logging.disable(logging.CRITICAL)
 
-import knowledge_retriever  # noqa: E402
-import knowledge_store  # noqa: E402
-import ingest  # noqa: E402
-import evaluate  # noqa: E402
-from chunker import chunk_markdown  # noqa: E402
+import knowledge_retriever
+import knowledge_store
+import ingest
+import evaluate
+from chunker import chunk_markdown
 
 KEY = knowledge_store.new_key()
 RECORDS = [
@@ -87,13 +87,12 @@ def test_load_store_ger_none_om_fil_eller_nyckel_saknas_eller_ar_fel():
         fil.write_bytes(knowledge_store.pack(RECORDS, VECTORS, "fejk", KEY))
         assert knowledge_store.load_store(fil, KEY) is not None
         assert knowledge_store.load_store(fil, knowledge_store.new_key()) is None  # fel nyckel
-        import os
-        gammal = os.environ.pop("KNOWLEDGE_KEY", None)
+        original = knowledge_store._read_key
+        knowledge_store._read_key = lambda: None
         try:
             assert knowledge_store.load_store(fil, None) is None       # ingen nyckel
         finally:
-            if gammal:
-                os.environ["KNOWLEDGE_KEY"] = gammal
+            knowledge_store._read_key = original
 
 
 def test_inlaeggning_anvaender_cache_och_provar_igen_vid_fel():
