@@ -21,3 +21,6 @@ Thumbs.db
 
 # Secrets
 .env
+
+# Kunskapsmaterial för RAG (PLAN-118/113): modulerna ligger inte i git
+chat-engine/knowledge/data/
