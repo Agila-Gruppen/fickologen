@@ -5,6 +5,7 @@ from .routes.users import router as UserRouter
 from .routes.auth import router as AuthRouter
 from .routes.chat import router as ChatRouter
 from .routes.admin import router as AdminRouter
+from .routes.diary import router as DiaryRouter
 from .config.database import SessionLocal
 from .models.user import User
 from .utils.admin import admin_usernames
@@ -56,6 +57,7 @@ app.include_router(UserRouter)
 app.include_router(AuthRouter)
 app.include_router(ChatRouter)
 app.include_router(AdminRouter)
+app.include_router(DiaryRouter)
 
 @app.get("/")
 async def root():

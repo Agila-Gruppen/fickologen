@@ -671,6 +671,89 @@ div[class*="st-key-delete_account_btn"] button:disabled {
   transform: none !important;
 }
 
+/* ---------- Recovery code dialog ---------- */
+.fk-recovery-code {
+  font-family: 'Sora', 'Inter', monospace;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--heading);
+  background: var(--surface);
+  border: 1px dashed var(--sage);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin: 0.4rem 0 0.9rem 0;
+  user-select: all;
+}
+
+/* ---------- Diary ---------- */
+div[class*="st-key-fk_diary_composer"],
+div[class*="st-key-fk_diary_editbox_"] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem 1.5rem 1.2rem 1.5rem;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 1.2rem;
+}
+div[class*="st-key-fk_diary_composer"] div[data-testid="stForm"],
+div[class*="st-key-fk_diary_editbox_"] div[data-testid="stForm"] {
+  border: none !important;
+  padding: 0 !important;
+}
+.fk-diary-entry {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.3rem 1.5rem;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 0.6rem;
+}
+.fk-diary-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+.fk-diary-mood {
+  background: var(--sage-tint);
+  color: var(--sage-dark);
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.7rem;
+  font-weight: 500;
+}
+.fk-diary-content {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+div[class*="st-key-diary_edit_"] button,
+div[class*="st-key-diary_delete_"] button,
+div[class*="st-key-diary_canceldelete_"] button {
+  font-size: 0.8rem !important;
+  padding: 0.3rem 0.8rem !important;
+  min-height: 0 !important;
+}
+div[class*="st-key-diary_confirmdelete_"] button {
+  background: var(--terracotta-tint) !important;
+  color: var(--terracotta) !important;
+  border: 1px solid rgba(197, 122, 95, 0.3) !important;
+  font-size: 0.8rem !important;
+  padding: 0.3rem 0.8rem !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+}
+div[class*="st-key-diary_confirmdelete_"] button:hover {
+  background: var(--terracotta) !important;
+  color: #FFFFFF !important;
+}
+
 /* ---------- Misc ---------- */
 .fk-divider {
   border: none;
