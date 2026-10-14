@@ -17,6 +17,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     password: Mapped[str] = mapped_column(String(255))  # bcrypt hash
+    recovery_code: Mapped[Optional[str]] = mapped_column(String(255))  # bcrypt hash of the one-time recovery code
     email: Mapped[Optional[str]] = mapped_column(String(255), unique=True, index=True)
     role: Mapped[str] = mapped_column(String(32), server_default="user")
     can_chat: Mapped[bool] = mapped_column(server_default="false")

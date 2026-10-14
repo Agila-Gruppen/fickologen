@@ -7,6 +7,7 @@ from pathlib import Path
 import streamlit as st
 
 import auth
+import diary_api
 from api import BackendUnavailable
 
 ASSETS_DIR = Path(__file__).parent / "assets"
@@ -14,7 +15,7 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 NAV_ITEMS = [
     ("home", "Hem", "🏡"),
     ("chat", "Chatt", "💬"),
-    # ("diary", "Dagbok", "📓"),
+    ("diary", "Dagbok", "📓"),
     # ("treatment", "Behandling", "🌱"),
     # ("history", "Tidigare chattar", "🕰️"),
     # ("saved", "Sparade lösningar", "💡"),
@@ -89,7 +90,7 @@ def _submit_account_form(action, *args) -> None:
 
 @st.dialog("Ditt konto")
 def _account_dialog() -> None:
-    login_tab, signup_tab = st.tabs(["Logga in", "Skapa konto"])
+    login_tab, signup_tab, reset_tab = st.tabs(["Logga in", "Skapa konto", "Glömt lösenord"])
 
     with login_tab:
         with st.form("fk_login_form", border=False):
@@ -117,6 +118,61 @@ def _account_dialog() -> None:
         if submitted:
             _submit_account_form(auth.sign_up, username, password, password_again)
 
+    with reset_tab:
+        st.markdown(
+            '<p class="fk-card-text">Använd återställningskoden du fick när du skapade '
+            "kontot för att välja ett nytt lösenord.</p>",
+            unsafe_allow_html=True,
+        )
+        with st.form("fk_reset_form", border=False):
+            username = st.text_input("Användarnamn", key="fk_reset_username")
+            recovery_code = st.text_input(
+                "Återställningskod",
+                key="fk_reset_code",
+                placeholder="XXXX-XXXX-XXXX-XXXX",
+            )
+            password = st.text_input("Nytt lösenord", type="password", key="fk_reset_password", help="Minst 6 tecken.")
+            password_again = st.text_input("Upprepa det nya lösenordet", type="password", key="fk_reset_password_again")
+            submitted = st.form_submit_button("Byt lösenord och logga in", type="primary", use_container_width=True)
+        if submitted:
+            _submit_account_form(auth.reset_password, username, recovery_code, password, password_again)
+
+
+def open_account_dialog() -> None:
+    _account_dialog()
+
+
+@st.dialog("Spara din återställningskod", dismissible=False)
+def _recovery_code_dialog(code: str) -> None:
+    st.markdown(
+        '<p class="fk-card-text">Om du glömmer ditt lösenord är det här enda sättet att '
+        "komma in på kontot igen – vi vet inte vem du är och kan inte skicka något till dig. "
+        "Skriv ner koden eller spara den i en lösenordshanterare.</p>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(f'<div class="fk-recovery-code">{html.escape(code)}</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="fk-data-note">🔒 Koden visas bara den här gången. Varje kod fungerar '
+        "en gång – när du använt den får du en ny.</div>",
+        unsafe_allow_html=True,
+    )
+    saved = st.checkbox("Jag har sparat koden", key="fk_recovery_saved")
+    if st.button("Klar", type="primary", disabled=not saved, use_container_width=True):
+        st.session_state.pop("fk_recovery_code", None)
+        st.session_state.pop("fk_recovery_saved", None)
+        st.rerun()
+
+
+PROFILE_FIELDS = [
+    ("email", "E-post"),
+    ("first_name", "Förnamn"),
+    ("last_name", "Efternamn"),
+    ("birth_year", "Födelseår"),
+    ("phone", "Telefon"),
+    ("gender", "Kön"),
+    ("city", "Ort"),
+]
+
 
 def _format_timestamp(value: str) -> str:
     try:
@@ -136,13 +192,27 @@ def _my_data_dialog() -> None:
         st.error(error)
         return
 
+    try:
+        diary_count = len(diary_api.list_entries())
+    except diary_api.SessionExpired:
+        st.error(auth.SESSION_EXPIRED)
+        return
+    except BackendUnavailable:
+        diary_count = "Kunde inte hämtas"
+
     rows = [
         ("Användarnamn", html.escape(data["username"])),
         ("Konto-ID", data["id"]),
         ("Lösenord", "Sparas bara krypterat"),
         ("Konto skapat", _format_timestamp(data["created_at"])),
         ("Senast ändrat", _format_timestamp(data["updated_at"])),
+        ("Dagboksanteckningar", diary_count),
     ]
+    # Profile fields are optional; list the ones that are filled in so the
+    # list really is everything that is stored.
+    for key, label in PROFILE_FIELDS:
+        if data.get(key) not in (None, ""):
+            rows.append((label, html.escape(str(data[key]))))
     rows_html = "".join(
         f'<div class="fk-data-row"><span class="fk-data-label">{label}</span>'
         f'<span class="fk-data-value">{value}</span></div>'
@@ -153,9 +223,53 @@ def _my_data_dialog() -> None:
         <p class="fk-card-text">Det här är allt Fickologen har sparat om dig – inget mer.</p>
         <div class="fk-data-list">{rows_html}</div>
         <div class="fk-data-note">
-            🔒 Ditt lösenord går inte att läsa, inte ens för oss. Dina chattar sparas
-            inte – de försvinner när du stänger eller laddar om sidan.
+            🔒 Ditt lösenord och din återställningskod går inte att läsa, inte ens för oss.
+            Dagboken visas bara för dig, under Dagbok i menyn. Dina chattar sparas inte – de
+            försvinner när du stänger eller laddar om sidan.
         </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<hr class="fk-divider" />', unsafe_allow_html=True)
+    with st.expander("Byt lösenord"):
+        with st.form("fk_change_password_form", border=False, clear_on_submit=True):
+            current = st.text_input("Nuvarande lösenord", type="password")
+            password = st.text_input("Nytt lösenord", type="password", help="Minst 6 tecken.")
+            password_again = st.text_input("Upprepa det nya lösenordet", type="password")
+            submitted = st.form_submit_button("Byt lösenord", type="primary", use_container_width=True)
+        if submitted:
+            try:
+                error = auth.change_password(current, password, password_again)
+            except BackendUnavailable:
+                error = "Kunde inte nå servern just nu. Försök igen om en liten stund."
+            if error:
+                st.error(error)
+            else:
+                st.success("Ditt lösenord är bytt.")
+
+    with st.expander("Ny återställningskod"):
+        st.markdown(
+            '<p class="fk-card-text">Har du tappat bort koden, eller skapade du kontot innan '
+            "koder fanns? Skapa en ny – den gamla slutar då att fungera.</p>",
+            unsafe_allow_html=True,
+        )
+        with st.form("fk_new_code_form", border=False, clear_on_submit=True):
+            current = st.text_input("Ditt lösenord", type="password")
+            submitted = st.form_submit_button("Skapa ny kod", use_container_width=True)
+        if submitted:
+            try:
+                error = auth.new_recovery_code(current)
+            except BackendUnavailable:
+                error = "Kunde inte nå servern just nu. Försök igen om en liten stund."
+            if error:
+                st.error(error)
+            else:
+                # Full rerun: closes this dialog and opens the one showing the code.
+                st.rerun()
+
+    st.markdown(
+        """
         <hr class="fk-divider" />
         <div class="fk-section-title" style="margin-top:0.4rem;">Radera konto</div>
         <p class="fk-card-text">
@@ -185,6 +299,8 @@ def _render_account() -> None:
     user = auth.current_user()
     if st.session_state.pop("fk_account_deleted", False):
         st.toast("Ditt konto och all tillhörande data är raderat.")
+    if code := st.session_state.get("fk_recovery_code"):
+        _recovery_code_dialog(code)
     with st.container(key="fk_account"):
         if user:
             username = html.escape(user["username"])

@@ -4,6 +4,15 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
+MIN_PASSWORD_LENGTH = 6
+
+
+def check_password(v: str) -> str:
+    if len(v) < MIN_PASSWORD_LENGTH:
+        raise ValueError(f'Password must be at least {MIN_PASSWORD_LENGTH} characters long')
+    return v
+
+
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, description="User's username")
 
@@ -37,9 +46,7 @@ class UserCreate(UserBase):
     @classmethod
     def password_must_be_strong(cls, v: str) -> str:
         """Simple validation that the password has at least 6 characters"""
-        if len(v) < 6:
-            raise ValueError('Password must be at least 6 characters long')
-        return v
+        return check_password(v)
 
 
 class UserData(BaseModel):
@@ -63,6 +70,42 @@ class UserData(BaseModel):
     city: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+
+class UserCreated(UserData):
+    """
+    Schema returned when a user is created. recovery_code is shown only
+    this once; the database keeps just its hash.
+    """
+    recovery_code: str
+
+
+class PasswordChange(BaseModel):
+    """
+    Schema for a logged-in user changing their password.
+    """
+    current_password: str
+    new_password: str = Field(..., min_length=MIN_PASSWORD_LENGTH)
+
+    @field_validator('new_password')
+    @classmethod
+    def password_must_be_strong(cls, v: str) -> str:
+        return check_password(v)
+
+
+class RecoveryCodeRequest(BaseModel):
+    """
+    Schema for a logged-in user asking for a new recovery code.
+    The password is required so a left-open session cannot take over the account.
+    """
+    current_password: str
+
+
+class RecoveryCodeResponse(BaseModel):
+    """
+    Schema for a newly issued recovery code, shown only this once.
+    """
+    recovery_code: str
 
 
 class AdminUserUpdate(BaseModel):
