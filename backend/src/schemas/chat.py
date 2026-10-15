@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,6 +18,10 @@ class ChatRequest(BaseModel):
     """
     messages: list[ChatMessage] = Field(..., min_length=1)
     engine: Literal["router", "legacy"] = "router"
+    conversation_id: Optional[int] = Field(
+        default=None,
+        description="Which conversation to append to. Omit (null) to start a new one.",
+    )
 
 
 class ChatSource(BaseModel):
@@ -41,3 +45,4 @@ class ChatResponse(BaseModel):
     category: str | None = None
     via: str | None = None
     llm_used: bool | None = None
+    conversation_id: int | None = None
