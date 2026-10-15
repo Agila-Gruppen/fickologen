@@ -66,26 +66,47 @@ Modulerna är kopierade från en webbplattform och innehåller sådant som aldri
 
 Resultat på de nio modulerna: **275 bitar**, median **199 ord**, minst 40 och störst 491. Fördelning: 251 begrepp, 22 övningar, 2 exempel.
 
-## Materialet ligger utanför git
+## Materialet: krypterat paket i stället för text i repot
 
-`data/` är avstängd i `.gitignore`. Det betyder:
+Modulernas text ska inte ligga som läsbar text i det publika repot. Därför:
 
-- Word-filerna och de konverterade filerna **finns bara på din dator**. Ingen annan i teamet har dem.
-- **Railway hämtar koden från GitHub**, så servern har inte materialet. För att RAG ska fungera live måste det finnas ett sätt att få dit det (se PLAN-113). Det går också att checka in de färdiga markdown-filerna när ni har bestämt att det är okej.
-- Den som kör `convert_docx.py` lokalt får samma resultat, men behöver Word-filerna.
+- `data/` (de konverterade markdown-filerna) är avstängd i `.gitignore` och finns bara hos den som har Word-filerna.
+- Det som följer med koden är **`material.enc`**: bitarna och deras vektorer, krypterade (Fernet/AES). Utan nyckeln är filen oläslig.
+- Nyckeln heter `KNOWLEDGE_KEY`. Den ligger i `chat-engine/.env` (git ignorerar den) och som variabel i Railway. **Lägg den aldrig i git, Discord eller en skärmdump.**
+- Saknas filen eller nyckeln är kunskapen avstängd och chatten svarar som förut. Det kraschar aldrig.
+
+Vad det skyddar mot: att någon läser eller kopierar texten ur repot. Vad det **inte** skyddar mot: den som har nyckeln (alla med tillgång till Railway kan läsa variabeln). Håll därför nyckeln begränsad, och bestäm i teamet att appen och materialet inte säljs eller sprids vidare utan att alla är överens.
+
+Modellen svarar dessutom med instruktionen att inte citera långa stycken ordagrant (se `build_system_prompt`).
 
 ## Köra
 
 ```bash
-python chat-engine/knowledge/convert_docx.py "C:/sökväg/till/mappen/med/modulerna"
-python chat-engine/knowledge/chunker.py chat-engine/knowledge/data
-python chat-engine/tests/test_knowledge.py
+python chat-engine/knowledge/convert_docx.py "C:/sökväg/till/mappen/med/modulerna"   # Word -> markdown (data/)
+python chat-engine/knowledge/chunker.py chat-engine/knowledge/data                    # statistik över bitarna
+python chat-engine/knowledge/ingest.py --new-key        # en gång: skapar nyckeln (lägg i chat-engine/.env)
+python chat-engine/knowledge/ingest.py --dry-run        # antal bitar, inga anrop
+python chat-engine/knowledge/ingest.py                  # bäddar in (ett Gemini-anrop per bit) och skriver material.enc
+python chat-engine/knowledge/evaluate.py                # mäter sökningen och föreslår MIN_SCORE
+python chat-engine/tests/test_knowledge.py              # tester (påhittad text, utan nyckel)
+python chat-engine/tests/test_retrieval.py              # tester av sökningen (fejkade vektorer)
 ```
 
-## Kvar för PLAN-113
+## Så fungerar sökningen
 
-1. Embedding-modell (Gemini eller lokal) och test på svenska.
-2. Var indexet ska bo på Railway (volym, bygga om vid start, eller förberäknat).
-3. `retrieve_context()` i `backend/src/services/retrieval.py`: sök, och returnera inget vid svag träff.
-4. En testmängd med 15–20 frågor och förväntat avsnitt.
-5. (klart) Tabellerna är granskade, se `KEEP_TABLES_UNDER`.
+1. Användaren skriver en KBT-fråga. Routern ser att det inte är kris och anropar `retrieve_fn`.
+2. `knowledge_retriever.retrieve()` gör frågan till en vektor (`llm.embed`, ett Gemini-anrop) och jämför med alla bitar i paketet.
+3. De upp till 4 bitar som liknar mest, och minst `MIN_SCORE`, skickas med som "KUNSKAPSUNDERLAG". Källan (modul och rubrik) följer med i svaret.
+4. Är ingen bit tillräckligt lik skickas inget med, och boten svarar utan underlag.
+
+Gamla motorn (`engine=legacy`) använder aldrig kunskapen, så jämförelsen i demon blir tydlig.
+
+## Beslut och avvikelse från kortet
+
+Kortet säger ChromaDB. Vi använder i stället en enkel sökning i minnet över det krypterade paketet, eftersom 275 bitar inte kräver en vektordatabas, Railway slipper en volym, inget tungt paket behövs, och paketet kan krypteras. Behöver materialet växa kraftigt går det att byta till ChromaDB eller pgvector bakom samma funktion (`retrieve()`).
+
+## Kvar
+
+1. Köra `ingest.py` lokalt och lägga `KNOWLEDGE_KEY` i Railway (den som har materialet).
+2. Köra `evaluate.py` och sätta `MIN_SCORE` efter resultatet.
+3. Visa källorna i Streamlit-teknikraden (valfritt).

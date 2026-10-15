@@ -26,6 +26,7 @@ class Chunk:
     path: list[str]    # rubrikväg, t.ex. ["Tankefällor", "Tankeläsning"]
     typ: str           # begrepp | övning | exempel | arbetsblad
     words: int
+    body: str = ""      # texten utan rubrikväg
     meta: dict = field(default_factory=dict)
 
 
@@ -147,7 +148,7 @@ def chunk_markdown(raw: str, fallback_id: str = "dokument") -> list[Chunk]:
             heading = " > ".join([titel] + path)
             chunks.append(Chunk(
                 id=cid, text=f"{heading}\n\n{part}", doc_id=doc_id, titel=titel, path=path,
-                typ=typ, words=_words(part),
+                typ=typ, words=_words(part), body=part,
                 meta={"källa": meta.get("källa", ""), "modul": meta.get("modul", "")},
             ))
     return chunks
