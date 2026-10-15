@@ -18,7 +18,7 @@ NAV_ITEMS = [
     ("diary", "Dagbok", "📓"),
     # ("treatment", "Behandling", "🌱"),
     # ("history", "Tidigare chattar", "🕰️"),
-    # ("saved", "Sparade lösningar", "💡"),
+    ("saved", "Sparade chattar", "💾"),
     ("safety", "Trygghet & integritet", "🛡️"),
 ]
 
@@ -188,8 +188,15 @@ def _my_data_dialog() -> None:
     except BackendUnavailable:
         st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
         return
+    try:
+        data, error = auth.my_data()
+    except BackendUnavailable:
+        st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
+        return
     if error:
         st.error(error)
+        return
+    if data is None:
         return
 
     try:

@@ -1,6 +1,6 @@
 import streamlit as st
 
-from chat_engine import send_user_message
+from chat_engine import send_user_message, start_new_conversation
 from components import go_to, logo_data_uri
 
 SUGGESTIONS = [
@@ -42,10 +42,12 @@ def render() -> None:
     chosen_chip = _render_chips()
 
     if chosen_chip:
+        start_new_conversation()
         send_user_message(chosen_chip)
         go_to("chat")
 
     if submitted and prompt_value and prompt_value.strip():
+        start_new_conversation()
         send_user_message(prompt_value)
         go_to("chat")
 

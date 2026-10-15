@@ -107,6 +107,8 @@ def reset_password(username: str, recovery_code: str, password: str, password_ag
 def log_out() -> None:
     st.session_state.pop("fk_user", None)
     st.session_state.pop("fk_token", None)
+    st.session_state.pop("fk_messages", None)
+    st.session_state.pop("fk_conversation_id", None)
 
 
 SESSION_EXPIRED = "Din inloggning har gått ut. Logga in igen för att fortsätta."
