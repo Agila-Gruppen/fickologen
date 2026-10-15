@@ -73,7 +73,7 @@ def _mood_picker(key: str, default: int | None = None) -> int | None:
     return st.segmented_control(
         "Hur mår du? (valfritt)",
         options=list(MOODS),
-        format_func=MOODS.get,
+        format_func=lambda m: MOODS[m],
         default=default,
         key=key,
     )
@@ -133,18 +133,18 @@ def _render_entry(entry: dict) -> None:
     # let markdown take over the rest of the text.
     content = html.escape(entry["content"]).replace("\r\n", "\n").replace("\n", "<br>")
     st.markdown(
-        f"""
-        <div class="fk-diary-entry">
-            <div class="fk-diary-meta">
-                <span>{_format_date(entry["created_at"])}</span>
-                {mood}
-            </div>
-            {title}
-            <div class="fk-diary-content">{content}</div>
+            f"""
+    <div class="fk-diary-entry">
+        <div class="fk-diary-meta">
+            <span>{_format_date(entry["created_at"])}</span>
+            {mood}
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        {title}
+        <div class="fk-diary-content">{content}</div>
+    </div>
+    """,
+            unsafe_allow_html=True,
+        )
 
     if st.session_state.get("fk_diary_deleting") == entry_id:
         st.markdown(
@@ -186,10 +186,11 @@ def _render_edit_form(entry: dict) -> None:
         st.session_state.pop("fk_diary_editing", None)
         st.rerun()
     if saved:
-        if not content.strip():
+        content_text = content or ""
+        if not content_text.strip():
             st.warning("Anteckningen kan inte vara tom.")
             return
-        diary_api.update_entry(entry_id, title.strip(), content.strip(), mood)
+        diary_api.update_entry(entry_id, title.strip(), content_text.strip(), mood)
         st.session_state.pop("fk_diary_editing", None)
         st.session_state["fk_diary_flash"] = "Ändringarna är sparade."
         st.rerun()

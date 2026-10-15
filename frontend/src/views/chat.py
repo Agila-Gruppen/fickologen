@@ -113,7 +113,7 @@ def render() -> None:
         "sätt att börja på.",
     )
     if auth.current_user():
-        _, right = st.columns([5, 1])
+        _, right = st.columns([4, 2])
         with right:
             if st.button("➕ Ny chatt", use_container_width=True, key="fk_new_chat"):
                 start_new_conversation()
