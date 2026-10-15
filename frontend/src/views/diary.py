@@ -133,18 +133,13 @@ def _render_entry(entry: dict) -> None:
     # let markdown take over the rest of the text.
     content = html.escape(entry["content"]).replace("\r\n", "\n").replace("\n", "<br>")
     st.markdown(
-            f"""
-    <div class="fk-diary-entry">
-        <div class="fk-diary-meta">
-            <span>{_format_date(entry["created_at"])}</span>
-            {mood}
-        </div>
-        {title}
-        <div class="fk-diary-content">{content}</div>
-    </div>
-    """,
-            unsafe_allow_html=True,
-        )
+        '<div class="fk-diary-entry">'
+        f'<div class="fk-diary-meta"><span>{_format_date(entry["created_at"])}</span>{mood}</div>'
+        f'{title}'
+        f'<div class="fk-diary-content">{content}</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
     if st.session_state.get("fk_diary_deleting") == entry_id:
         st.markdown(

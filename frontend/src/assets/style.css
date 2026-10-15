@@ -805,3 +805,107 @@ div[class*="st-key-diary_confirmdelete_"] button:hover {
 [data-testid="stCaptionContainer"] {
   color: var(--text-muted) !important;
 }
+.fk-diary-entry {
+  background:
+    radial-gradient(ellipse 400px 200px at top right, rgba(197, 122, 95, 0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 300px 180px at bottom left, rgba(197, 122, 95, 0.035) 0%, transparent 60%),
+    #FEFCF7;
+  border: 1px solid rgba(197, 122, 95, 0.14);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgba(58, 55, 51, 0.03),
+    0 14px 36px rgba(58, 55, 51, 0.07);
+  margin-bottom: 1.4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mjuk terracotta-wash i övre vänstra hörnet, som en subtil akvarell */
+.fk-diary-entry::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle at top left, rgba(197, 122, 95, 0.14), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Diskret citationstecken längst ned till höger, som vattenstämpel */
+.fk-diary-entry::after {
+  content: "\201D";
+  position: absolute;
+  bottom: -1.5rem;
+  right: 1rem;
+  font-family: Georgia, serif;
+  font-size: 5rem;
+  color: var(--terracotta);
+  opacity: 0.07;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* === SEKTION 1: Datum + mood === */
+.fk-diary-entry .fk-diary-meta {
+  padding: 1.2rem 1.75rem 0.9rem 1.75rem;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 1px solid rgba(197, 122, 95, 0.12);
+  position: relative;
+  z-index: 1;
+}
+
+.fk-diary-entry .fk-diary-mood {
+  background: var(--terracotta-tint);
+  color: var(--terracotta);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid rgba(197, 122, 95, 0.2);
+  letter-spacing: 0;
+}
+
+/* === SEKTION 2: Titel === */
+.fk-diary-entry .fk-card-title {
+  padding: 1rem 1.75rem 1rem 1.75rem;
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--heading);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  border: none;
+  border-bottom: 1px solid rgba(197, 122, 95, 0.12);
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.fk-diary-entry .fk-card-title:empty {
+  display: none;
+}
+
+/* === SEKTION 3: Innehåll === */
+.fk-diary-entry .fk-diary-content {
+  padding: 1.1rem 1.75rem 1.4rem 1.75rem;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
