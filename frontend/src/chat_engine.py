@@ -1,8 +1,9 @@
 """Shared conversation state; replies come from the backend's /chat route.
 
-The Chat and Home views share one conversation stored in session state.
-Sending a message only records it; the Chat view then asks for the reply via
-`generate_pending_reply` so it can show a spinner while the backend answers.
+The Chat and Home views share one in-flight conversation stored in session state.
+Logged-in users also have their conversations persisted — the backend returns a
+`conversation_id` that we send back on every follow-up so new messages land in the
+same thread, and that lets the Saved view open an old thread.
 """
 import httpx
 import streamlit as st
@@ -14,7 +15,6 @@ GREETING = (
     "tankarna kommer – jag finns med och läser, i din takt."
 )
 
-# Which backend engine answers. "router" is the new routing engine.
 ENGINES = {
     "router": "Ny motor (routing)",
     "legacy": "Gammal motor (en mall)",
@@ -27,13 +27,23 @@ ERROR_REPLY = (
 )
 
 
-def _post(path: str, password: str, json: dict | None = None) -> httpx.Response:
-    return httpx.post(
-        f"{BACKEND_URL}{path}",
-        json=json,
-        headers={"X-Chat-Password": password},
-        timeout=TIMEOUT_SECONDS,
-    )
+def _auth_headers() -> dict:
+    """Logged-in users send their JWT cookie; anonymous users use CHAT_PASSWORD."""
+    if st.session_state.get("fk_token"):
+        return {"Cookie": f"access_token={st.session_state['fk_token']}"}
+    return {"X-Chat-Password": st.session_state.get("fk_password", "")}
+
+
+def _post(path: str, json: dict | None = None) -> httpx.Response:
+    try:
+        return httpx.post(
+            f"{BACKEND_URL}{path}",
+            json=json,
+            headers=_auth_headers(),
+            timeout=TIMEOUT_SECONDS,
+        )
+    except httpx.HTTPError as exc:
+        raise BackendUnavailable(str(exc)) from exc
 
 
 def _history() -> list[dict]:
@@ -56,6 +66,8 @@ def set_engine(engine: str) -> None:
 def ensure_started() -> None:
     if "fk_messages" not in st.session_state:
         st.session_state["fk_messages"] = [{"role": "assistant", "content": GREETING}]
+    if "fk_conversation_id" not in st.session_state:
+        st.session_state["fk_conversation_id"] = None
 
 
 def get_messages() -> list[dict]:
@@ -71,18 +83,46 @@ def send_user_message(text: str) -> None:
     st.session_state["fk_messages"].append({"role": "user", "content": text})
 
 
+def start_new_conversation() -> None:
+    """Reset the chat view. The next message will create a fresh thread in the DB."""
+    st.session_state["fk_messages"] = [{"role": "assistant", "content": GREETING}]
+    st.session_state["fk_conversation_id"] = None
+
+
+def load_conversation(conversation_id: int, messages: list[dict]) -> None:
+    """Open an existing conversation in the chat view."""
+    bubbles: list[dict] = []
+    for m in messages:
+        bubbles.append({
+            "role": m["role"],
+            "content": m["content"],
+            "category": m.get("category"),
+            "via": m.get("via"),
+            "llm_used": m.get("llm_used"),
+            "engine": "router",
+        })
+    st.session_state["fk_messages"] = bubbles
+    st.session_state["fk_conversation_id"] = conversation_id
+
+
 def has_pending_reply() -> bool:
-    return get_messages()[-1]["role"] == "user"
+    msgs = get_messages()
+    return len(msgs) > 0 and msgs[-1]["role"] == "user"
 
 
 def is_unlocked() -> bool:
-    return "fk_password" in st.session_state
+    """True if the user is allowed to chat (logged in, or password unlocked)."""
+    return bool(st.session_state.get("fk_token") or st.session_state.get("fk_password"))
 
 
 def try_unlock(password: str) -> bool:
-    """Unlock the chat for this session if the backend accepts the password."""
+    """Unlock the chat for anonymous users by trying the shared password."""
     try:
-        resp = _post("/chat/unlock", password)
+        resp = httpx.post(
+            f"{BACKEND_URL}/chat/unlock",
+            headers={"X-Chat-Password": password},
+            timeout=TIMEOUT_SECONDS,
+        )
     except httpx.HTTPError as exc:
         raise BackendUnavailable(str(exc)) from exc
     if resp.status_code == 401:
@@ -99,21 +139,26 @@ def generate_pending_reply() -> None:
     try:
         resp = _post(
             "/chat/",
-            st.session_state["fk_password"],
-            {"messages": _history(), "engine": get_engine()},
+            {
+                "messages": _history(),
+                "engine": get_engine(),
+                "conversation_id": st.session_state.get("fk_conversation_id"),
+            },
         )
         resp.raise_for_status()
         data = resp.json()
+        # Remember which backend conversation we're writing to.
+        if data.get("conversation_id") is not None:
+            st.session_state["fk_conversation_id"] = data["conversation_id"]
         reply = {
             "role": "assistant",
             "content": data["reply"],
-            # How the backend handled the message, shown when tech info is switched on.
             "engine": data.get("engine"),
             "category": data.get("category"),
             "via": data.get("via"),
             "llm_used": data.get("llm_used"),
         }
-    except Exception as exc:  # backend down, model failure, ...
+    except Exception as exc:
         print(f"[chat_engine] Backend call failed: {exc!r}")
         reply = {"role": "assistant", "content": ERROR_REPLY, "error": True}
     st.session_state["fk_messages"].append(reply)

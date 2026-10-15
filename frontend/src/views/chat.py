@@ -1,5 +1,7 @@
 import html
-
+import auth
+from typing import Any
+from alembic.util import msg
 import streamlit as st
 
 from chat_engine import (
@@ -12,6 +14,7 @@ from chat_engine import (
     is_unlocked,
     send_user_message,
     set_engine,
+    start_new_conversation,
     try_unlock,
 )
 from components import page_header
@@ -23,7 +26,7 @@ VIA_LABELS = {
 }
 
 
-def _tech_info(msg: dict) -> str | None:
+def _tech_info(msg: dict[str, Any]) -> str | None:
     """One line about how the backend produced a reply, or None if there is nothing to show."""
     if msg["role"] != "assistant" or msg.get("error") or not msg.get("engine"):
         return None
@@ -31,11 +34,12 @@ def _tech_info(msg: dict) -> str | None:
         return "Gammal motor: samma mall för alla meddelanden"
     category = msg.get("category") or "okänd"
     how = "Gemini skrev svaret" if msg.get("llm_used") else "fast, granskad text (ingen AI)"
-    via = VIA_LABELS.get(msg.get("via"), msg.get("via") or "okänt")
+    via_key = msg.get("via") or "okänt"
+    via = VIA_LABELS.get(via_key, via_key)
     return f"Kategori: {category} · {how} · upptäckt via {via}"
 
 
-def _render_bubble(msg: dict) -> None:
+def _render_bubble(msg: dict[str, Any]) -> None:
     role, content = msg["role"], msg["content"]
     if role == "assistant":
         st.markdown('<div class="fk-reflect-label">Fickologen reflekterar…</div>', unsafe_allow_html=True)
@@ -108,6 +112,12 @@ def render() -> None:
         "Det du skriver stannar mellan dig och Fickologen. Det finns inget rätt "
         "sätt att börja på.",
     )
+    if auth.current_user():
+        _, right = st.columns([5, 1])
+        with right:
+            if st.button("➕ Ny chatt", use_container_width=True, key="fk_new_chat"):
+                start_new_conversation()
+                st.rerun()
 
     _demo_settings()
 
