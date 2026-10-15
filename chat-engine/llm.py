@@ -9,6 +9,8 @@ from pathlib import Path
 import safety_config as cfg
 
 MODELL = "gemini-3.5-flash-lite"  # kontrollera exakt sträng i AI Studio
+EMBEDDING_MODELL = "gemini-embedding-2"  # tar EN text per anrop (en lista slås ihop till en vektor)
+EMBEDDING_DIM = 768
 _klient = None
 
 KLASSIFICERINGS_PROMPT = """\
@@ -80,3 +82,20 @@ def classify(meddelande, historik, soft_traffar):
     ord_ = (svar.text or "").strip().upper().split()
     token = ord_[0].strip(".:,;\"'`*") if ord_ else ""
     return token if token in cfg.KATEGORIER else None
+
+
+def embed(text, task="RETRIEVAL_QUERY"):
+    """Sifferrepresentation (vektor) av EN text, för sökning i kunskapsmaterialet.
+
+    task är "RETRIEVAL_DOCUMENT" när materialet läggs in och "RETRIEVAL_QUERY" när
+    användarens fråga slås upp. Samma EMBEDDING_MODELL och EMBEDDING_DIM måste användas
+    vid inläggning och sökning.
+    """
+    from google.genai import types
+
+    svar = _hamta_klient().models.embed_content(
+        model=EMBEDDING_MODELL,
+        contents=text,
+        config=types.EmbedContentConfig(task_type=task, output_dimensionality=EMBEDDING_DIM),
+    )
+    return list(svar.embeddings[0].values)

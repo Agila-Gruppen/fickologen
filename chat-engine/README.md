@@ -70,6 +70,8 @@ Gemini nere, blockerat eller tomt svar ger en vänlig reservtext med 112/1177. B
 | `llm.py` | All kod som pratar med Gemini (byter vi leverantör ändras bara denna) |
 | `prototype.py` | Terminalchatt med debugrad |
 | `tests/test_router.py` | 26 tester med fejkad Gemini |
+| `knowledge/` | **Kunskapsmaterial för RAG** (PLAN-118): spec, konverterare från Word till markdown, och uppdelare i sökbara bitar. Se `knowledge/README.md`. |
+| `tests/test_backend_wiring.py`, `tests/test_knowledge.py` | Tester av backendkopplingen respektive materialuppdelningen |
 
 ## Köra och testa
 
@@ -82,14 +84,9 @@ Använd bara **påhittad data** när ni provar mot Gemini (gratisnivån kan anv�
 
 ## RAG: vad som är kvar
 
-Routern är förberedd. `route()` tar en `retrieve_fn` som anropas **bara** i KBT-hanteraren (aldrig vid kris), och `build_system_prompt(modul, kontext)` lägger in underlaget med regeln "hitta inte på". Kvar (PLAN-113):
+Routern är förberedd. `route()` tar en `retrieve_fn` som anropas **bara** i KBT-hanteraren (aldrig vid kris), och `build_system_prompt(modul, kontext)` lägger in underlaget med regeln "hitta inte på".
 
-1. Få fram texten ur de 9 modulerna och kontrollera att vi får använda den.
-2. Dela upp texten i bitar med metadata (modul, kapitel).
-3. Välja embedding-modell (Gemini eller lokal) och testa svenska.
-4. Bygga ChromaDB-index, och se till att det överlever omstart på Railway.
-5. Fylla i `retrieve_context()` i `backend/src/services/retrieval.py`. Returnera inget vid låg likhet.
-6. Skriva en utvärderingsmängd (frågor med förväntat avsnitt).
+**Klart:** PLAN-118 (materialet konverteras och delas i bitar) och bygget av sökningen (PLAN-113: krypterat paket, sökning, inläggning och utvärdering), se `knowledge/README.md`. **Kvar:** köra inläggningen lokalt (`knowledge/ingest.py`), lägga `KNOWLEDGE_KEY` i Railway och justera `MIN_SCORE` med `knowledge/evaluate.py`. Saknas paketet eller nyckeln är kunskapen avstängd och chatten fungerar som förut.
 
 Inget i routern behöver ändras för det.
 
