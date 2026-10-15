@@ -1,11 +1,14 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from ..config.database import Base
+
+if TYPE_CHECKING:
+    from .conversation import Conversation
 
 
 class Message(Base):
@@ -27,5 +30,7 @@ class Message(Base):
     llm_used: Mapped[Optional[bool]] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
+    conversation: Mapped["Conversation"] = relationship(back_populates="messages")
+    
     def __repr__(self):
         return f"<Message(id={self.id}, conversation_id={self.conversation_id}, role='{self.role}')>"

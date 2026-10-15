@@ -1,11 +1,16 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from ..config.database import Base
+
+
+if TYPE_CHECKING:
+    from .conversation import Conversation
+    from .diary_entry import DiaryEntry
 
 
 class User(Base):
@@ -30,5 +35,16 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
+    conversations: Mapped[list["Conversation"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="Conversation.updated_at.desc()",
+    )
+    diary_entries: Mapped[list["DiaryEntry"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="DiaryEntry.created_at.desc()",
+    )
+    
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"
