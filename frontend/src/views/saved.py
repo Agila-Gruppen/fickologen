@@ -1,5 +1,6 @@
 """Saved chats: list the logged-in user's conversations, open or delete them."""
 from datetime import datetime
+from datetime_utils import to_local
 
 import streamlit as st
 
@@ -10,10 +11,10 @@ from components import go_to, page_header
 
 
 def _format_dt(iso: str) -> str:
-    try:
-        return datetime.fromisoformat(iso.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M")
-    except (ValueError, AttributeError):
+    dt = to_local(iso)
+    if dt is None:
         return iso
+    return dt.strftime("%Y-%m-%d %H:%M")
 
 
 def _open(conversation_id: int) -> None:

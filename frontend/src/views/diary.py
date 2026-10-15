@@ -1,5 +1,6 @@
 import html
 from datetime import datetime
+from datetime_utils import to_local
 
 import streamlit as st
 
@@ -118,9 +119,8 @@ def _render_entries(entries: list[dict]) -> None:
 
 
 def _format_date(value: str) -> str:
-    try:
-        dt = datetime.fromisoformat(value)
-    except ValueError:
+    dt = to_local(value)
+    if dt is None:
         return value
     return f"{WEEKDAYS[dt.weekday()].capitalize()} {dt.day} {MONTHS[dt.month - 1]} {dt.year}, {dt:%H:%M}"
 
