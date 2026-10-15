@@ -3,6 +3,7 @@ import base64
 import html
 from datetime import datetime
 from pathlib import Path
+from datetime_utils import to_local
 
 import streamlit as st
 
@@ -175,10 +176,10 @@ PROFILE_FIELDS = [
 
 
 def _format_timestamp(value: str) -> str:
-    try:
-        return datetime.fromisoformat(value).strftime("%Y-%m-%d %H:%M")
-    except ValueError:
+    dt = to_local(value)
+    if dt is None:
         return value
+    return dt.strftime("%Y-%m-%d %H:%M")
 
 
 @st.dialog("Din sparade data")
