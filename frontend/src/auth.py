@@ -171,3 +171,17 @@ def new_recovery_code(current_password: str) -> str | None:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     _show_recovery_code(resp.json()["recovery_code"])
     return None
+
+
+def delete_my_content() -> tuple[dict | None, str | None]:
+    """Delete all chats, diary entries and CBT progress but keep the account.
+
+    Returns ({"conversations", "diary_entries"} counts, None), or (None, error message).
+    """
+    resp = authed_request("DELETE", "/users/me/data")
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None

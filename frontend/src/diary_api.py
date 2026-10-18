@@ -32,3 +32,8 @@ def update_entry(entry_id: int, title: str, content: str, mood: int | None) -> d
 
 def delete_entry(entry_id: int) -> None:
     _call("DELETE", f"/diary/{entry_id}")
+
+
+def delete_all_entries() -> int:
+    """Delete every diary entry. Returns how many were deleted."""
+    return _call("DELETE", "/diary/")["deleted"]

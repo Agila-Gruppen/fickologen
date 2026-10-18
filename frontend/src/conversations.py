@@ -48,3 +48,14 @@ def delete_conversation(conversation_id: int) -> str | None:
     if not resp.is_success and resp.status_code != 404:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     return None
+
+
+def delete_all_conversations() -> tuple[int | None, str | None]:
+    """Delete every saved chat. Returns (how many were deleted, None), or (None, error message)."""
+    resp = _authed("DELETE", "/conversations/")
+    if resp.status_code == 401:
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json()["deleted"], None

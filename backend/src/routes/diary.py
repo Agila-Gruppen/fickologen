@@ -5,6 +5,8 @@ from ..config.database import get_db
 from ..models.diary_entry import DiaryEntry
 from ..schemas.auth import CurrentUser
 from ..schemas.diary import DiaryEntryCreate, DiaryEntryData, DiaryEntryUpdate
+from ..schemas.user_data import DeletedCount
+from ..services.user_data import delete_diary_entries
 from ..utils.auth import get_current_user
 
 
@@ -113,3 +115,20 @@ async def delete_entry(
     db.delete(entry)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/", response_model=DeletedCount)
+async def delete_all_entries(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Deletes all the logged-in user's diary entries.
+
+    Returns:
+        DeletedCount with how many entries were removed
+    """
+    deleted = delete_diary_entries(current_user.user_id, db)
+    db.commit()
+    print(f"Deleted all {deleted} diary entries for user {current_user.user_id}")
+    return DeletedCount(deleted=deleted)
