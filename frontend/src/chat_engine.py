@@ -1,9 +1,9 @@
 """Shared conversation state; replies come from the backend's /chat route.
 
 The Chat and Home views share one in-flight conversation stored in session state.
-Logged-in users also have their conversations persisted — the backend returns a
-`conversation_id` that we send back on every follow-up so new messages land in the
-same thread, and that lets the Saved view open an old thread.
+Only logged-in users can chat — the backend persists their conversations and
+returns a `conversation_id` that we send back on every follow-up so new messages
+land in the same thread, and that lets the Saved view open an old thread.
 """
 import httpx
 import streamlit as st
@@ -28,10 +28,9 @@ ERROR_REPLY = (
 
 
 def _auth_headers() -> dict:
-    """Logged-in users send their JWT cookie; anonymous users use CHAT_PASSWORD."""
-    if st.session_state.get("fk_token"):
-        return {"Cookie": f"access_token={st.session_state['fk_token']}"}
-    return {"X-Chat-Password": st.session_state.get("fk_password", "")}
+    """The JWT cookie identifies the logged-in user; chat requires it."""
+    token = st.session_state.get("fk_token", "")
+    return {"Cookie": f"access_token={token}"}
 
 
 def _post(path: str, json: dict | None = None) -> httpx.Response:
@@ -111,27 +110,8 @@ def has_pending_reply() -> bool:
 
 
 def is_unlocked() -> bool:
-    """True if the user is allowed to chat (logged in, or password unlocked)."""
-    return bool(st.session_state.get("fk_token") or st.session_state.get("fk_password"))
-
-
-def try_unlock(password: str) -> bool:
-    """Unlock the chat for anonymous users by trying the shared password."""
-    try:
-        resp = httpx.post(
-            f"{BACKEND_URL}/chat/unlock",
-            headers={"X-Chat-Password": password},
-            timeout=TIMEOUT_SECONDS,
-        )
-    except httpx.HTTPError as exc:
-        raise BackendUnavailable(str(exc)) from exc
-    if resp.status_code == 401:
-        return False
-    if not resp.is_success:
-        raise BackendUnavailable(f"HTTP {resp.status_code}")
-    st.session_state["fk_password"] = password
-    return True
-
+    """True if the user is logged in and can therefore reach the chat endpoint."""
+    return bool(st.session_state.get("fk_token"))
 
 def generate_pending_reply() -> None:
     if not has_pending_reply() or not is_unlocked():
@@ -145,9 +125,29 @@ def generate_pending_reply() -> None:
                 "conversation_id": st.session_state.get("fk_conversation_id"),
             },
         )
+        if resp.status_code == 403:
+            reply = {
+                "role": "assistant",
+                "content": (
+                    "Chatten är i stängd beta just nu och ditt konto har inte fått "
+                    "åtkomst än. Hör av dig till teamet om du vill vara med och testa."
+                ),
+                "error": True,
+            }
+            st.session_state["fk_messages"].append(reply)
+            return
+        if resp.status_code == 401:
+            # Login expired; drop state so the UI falls back to the login CTA.
+            st.session_state.pop("fk_token", None)
+            st.session_state.pop("fk_user", None)
+            st.session_state["fk_messages"].append({
+                "role": "assistant",
+                "content": "Din inloggning har gått ut. Logga in igen för att fortsätta.",
+                "error": True,
+            })
+            return
         resp.raise_for_status()
         data = resp.json()
-        # Remember which backend conversation we're writing to.
         if data.get("conversation_id") is not None:
             st.session_state["fk_conversation_id"] = data["conversation_id"]
         reply = {

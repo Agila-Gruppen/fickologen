@@ -1,8 +1,6 @@
-import hmac
-import os
 from typing import Optional
 
-from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
@@ -20,58 +18,53 @@ router = APIRouter(
     tags=["chat"]
 )
 
-
-def require_chat_password(x_chat_password: Optional[str] = Header(None)) -> None:
-    """
-    Dependency that guards the chat with the shared prototype password.
-
-    Args:
-        x_chat_password: Password from the X-Chat-Password header
-
-    Raises:
-        HTTPException: 401 if the password is missing or wrong, or if no
-            CHAT_PASSWORD is configured (fail closed)
-    """
-    expected = os.environ.get("CHAT_PASSWORD", "")
-    provided = x_chat_password or ""
-    if not expected or not hmac.compare_digest(provided.encode(), expected.encode()):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid chat password"
-        )
-        
 def allow_chat(
-    x_chat_password: Optional[str] = Header(None),
     access_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db),
-) -> Optional[User]:
+) -> User:
     """
-    Allows the chat for either:
-      - a logged-in user identified by the access_token cookie (returns User), or
-      - anyone who knows the shared CHAT_PASSWORD (returns None).
+    Allows the chat for logged-in users with chat access.
+
+    A user has chat access when their role is 'admin' or can_chat is True.
 
     Raises:
-        HTTPException: 401 if neither path checks out.
+        HTTPException: 401 if not logged in or the session is invalid.
+        HTTPException: 403 if logged in but not allowed to chat.
     """
-    if access_token:
-        payload = decode_access_token(access_token)
-        if payload:
-            user_id = payload.get("user_id")
-            if isinstance(user_id, int):
-                user = db.query(User).filter(User.id == user_id).first()
-                if user:
-                    return user
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not logged in"
+        )
 
-    expected = os.environ.get("CHAT_PASSWORD", "")
-    provided = x_chat_password or ""
-    if expected and hmac.compare_digest(provided.encode(), expected.encode()):
-        return None
+    payload = decode_access_token(access_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session"
+        )
 
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Not authorized to chat"
-    )
+    user_id = payload.get("user_id")
+    if not isinstance(user_id, int):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid session payload"
+        )
 
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account no longer exists"
+        )
+
+    if user.role != "admin" and not user.can_chat:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chat access not granted for this account"
+        )
+
+    return user
 
 def _resolve_conversation(
     user: User,
@@ -109,20 +102,6 @@ def _resolve_conversation(
     db.add(conv)
     db.flush()
     return conv
-
-
-@router.post("/unlock", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_chat_password)])
-async def unlock():
-    """
-    Checks the chat password without sending a message.
-
-    Returns:
-        204 if the password is correct
-
-    Raises:
-        HTTPException: 401 if the password is wrong
-    """
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/", response_model=ChatResponse)
