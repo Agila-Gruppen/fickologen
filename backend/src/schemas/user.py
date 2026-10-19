@@ -107,6 +107,19 @@ class RecoveryCodeResponse(BaseModel):
     """
     recovery_code: str
 
+class UserSelfUpdate(BaseModel):
+    """
+    Schema for a user updating their own account details.
+    All fields are optional; only the ones sent are changed.
+    Pass null for an optional field to clear it.
+    """
+    email: Optional[EmailStr] = Field(None)
+    first_name: Optional[str] = Field(None, max_length=100)
+    last_name: Optional[str] = Field(None, max_length=100)
+    birth_year: Optional[int] = Field(None, ge=1900, le=2026)
+    phone: Optional[str] = Field(None, max_length=32)
+    gender: Optional[str] = Field(None, max_length=32)
+    city: Optional[str] = Field(None, max_length=100)
 
 class AdminUserUpdate(BaseModel):
     """

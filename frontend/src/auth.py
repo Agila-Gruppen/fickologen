@@ -185,3 +185,24 @@ def delete_my_content() -> tuple[dict | None, str | None]:
     if not resp.is_success:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     return resp.json(), None
+
+def update_my_data(fields: dict) -> tuple[dict | None, str | None]:
+    """Patch the logged-in user's own account details.
+
+    `fields` only contains the keys the user actually changed.
+    Returns (updated_user_dict, None), or (None, error message).
+    """
+    resp = authed_request("PATCH", "/users/me", fields)
+    if resp.status_code == 400:
+        try:
+            return None, resp.json().get("detail") or "Något i formuläret kunde inte sparas."
+        except ValueError:
+            return None, "Något i formuläret kunde inte sparas."
+    if resp.status_code == 422:
+        return None, "Något i formuläret stämde inte. Kolla värdena och försök igen."
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None
