@@ -651,19 +651,22 @@ div[role="dialog"] button[aria-label="Close"] {
 }
 
 /* Delete account button: terracotta like the crisis button, to signal care */
-div[class*="st-key-delete_account_btn"] button {
+div[class*="st-key-delete_account_btn"] button,
+div[class*="st-key-delete_data_btn"] button {
   background: var(--terracotta-tint) !important;
   color: var(--terracotta) !important;
   border: 1px solid rgba(197, 122, 95, 0.3) !important;
   font-weight: 500 !important;
   box-shadow: none !important;
 }
-div[class*="st-key-delete_account_btn"] button:hover:not(:disabled) {
+div[class*="st-key-delete_account_btn"] button:hover:not(:disabled),
+div[class*="st-key-delete_data_btn"] button:hover:not(:disabled) {
   background: var(--terracotta) !important;
   color: #FFFFFF !important;
   border-color: var(--terracotta) !important;
 }
-div[class*="st-key-delete_account_btn"] button:disabled {
+div[class*="st-key-delete_account_btn"] button:disabled,
+div[class*="st-key-delete_data_btn"] button:disabled {
   background: var(--surface-muted) !important;
   color: var(--text-muted) !important;
   border-color: var(--border) !important;

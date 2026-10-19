@@ -15,6 +15,8 @@ from ..models.user import User
 from ..utils.auth import get_current_user
 from ..utils.password import generate_recovery_code, hash_password, verify_password
 from ..utils.admin import is_admin_username
+from ..schemas.user_data import DeletedContent
+from ..services.user_data import delete_conversations, delete_cbt_progress, delete_diary_entries
 
 router = APIRouter(
     prefix="/users",
@@ -175,3 +177,30 @@ async def new_recovery_code(
 
     print(f"User ID {user.id} got a new recovery code")
     return RecoveryCodeResponse(recovery_code=recovery_code)
+
+
+@router.delete("/me/data", response_model=DeletedContent)
+async def delete_my_content(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Deletes everything the logged-in user has created – conversations with
+    their messages, diary entries and CBT progress – but keeps the account,
+    so they can go on using Fickologen with a clean slate.
+
+    Returns:
+        DeletedContent with how many conversations and diary entries were removed
+
+    Raises:
+        HTTPException: 401 if not logged in
+        HTTPException: 404 if the account no longer exists
+    """
+    user = _get_own_user(current_user, db)
+    conversations = delete_conversations(user.id, db)
+    diary_entries = delete_diary_entries(user.id, db)
+    delete_cbt_progress(user.id, db)
+    db.commit()
+
+    print(f"Deleted all content for user ID {user.id}: {conversations} conversations, {diary_entries} diary entries")
+    return DeletedContent(conversations=conversations, diary_entries=diary_entries)

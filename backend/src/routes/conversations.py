@@ -5,6 +5,8 @@ from ..config.database import get_db
 from ..models.conversation import Conversation
 from ..schemas.auth import CurrentUser
 from ..schemas.conversation import ConversationData, ConversationWithMessages
+from ..schemas.user_data import DeletedCount
+from ..services.user_data import delete_conversations
 from ..utils.auth import get_current_user
 
 
@@ -86,3 +88,20 @@ async def delete_conversation(
     db.commit()
     print(f"Deleted conversation {conversation_id} for user {current_user.user_id}")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/", response_model=DeletedCount)
+async def delete_all_conversations(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Deletes all the logged-in user's conversations and their messages.
+
+    Returns:
+        DeletedCount with how many conversations were removed
+    """
+    deleted = delete_conversations(current_user.user_id, db)
+    db.commit()
+    print(f"Deleted all {deleted} conversations for user {current_user.user_id}")
+    return DeletedCount(deleted=deleted)

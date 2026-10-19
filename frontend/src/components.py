@@ -8,7 +8,9 @@ from datetime_utils import to_local
 import streamlit as st
 
 import auth
+import conversations as conv_api
 import diary_api
+from chat_engine import start_new_conversation
 from api import BackendUnavailable
 
 ASSETS_DIR = Path(__file__).parent / "assets"
@@ -189,11 +191,6 @@ def _my_data_dialog() -> None:
     except BackendUnavailable:
         st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
         return
-    try:
-        data, error = auth.my_data()
-    except BackendUnavailable:
-        st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
-        return
     if error:
         st.error(error)
         return
@@ -208,12 +205,22 @@ def _my_data_dialog() -> None:
     except BackendUnavailable:
         diary_count = "Kunde inte hämtas"
 
+    try:
+        conversations, error = conv_api.list_conversations()
+    except BackendUnavailable:
+        conversations, error = None, None
+    if error:
+        st.error(error)
+        return
+    chat_count = len(conversations) if conversations is not None else "Kunde inte hämtas"
+
     rows = [
         ("Användarnamn", html.escape(data["username"])),
         ("Konto-ID", data["id"]),
         ("Lösenord", "Sparas bara krypterat"),
         ("Konto skapat", _format_timestamp(data["created_at"])),
         ("Senast ändrat", _format_timestamp(data["updated_at"])),
+        ("Sparade chattar", chat_count),
         ("Dagboksanteckningar", diary_count),
     ]
     # Profile fields are optional; list the ones that are filled in so the
@@ -232,8 +239,8 @@ def _my_data_dialog() -> None:
         <div class="fk-data-list">{rows_html}</div>
         <div class="fk-data-note">
             🔒 Ditt lösenord och din återställningskod går inte att läsa, inte ens för oss.
-            Dagboken visas bara för dig, under Dagbok i menyn. Dina chattar sparas inte – de
-            försvinner när du stänger eller laddar om sidan.
+            Dina chattar och din dagbok visas bara för dig, under Sparade chattar och
+            Dagbok i menyn. Du kan radera dem här nedanför när du vill.
         </div>
         """,
         unsafe_allow_html=True,
@@ -276,6 +283,8 @@ def _my_data_dialog() -> None:
                 # Full rerun: closes this dialog and opens the one showing the code.
                 st.rerun()
 
+    _delete_data_section(chat_count, diary_count)
+
     st.markdown(
         """
         <hr class="fk-divider" />
@@ -302,11 +311,88 @@ def _my_data_dialog() -> None:
         st.rerun()
 
 
+def _count(n: int, singular: str, plural: str) -> str:
+    return f"{n} {singular if n == 1 else plural}"
+
+
+def _delete_data_section(chat_count: int | str, diary_count: int | str) -> None:
+    """Delete chats, diary entries or both, keeping the account."""
+    st.markdown(
+        """
+        <hr class="fk-divider" />
+        <div class="fk-section-title" style="margin-top:0.4rem;">Radera data</div>
+        <p class="fk-card-text">
+            Rensa det du sparat men behåll ditt konto. Det går inte att ångra.
+        </p>
+        """,
+        unsafe_allow_html=True,
+    )
+    options = {
+        "chats": f"Alla chattar ({chat_count})",
+        "diary": f"Alla dagboksanteckningar ({diary_count})",
+        "all": "Allt innehåll – chattar och dagbok",
+    }
+    choice = st.radio(
+        "Vad vill du radera?",
+        options=list(options),
+        format_func=options.get,
+        key="fk_delete_data_choice",
+        label_visibility="collapsed",
+    )
+    nothing_to_delete = {
+        "chats": chat_count == 0,
+        "diary": diary_count == 0,
+        "all": chat_count == 0 and diary_count == 0,
+    }[choice]
+    if nothing_to_delete:
+        st.caption("Det finns inget sparat att radera här.")
+    confirmed = st.checkbox("Jag förstår att det inte går att ångra", key="fk_delete_data_confirm")
+    if not st.button(
+        "Radera",
+        key="delete_data_btn",
+        disabled=not confirmed or nothing_to_delete,
+        use_container_width=True,
+    ):
+        return
+
+    try:
+        if choice == "chats":
+            deleted, error = conv_api.delete_all_conversations()
+            message = f"Raderat: {_count(deleted, 'chatt', 'chattar')}." if not error else None
+        elif choice == "diary":
+            deleted, error = diary_api.delete_all_entries(), None
+            message = f"Raderat: {_count(deleted, 'dagboksanteckning', 'dagboksanteckningar')}."
+        else:
+            counts, error = auth.delete_my_content()
+            message = (
+                f"Raderat: {_count(counts['conversations'], 'chatt', 'chattar')} och "
+                f"{_count(counts['diary_entries'], 'dagboksanteckning', 'dagboksanteckningar')}."
+                if not error else None
+            )
+    except diary_api.SessionExpired:
+        error = auth.SESSION_EXPIRED
+    except BackendUnavailable:
+        error = "Kunde inte nå servern just nu. Försök igen om en liten stund."
+    if error:
+        st.error(error)
+        return
+
+    if choice in ("chats", "all"):
+        # The open chat was one of the deleted ones; start a fresh one.
+        start_new_conversation()
+    st.session_state.pop("fk_delete_data_confirm", None)
+    # Shown by _render_account after the rerun closes the dialog.
+    st.session_state["fk_account_flash"] = message
+    st.rerun()
+
+
 def _render_account() -> None:
     """Account box at the bottom of the sidebar (pinned there by the CSS)."""
     user = auth.current_user()
     if st.session_state.pop("fk_account_deleted", False):
         st.toast("Ditt konto och all tillhörande data är raderat.")
+    if flash := st.session_state.pop("fk_account_flash", None):
+        st.toast(flash)
     if code := st.session_state.get("fk_recovery_code"):
         _recovery_code_dialog(code)
     with st.container(key="fk_account"):
