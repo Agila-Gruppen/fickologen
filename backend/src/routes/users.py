@@ -9,6 +9,7 @@ from ..schemas.user import (
     UserCreate,
     UserCreated,
     UserData,
+    UserSelfUpdate,
 )
 from ..config.database import get_db
 from ..models.user import User
