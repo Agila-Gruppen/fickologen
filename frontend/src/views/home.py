@@ -1,7 +1,7 @@
 import streamlit as st
 
-from chat_engine import send_user_message, start_new_conversation
-from components import go_to, logo_data_uri
+from chat_engine import is_unlocked, send_user_message, start_new_conversation
+from components import go_to, logo_data_uri, open_account_dialog
 
 SUGGESTIONS = [
     "Jag vet inte var jag ska börja",
@@ -41,15 +41,19 @@ def render() -> None:
 
     chosen_chip = _render_chips()
 
-    if chosen_chip:
+    def _handle_message(text: str) -> None:
+        if not is_unlocked():
+            open_account_dialog()
+            return
         start_new_conversation()
-        send_user_message(chosen_chip)
+        send_user_message(text)
         go_to("chat")
 
+    if chosen_chip:
+        _handle_message(chosen_chip)
+
     if submitted and prompt_value and prompt_value.strip():
-        start_new_conversation()
-        send_user_message(prompt_value)
-        go_to("chat")
+        _handle_message(prompt_value)
 
     # st.markdown('<div class="fk-divider"></div>', unsafe_allow_html=True)
     #

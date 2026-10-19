@@ -1,12 +1,11 @@
 import html
-import auth
 from typing import Any
-from alembic.util import msg
+
 import streamlit as st
 
+import auth
 from chat_engine import (
     ENGINES,
-    BackendUnavailable,
     generate_pending_reply,
     get_engine,
     get_messages,
@@ -15,9 +14,8 @@ from chat_engine import (
     send_user_message,
     set_engine,
     start_new_conversation,
-    try_unlock,
 )
-from components import page_header
+from components import open_account_dialog, page_header
 
 VIA_LABELS = {
     "regel": "regel",
@@ -81,29 +79,28 @@ def _demo_settings() -> None:
         )
 
 
-@st.dialog("🔒 Lösenord krävs", dismissible=False)
-def _password_dialog() -> None:
+def _render_login_cta() -> None:
+    """Shown instead of the composer when the visitor isn't logged in."""
     st.markdown(
-        "Den här prototypen är lösenordsskyddad. **Skriv in lösenordet** för att "
-        "skicka ditt meddelande och börja chatta. Du behöver bara göra det en gång."
+        '<div class="fk-card" style="text-align:center;">'
+        '<span class="fk-card-icon">🔒</span>'
+        '<div class="fk-card-title">Logga in för att chatta</div>'
+        '<p class="fk-card-text">'
+        "Chatten är i stängd beta. Logga in på ditt konto eller skapa ett nytt "
+        "för att börja prata med Fickologen."
+        '</p>'
+        '</div>',
+        unsafe_allow_html=True,
     )
-    with st.form("fk_password_form", border=False):
-        password = st.text_input(
-            "Lösenord",
-            type="password",
-            placeholder="Skriv lösenordet här",
-        )
-        submitted = st.form_submit_button("Lås upp chatten", type="primary", use_container_width=True)
-    if submitted:
-        try:
-            unlocked = try_unlock(password)
-        except BackendUnavailable:
-            st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
-            return
-        if unlocked:
-            st.rerun()
-        st.error("Fel lösenord. Försök igen.")
-
+    _, mid, _ = st.columns([1, 2, 1])
+    with mid:
+        if st.button(
+            "Logga in / skapa konto",
+            type="primary",
+            use_container_width=True,
+            key="fk_chat_login_cta",
+        ):
+            open_account_dialog()
 
 def render() -> None:
     page_header(
@@ -112,21 +109,21 @@ def render() -> None:
         "Det du skriver stannar mellan dig och Fickologen. Det finns inget rätt "
         "sätt att börja på.",
     )
-    if auth.current_user():
-        _, right = st.columns([4, 2])
-        with right:
-            if st.button("➕ Ny chatt", use_container_width=True, key="fk_new_chat"):
-                start_new_conversation()
-                st.rerun()
+
+    if not is_unlocked():
+        _render_login_cta()
+        return
+
+    _, right = st.columns([4, 2])
+    with right:
+        if st.button("➕ Ny chatt", use_container_width=True, key="fk_new_chat"):
+            start_new_conversation()
+            st.rerun()
 
     _demo_settings()
 
     for msg in get_messages():
         _render_bubble(msg)
-
-    if has_pending_reply() and not is_unlocked():
-        _password_dialog()
-        return
 
     user_text = st.chat_input("Skriv vad som helst – det finns ingen fel ordning.")
     if user_text:
