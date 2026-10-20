@@ -9,7 +9,7 @@ import conversations as conv_api
 import diary_api
 from api import BackendUnavailable
 from chat_engine import start_new_conversation
-from components import PROFILE_FIELDS, page_header
+from components import page_header
 from datetime_utils import to_local
 
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
