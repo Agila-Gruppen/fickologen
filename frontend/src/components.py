@@ -44,8 +44,11 @@ def logo_path() -> Path:
     return ASSETS_DIR / "logo-mark.png"
 
 
+HIDDEN_VIEWS = {"account"}
+
+
 def get_current_view() -> str:
-    valid = {key for key, _, _ in NAV_ITEMS}
+    valid = {key for key, _, _ in NAV_ITEMS} | HIDDEN_VIEWS
     view = st.query_params.get("view", "home")
     return view if view in valid else "home"
 
