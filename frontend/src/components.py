@@ -213,7 +213,12 @@ def _render_account() -> None:
 
 
 def render_demo_settings() -> None:
-    """Choose the chat engine version and show how replies were produced (for demos)."""
+    """Choose the chat engine version and show how replies were produced (for demos).
+
+    Only admins who are logged in see this; everyone else gets the latest version.
+    """
+    if not auth.is_admin():
+        return
     from chat_engine import ENGINES, get_engine, set_engine  # local import: keeps components free of chat state
 
     with st.expander("Demo-inställningar"):

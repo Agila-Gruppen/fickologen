@@ -47,7 +47,7 @@ def _render_bubble(msg: dict[str, Any]) -> None:
             f'<div class="fk-bubble fk-bubble-bot">\n\n{html.escape(content, quote=False)}\n\n</div>',
             unsafe_allow_html=True,
         )
-        info = _tech_info(msg) if st.session_state.get("fk_show_tech") else None
+        info = _tech_info(msg) if auth.is_admin() and st.session_state.get("fk_show_tech") else None
         if info:
             st.caption(info)
     else:
