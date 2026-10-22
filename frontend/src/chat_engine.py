@@ -15,10 +15,13 @@ GREETING = (
     "tankarna kommer – jag finns med och läser, i din takt."
 )
 
+# The three chat engine versions, oldest first. "rag" is the latest and the default.
 ENGINES = {
-    "router": "Ny motor (routing)",
-    "legacy": "Gammal motor (en mall)",
+    "legacy": "Version 1: Grundmotor (en mall)",
+    "router": "Version 2: Routing (lager och mallar)",
+    "rag": "Version 3: Routing + RAG (kunskap ur modulerna)",
 }
+DEFAULT_ENGINE = "rag"
 
 ERROR_REPLY = (
     "Jag lyckades inte svara just nu – något gick fel på min sida, inte på din. "
@@ -55,7 +58,7 @@ def _history() -> list[dict]:
 
 
 def get_engine() -> str:
-    return st.session_state.get("fk_engine", "router")
+    return st.session_state.get("fk_engine", DEFAULT_ENGINE)
 
 
 def set_engine(engine: str) -> None:
@@ -157,6 +160,8 @@ def generate_pending_reply() -> None:
             "category": data.get("category"),
             "via": data.get("via"),
             "llm_used": data.get("llm_used"),
+            # Titles of the knowledge passages the reply was grounded in (RAG only).
+            "sources": [source["source"] for source in data.get("sources") or []],
         }
     except Exception as exc:
         print(f"[chat_engine] Backend call failed: {exc!r}")

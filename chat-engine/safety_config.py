@@ -46,7 +46,7 @@ OVERGREPP_TIDIGARE: personen har tidigare utsatts för övergrepp eller sexuellt
 BEGATT_BROTT: personen berättar att den har begått ett brott
 SEXUELLA_TANKAR_BARN: sexuella tankar om barn
 MISSBRUK: alkohol, droger, spel eller läkemedel som ett problem
-UTANFOR_OMRADE: medicin, dosering, att få en diagnos ställd, psykos, ätstörning och liknande. Allmänna kunskapsfrågor om social ångest, KBT eller övningar hör INTE hit
+UTANFOR_OMRADE: BARA frågor om medicin, dosering, att få en diagnos ställd, psykos eller ätstörning. Ämnen som inte handlar om hälsa alls (matlagning, väder, teknik) hör till OVRIGT. Allmänna kunskapsfrågor om social ångest, KBT eller övningar hör INTE hit
 META: frågor om boten själv, att den är en AI, eller om hur data sparas. Frågor om KBT eller ångest hör INTE hit
 KORT_SVAR: mycket kort svar (ja, nej, ok, vet inte) som hör ihop med botens förra fråga
 KBT_DELNING: personen delar en tanke, händelse eller fråga om sitt mående eller sin ångest, ELLER ställer en kunskapsfråga om social ångest, KBT, tankefällor, exponering, säkerhetsbeteenden, sociala färdigheter eller övningarna (t.ex. "Vad är ...?", "Hur gör man ...?")

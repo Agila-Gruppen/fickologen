@@ -100,11 +100,14 @@ def _load_engine() -> SimpleNamespace:
     )
 
 
-async def _generate_reply_router(messages: list[ChatMessage]) -> ChatResult:
+async def _generate_reply_router(messages: list[ChatMessage], use_knowledge: bool = False) -> ChatResult:
     """
     The router engine: fixed, reviewed texts for crisis and sensitive topics,
     short fixed replies for greetings and thanks, and Gemini with the right
     prompt module for everything else.
+
+    With use_knowledge the router also looks up the knowledge material for ordinary
+    CBT questions (RAG); without it the reply is built from the prompt alone.
     """
     engine = _load_engine()
     # The backend keeps no state between requests, so the router rebuilds its
@@ -131,7 +134,7 @@ async def _generate_reply_router(messages: list[ChatMessage]) -> ChatResult:
         engine.state_from_history(history),
         engine.classify,
         engine.generate,
-        retrieve,
+        retrieve if use_knowledge else None,
     )
     return ChatResult(
         reply=reply.text,
@@ -144,14 +147,15 @@ async def _generate_reply_router(messages: list[ChatMessage]) -> ChatResult:
 
 async def generate_reply(
     messages: list[ChatMessage],
-    engine: Literal["router", "legacy"] = "router",
+    engine: Literal["legacy", "router", "rag"] = "rag",
 ) -> ChatResult:
     """
     Generate the assistant's next reply.
 
     Args:
         messages: The conversation so far, ending with the user's new message
-        engine: "router" for the routing engine, "legacy" for the original single-template engine
+        engine: "legacy" = the original single-template engine, "router" = routing without
+            knowledge material, "rag" = routing plus knowledge lookup (the latest version)
 
     Returns:
         The reply, the context chunks it was grounded in, and how it was produced
@@ -161,4 +165,4 @@ async def generate_reply(
     """
     if engine == "legacy":
         return await _generate_reply_legacy(messages)
-    return await _generate_reply_router(messages)
+    return await _generate_reply_router(messages, use_knowledge=(engine == "rag"))
