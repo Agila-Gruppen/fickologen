@@ -281,6 +281,62 @@ def test_trasig_retrieve_stoppar_inte_svaret():
     assert svar.llm_used and "KUNSKAPSUNDERLAG" not in gen.prompter[0]
 
 
+# ------------------------------------- Naturligare ton: två mallar och variationsregler
+def test_kunskapsfraga_far_egen_mall_och_delning_far_sin():
+    _, _, gen_fraga = kor("Vad är tankeläsning?", klass="KBT_FRAGA")
+    _, _, gen_delning = kor("Jag blev så nervös på mötet", klass="KBT_DELNING")
+    assert "kunskapsfråga" in gen_fraga.prompter[0] and "Svara direkt på frågan" in gen_fraga.prompter[0]
+    assert "delar en tanke, händelse eller känsla" in gen_delning.prompter[0]
+    assert "Svara direkt på frågan" not in gen_delning.prompter[0]
+    assert "delar en tanke, händelse eller känsla" not in gen_fraga.prompter[0]
+
+
+def test_alla_llm_kategorier_har_en_mall():
+    for kategori in cfg.LLM_KATEGORIER:
+        assert cfg.MODUL_FOR[kategori] in MODULER, kategori
+
+
+def test_kunskap_slas_bara_upp_for_kbt_kategorierna():
+    anrop = []
+
+    def hamta(meddelande):
+        anrop.append(meddelande)
+        return "[Modul 3] Tankeläsning är..."
+
+    _, _, gen = kor("Vad är tankeläsning?", klass="KBT_FRAGA", retrieve=hamta)
+    assert len(anrop) == 1 and "KUNSKAPSUNDERLAG" in gen.prompter[0]
+    for klass in ("KORT_SVAR", "OVRIGT"):
+        anrop.clear()
+        kor("ja", klass=klass, retrieve=hamta)
+        assert not anrop, klass
+
+
+def test_variationsreglerna_finns_i_alla_mallar():
+    for modul in MODULER:
+        prompt = " ".join(build_system_prompt(modul).split())
+        assert "Börja aldrig med tack" in prompt, modul
+        assert "Kort sagt" in prompt and "Det här är inte ett misslyckande" in prompt, modul
+        assert "tidigare svar i samtalet" in prompt, modul
+        assert "samma eller en nästan likadan fråga" in prompt, modul
+        assert "vardaglig, naturlig svenska" in prompt, modul
+
+
+def test_bekraftelse_och_avlastning_ar_villkorade_pa_att_personen_uttryckt_det():
+    plattad = lambda modul: " ".join(build_system_prompt(modul).split())  # radbrytningar spelar ingen roll
+    assert "BARA om personen själv har uttryckt" in plattad("kbt")
+    assert "ENDAST om personen själv uttryckt" in plattad("kunskap")
+
+
+def test_laengdriktlinjer_finns_for_bada_kbt_mallarna():
+    assert "60-120 ord" in build_system_prompt("kbt")
+    assert "80-150 ord" in build_system_prompt("kunskap")
+
+
+def test_forsiktigt_laege_har_ingen_kbt_mall():
+    for text in ("SVARSSTRUKTUR", "kunskapsfråga"):
+        assert text not in MODULER["forsiktig"]
+
+
 if __name__ == "__main__":
     antal_fel = 0
     tester = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]

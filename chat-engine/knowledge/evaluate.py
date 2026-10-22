@@ -1,7 +1,7 @@
 """Mäter hur bra sökningen är, med frågorna i eval_questions.json (PLAN-113).
 
     python chat-engine/knowledge/evaluate.py                    # mäter sökningen
-    python chat-engine/knowledge/evaluate.py --klassificering   # kontrollerar också att kunskapsfrågor klassas som KBT_DELNING
+    python chat-engine/knowledge/evaluate.py --klassificering   # kontrollerar också att kunskapsfrågor klassas som KBT_FRAGA
 
 Kräver att material.enc och KNOWLEDGE_KEY finns, samt GEMINI_API_KEY (ett anrop per fråga).
 Frågor med tom lista under "moduler" är medvetet orelaterade: de ska INTE ge några träffar.
@@ -78,9 +78,9 @@ def main() -> None:
         print(f"Förslag på MIN_SCORE i knowledge_retriever.py: {report['förslag_min_score']}")
     if "--klassificering" in sys.argv:
         relevant = [q["fråga"] for q in questions if q["moduler"]]
-        fel = [f for f in relevant if llm.classify(f, [], []) != "KBT_DELNING"]
+        fel = [f for f in relevant if llm.classify(f, [], []) != "KBT_FRAGA"]
         print()
-        print(f"Kunskapsfrågor som klassades fel (ska vara KBT_DELNING): {len(fel)}/{len(relevant)}")
+        print(f"Kunskapsfrågor som klassades fel (ska vara KBT_FRAGA): {len(fel)}/{len(relevant)}")
         for f in fel:
             print("  -", f)
 

@@ -134,7 +134,7 @@ def route(message, history, state, classify_fn=None, generate_fn=None, retrieve_
     modul = "forsiktig" if risk_aktiv else cfg.MODUL_FOR[kategori]
 
     kontext = None
-    if retrieve_fn is not None and modul == "kbt":  # RAG: bara KBT-handlern
+    if retrieve_fn is not None and modul in ("kbt", "kunskap"):  # RAG: bara KBT-handlerna, aldrig vid kris
         try:
             kontext = retrieve_fn(message)
         except Exception as e:

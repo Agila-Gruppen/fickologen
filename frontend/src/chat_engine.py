@@ -8,6 +8,7 @@ land in the same thread, and that lets the Saved view open an old thread.
 import httpx
 import streamlit as st
 
+import auth
 from api import BACKEND_URL, TIMEOUT_SECONDS, BackendUnavailable
 
 GREETING = (
@@ -58,6 +59,9 @@ def _history() -> list[dict]:
 
 
 def get_engine() -> str:
+    """The chosen engine version. Only admins can choose; everyone else gets the latest."""
+    if not auth.is_admin():
+        return DEFAULT_ENGINE
     return st.session_state.get("fk_engine", DEFAULT_ENGINE)
 
 

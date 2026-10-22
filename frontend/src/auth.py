@@ -33,7 +33,7 @@ def authed_request(method: str, path: str, json: dict | None = None) -> httpx.Re
 
 
 def current_user() -> dict | None:
-    """The logged-in user as {"user_id", "username"}, or None."""
+    """The logged-in user as {"user_id", "username", "role"}, or None."""
     return st.session_state.get("fk_user")
 
 
@@ -45,9 +45,28 @@ def log_in(username: str, password: str) -> str | None:
     if not resp.is_success:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     data = resp.json()
-    st.session_state["fk_user"] = {"user_id": data["user_id"], "username": data["username"]}
     st.session_state["fk_token"] = resp.cookies.get("access_token")
+    st.session_state["fk_user"] = {
+        "user_id": data["user_id"],
+        "username": data["username"],
+        "role": _fetch_role(),
+    }
     return None
+
+
+def _fetch_role() -> str:
+    """The logged-in user's role ("admin" or "user"). Anything unclear counts as a normal user."""
+    try:
+        resp = authed_request("GET", "/users/me")
+    except BackendUnavailable:
+        return "user"
+    return resp.json().get("role", "user") if resp.is_success else "user"
+
+
+def is_admin() -> bool:
+    """True only for a logged-in admin. Used to show the demo settings and technical info."""
+    user = current_user()
+    return bool(user and user.get("role") == "admin")
 
 
 def _check_new_password(password: str, password_again: str) -> str | None:
