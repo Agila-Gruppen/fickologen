@@ -775,7 +775,7 @@ div[class*="st-key-diary_confirmdelete_"] button:hover {
    Explicit colors so the labels stay readable even when Streamlit falls back to
    its dark theme (for example when .streamlit/config.toml is not picked up). */
 [data-testid="stExpander"] {
-  background: var(--surface) !important;
+  background: transparent !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-md) !important;
 }
@@ -911,4 +911,15 @@ div[class*="st-key-diary_confirmdelete_"] button:hover {
   background: transparent;
   position: relative;
   z-index: 1;
+}
+/* The bar under the chat (behind the message box) takes the page background instead of
+   Streamlit's dark default, and the expander body follows its surroundings. */
+[data-testid="stBottom"],
+[data-testid="stBottom"] > div,
+[data-testid="stBottomBlockContainer"] {
+  background: var(--bg) !important;
+}
+[data-testid="stExpander"] details,
+[data-testid="stExpander"] summary {
+  background: transparent !important;
 }
