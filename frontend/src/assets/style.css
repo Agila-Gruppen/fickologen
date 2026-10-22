@@ -923,3 +923,22 @@ div[class*="st-key-diary_confirmdelete_"] button:hover {
 [data-testid="stExpander"] summary {
   background: transparent !important;
 }
+
+/* ---------- Saved chats: readable title and light icon buttons ----------
+   Explicit colors, so they hold even when Streamlit falls back to its dark theme. */
+.fk-saved-title {
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.5;
+}
+div[class*="st-key-conv_edit_"] button,
+div[class*="st-key-conv_del_"] button {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+div[class*="st-key-conv_edit_"] button:hover,
+div[class*="st-key-conv_del_"] button:hover {
+  border-color: var(--sage) !important;
+  background: var(--sage-tint) !important;
+}

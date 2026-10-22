@@ -1,4 +1,5 @@
-"""Saved chats: list the logged-in user's conversations, open or delete them."""
+"""Saved chats: list the logged-in user's conversations, open, rename or delete them."""
+import html
 from datetime import datetime
 from datetime_utils import to_local
 
@@ -41,6 +42,20 @@ def _delete(conversation_id: int) -> None:
     st.rerun()
 
 
+@st.dialog("Byt namn på chatten")
+def _rename_dialog(conversation_id: int, current_title: str) -> None:
+    with st.form(f"rename_form_{conversation_id}", border=False):
+        new_title = st.text_input("Namn", value=current_title, max_chars=60)
+        submitted = st.form_submit_button("Spara", type="primary", use_container_width=True)
+    if submitted:
+        error = conv_api.rename_conversation(conversation_id, new_title)
+        if error:
+            st.error(error)
+            return
+        st.toast("Namnet är sparat.")
+        st.rerun()
+
+
 @st.dialog("Radera chatt?")
 def _confirm_delete_dialog(conversation_id: int, title: str) -> None:
     st.markdown(f"Vill du radera chatten **{title}**? Den försvinner för gott.")
@@ -81,16 +96,19 @@ def render() -> None:
         title = conv.get("title") or "Namnlös chatt"
         is_open = st.session_state.get("fk_conversation_id") == conv["id"]
         with st.container(border=True):
-            c1, c2, c3 = st.columns([6, 2, 1])
+            c1, c2, c3, c4 = st.columns([6, 2, 1, 1])
             with c1:
                 marker = "🟢 " if is_open else ""
-                st.markdown(f"{marker}**{title}**")
+                st.markdown(f'<div class="fk-saved-title">{marker}{html.escape(title)}</div>', unsafe_allow_html=True)
                 st.caption(f"Senast uppdaterad {_format_dt(conv['updated_at'])}")
             with c2:
                 if st.button("Öppna", key=f"open_{conv['id']}", use_container_width=True):
                     _open(conv["id"])
             with c3:
-                if st.button("🗑️", key=f"del_{conv['id']}", use_container_width=True, help="Radera chatten"):
+                if st.button("✏️", key=f"conv_edit_{conv['id']}", use_container_width=True, help="Byt namn"):
+                    _rename_dialog(conv["id"], conv.get("title") or "")
+            with c4:
+                if st.button("🗑️", key=f"conv_del_{conv['id']}", use_container_width=True, help="Radera chatten"):
                     st.session_state["fk_pending_delete"] = conv["id"]
                     _confirm_delete_dialog(conv["id"], title)
 
