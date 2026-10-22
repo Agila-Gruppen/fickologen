@@ -17,7 +17,7 @@ class ChatRequest(BaseModel):
     Contains the whole conversation so far, ending with the user's new message.
     """
     messages: list[ChatMessage] = Field(..., min_length=1)
-    engine: Literal["router", "legacy"] = "router"
+    engine: Literal["legacy", "router", "rag"] = "rag"
     conversation_id: Optional[int] = Field(
         default=None,
         description="Which conversation to append to. Omit (null) to start a new one.",
@@ -41,7 +41,7 @@ class ChatResponse(BaseModel):
     """
     reply: str
     sources: list[ChatSource] = []
-    engine: Literal["router", "legacy"] = "router"
+    engine: Literal["legacy", "router", "rag"] = "rag"
     category: str | None = None
     via: str | None = None
     llm_used: bool | None = None

@@ -33,7 +33,7 @@ def a(text):
     return ChatMessage(role="assistant", content=text)
 
 
-def kor(messages, engine="router", klass="KBT_DELNING", svar="FEJK-SVAR"):
+def kor(messages, engine="rag", klass="KBT_DELNING", svar="FEJK-SVAR"):
     """Kör generate_reply med fejkad Gemini. svar kan vara en text eller ett Exception."""
     def generate(system_prompt, historik):
         if isinstance(svar, Exception):
@@ -89,6 +89,13 @@ def test_rag_underlag_hamtas_bara_for_kbt_och_redovisas_som_kalla():
     assert res.chunks == [] and anrop == []
 
 
+def test_version_2_routing_soeker_aldrig_i_kunskapen():
+    anrop = []
+    chat_service.retrieve_context = lambda q, k=4: anrop.append(q) or [ContextChunk(text="x", source="Modul 2")]
+    res = kor([GREETING, u("Jag blev nervös inför mötet")], engine="router")
+    assert res.chunks == [] and anrop == [] and res.category == "KBT_DELNING"
+
+
 def test_gemini_som_kraschar_ger_reservtext_inte_fel():
     res = kor([GREETING, u("Jag blev nervös inför mötet")], svar=RuntimeError("nere"))
     assert res.reply == cfg.FASTA_SVAR["FALLBACK"]
@@ -108,7 +115,8 @@ def test_gamla_motorn_valjs_med_engine_legacy():
 
 
 def test_schemat_har_router_som_standard_och_nekar_okand_motor():
-    assert ChatRequest(messages=[u("hej")]).engine == "router"
+    assert ChatRequest(messages=[u("hej")]).engine == "rag"  # senaste versionen är standard
+    assert ChatRequest(messages=[u("hej")], engine="router").engine == "router"
     try:
         ChatRequest(messages=[u("hej")], engine="nagot-annat")
     except ValidationError:

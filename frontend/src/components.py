@@ -212,6 +212,27 @@ def _render_account() -> None:
                 _account_dialog()
 
 
+def render_demo_settings() -> None:
+    """Choose the chat engine version and show how replies were produced (for demos)."""
+    from chat_engine import ENGINES, get_engine, set_engine  # local import: keeps components free of chat state
+
+    with st.expander("Demo-inställningar"):
+        engines = list(ENGINES)
+        engine = st.radio(
+            "Chattmotor",
+            options=engines,
+            index=engines.index(get_engine()),
+            format_func=ENGINES.get,
+            key="fk_engine_choice",
+        )
+        set_engine(engine)
+        st.session_state["fk_show_tech"] = st.checkbox(
+            "Visa teknisk info under svaren",
+            value=st.session_state.get("fk_show_tech", False),
+            key="fk_show_tech_choice",
+        )
+
+
 def render_sidebar() -> None:
     current = get_current_view()
     with st.sidebar:
@@ -234,6 +255,8 @@ def render_sidebar() -> None:
             state = "navactive" if key == current else "nav"
             if st.button(label, icon=icon, key=f"{state}_{key}", use_container_width=True):
                 go_to(key)
+
+        render_demo_settings()
 
         st.markdown('<div class="fk-sidebar-spacer"></div>', unsafe_allow_html=True)
         st.markdown('<div class="fk-sidebar-footer">', unsafe_allow_html=True)
