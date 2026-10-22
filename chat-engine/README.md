@@ -29,7 +29,7 @@ Lager 1  Gemini klassificerar (ett ordsvar: kategorin)
    ▼
 Lager 2  Hanterare
    ├─ kris- och känsliga kategorier → fast text med hjälplinjer
-   └─ KBT_DELNING / KORT_SVAR / OVRIGT → Gemini med rätt promptmodul
+   └─ KBT_DELNING / KBT_FRAGA / KORT_SVAR / OVRIGT → Gemini med rätt promptmodul
 ```
 
 ### Kategorier
@@ -38,7 +38,7 @@ Lager 2  Hanterare
 |---|---|---|
 | Kris | SJALVSKADA, VALD_MOT_ANDRA, VALD_MOT_MIG, OROAD_FOR_ANNAN | Fast text med 112 och hjälplinjer. Sätter försiktigt läge i 3 turer. |
 | Känsliga | OVERGREPP_TIDIGARE (sätter också försiktigt läge), BEGATT_BROTT, SEXUELLA_TANKAR_BARN, MISSBRUK, UTANFOR_OMRADE, META | Fast text som hänvisar rätt |
-| LLM | KBT_DELNING, KORT_SVAR, OVRIGT | Gemini svarar med modul kbt, latt eller ovrigt |
+| LLM | KBT_DELNING (personen delar något om sig själv), KBT_FRAGA (allmän kunskapsfråga), KORT_SVAR, OVRIGT | Gemini svarar med modul kbt, kunskap, latt eller ovrigt |
 | Interna | TOMT, HEJ, TACK, HEJ_DA, RISK_UPPFOLJNING, OSAKER, FALLBACK | Kort fast text |
 
 ### Hård och mjuk lista
@@ -50,7 +50,9 @@ Exempel: "jag vill dö" larmar direkt. "Jag ville dö av skam" larmar inte, utan
 
 ### Promptmoduler (`prompts.py`)
 
-`GRUNDREGLER` gäller alltid ("du är en AI", "anta aldrig något om användaren", ...). Därefter läggs en modul till: `kbt` (mallen), `latt` (kort svar), `ovrigt`, eller `forsiktig` (de tre turerna efter en kris).
+`GRUNDREGLER` gäller alltid ("du är en AI", "anta aldrig något om användaren", språk och ton, och **variationsregler**: börja inte med tack, undvik stående fraser, upprepa inte egna öppningar, fråga bara när det är naturligt, och förklara annorlunda om samma fråga kommer igen). Därefter läggs en modul till: `kbt` (personen delar något om sig själv: spegla kort, lyssna), `kunskap` (en kunskapsfråga: svara direkt, förklara enkelt med exempel), `latt` (kort svar), `ovrigt`, eller `forsiktig` (de tre turerna efter en kris). RAG används bara i `kbt` och `kunskap`.
+
+**Stilen mäts** med `stilmatare.py` (ca 40 Gemini-anrop): andel svar som börjar med tack, innehåller "misslyckande", slutar med "brukar"-fråga, med mera, samt längd. Kör den före och efter varje ändring i `prompts.py`. Första mätningen (före → efter): tack/beröm 100 → 0 %, "misslyckande" 43 → 0 %, snittlängd 150 → 82 ord.
 
 ### Backend utan minne
 
@@ -69,7 +71,8 @@ Gemini nere, blockerat eller tomt svar ger en vänlig reservtext med 112/1177. B
 | `prompts.py` | Promptmodulerna |
 | `llm.py` | All kod som pratar med Gemini (byter vi leverantör ändras bara denna) |
 | `prototype.py` | Terminalchatt med debugrad |
-| `tests/test_router.py` | 26 tester med fejkad Gemini |
+| `tests/test_router.py` | 33 tester med fejkad Gemini |
+| `stilmatare.py` | Mäter hur stolpiga och upprepande svaren är (kör före/efter ändringar i prompterna) |
 | `knowledge/` | **Kunskapsmaterial för RAG** (PLAN-118): spec, konverterare från Word till markdown, och uppdelare i sökbara bitar. Se `knowledge/README.md`. |
 | `tests/test_backend_wiring.py`, `tests/test_knowledge.py` | Tester av backendkopplingen respektive materialuppdelningen |
 

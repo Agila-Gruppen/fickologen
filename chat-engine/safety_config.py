@@ -27,7 +27,7 @@ H = HJALPLINJER
 KRIS_KATEGORIER = ("SJALVSKADA", "VALD_MOT_ANDRA", "VALD_MOT_MIG", "OROAD_FOR_ANNAN")
 KANSLIGA_KATEGORIER = ("OVERGREPP_TIDIGARE", "BEGATT_BROTT", "SEXUELLA_TANKAR_BARN",
                        "MISSBRUK", "UTANFOR_OMRADE", "META")
-LLM_KATEGORIER = ("KBT_DELNING", "KORT_SVAR", "OVRIGT")
+LLM_KATEGORIER = ("KBT_DELNING", "KBT_FRAGA", "KORT_SVAR", "OVRIGT")
 KATEGORIER = KRIS_KATEGORIER + KANSLIGA_KATEGORIER + LLM_KATEGORIER
 
 # Efter dessa går boten in i "försiktigt läge" i några turer.
@@ -35,7 +35,7 @@ FORSIKTIGA_KATEGORIER = KRIS_KATEGORIER + ("OVERGREPP_TIDIGARE",)
 RISK_TURNS = 3
 
 # Vilken promptmodul varje LLM-kategori använder (se prompts.py).
-MODUL_FOR = {"KBT_DELNING": "kbt", "KORT_SVAR": "latt", "OVRIGT": "ovrigt"}
+MODUL_FOR = {"KBT_DELNING": "kbt", "KBT_FRAGA": "kunskap", "KORT_SVAR": "latt", "OVRIGT": "ovrigt"}
 
 KATEGORIBESKRIVNING = """\
 SJALVSKADA: personen uttrycker självmordstankar, självskada eller att inte vilja leva
@@ -49,7 +49,8 @@ MISSBRUK: alkohol, droger, spel eller läkemedel som ett problem
 UTANFOR_OMRADE: BARA frågor om medicin, dosering, att få en diagnos ställd, psykos eller ätstörning. Ämnen som inte handlar om hälsa alls (matlagning, väder, teknik) hör till OVRIGT. Allmänna kunskapsfrågor om social ångest, KBT eller övningar hör INTE hit
 META: frågor om boten själv, att den är en AI, eller om hur data sparas. Frågor om KBT eller ångest hör INTE hit
 KORT_SVAR: mycket kort svar (ja, nej, ok, vet inte) som hör ihop med botens förra fråga
-KBT_DELNING: personen delar en tanke, händelse eller fråga om sitt mående eller sin ångest, ELLER ställer en kunskapsfråga om social ångest, KBT, tankefällor, exponering, säkerhetsbeteenden, sociala färdigheter eller övningarna (t.ex. "Vad är ...?", "Hur gör man ...?")
+KBT_DELNING: personen delar en egen tanke, händelse eller känsla om sitt mående eller sin ångest (t.ex. "Jag blev så nervös på mötet")
+KBT_FRAGA: personen ställer en allmän kunskapsfråga om social ångest, KBT, tankefällor, exponering, säkerhetsbeteenden, sociala färdigheter eller övningarna (t.ex. "Vad är ...?", "Hur gör man ...?", "Varför ...?")
 OVRIGT: allt annat (småprat, off-topic, kritik av boten, vill prata med en människa)"""
 
 # ------------------------------------------------- Lager 0: regler (utkast!)
