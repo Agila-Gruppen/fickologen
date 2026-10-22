@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 
 from ..config.database import get_db
 from ..models.conversation import Conversation
 from ..schemas.auth import CurrentUser
-from ..schemas.conversation import ConversationData, ConversationWithMessages
+from ..schemas.conversation import ConversationData, ConversationRename, ConversationWithMessages
 from ..schemas.user_data import DeletedCount
 from ..services.user_data import delete_conversations
 from ..utils.auth import get_current_user
@@ -71,6 +72,27 @@ async def get_conversation_with_messages(
     The messages relationship on the model already orders by created_at ASC.
     """
     return _get_own_conversation(conversation_id, current_user, db)
+
+
+@router.patch("/{conversation_id}", response_model=ConversationData)
+async def rename_conversation(
+    conversation_id: int,
+    rename: ConversationRename,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Changes the title of one of the logged-in user's conversations.
+
+    updated_at is left as it was, so renaming does not move the chat to the top of
+    the saved list.
+    """
+    conv = _get_own_conversation(conversation_id, current_user, db)
+    conv.title = rename.title
+    flag_modified(conv, "updated_at")  # keep the value instead of letting onupdate bump it
+    db.commit()
+    db.refresh(conv)
+    return conv
 
 
 @router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
