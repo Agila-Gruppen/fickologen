@@ -8,6 +8,11 @@ from components import page_header
 
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
 
+PASSWORD_KEY = "fk_manage_accounts_new_password"
+TARGET_KEY = "fk_manage_accounts_target"
+FLASH_KEY = "fk_manage_accounts_flash"
+ERROR_KEY = "fk_manage_accounts_error"
+
 
 def render() -> None:
     page_header(
@@ -24,10 +29,40 @@ def render() -> None:
         st.error("Du behöver adminbehörighet för att se den här sidan.")
         return
 
-    if flash := st.session_state.pop("fk_manage_accounts_flash", None):
+    if flash := st.session_state.pop(FLASH_KEY, None):
         st.toast(flash)
 
     _render_change_password_card()
+
+
+def _on_cancel() -> None:
+    st.session_state[PASSWORD_KEY] = ""
+    st.session_state.pop(ERROR_KEY, None)
+
+
+def _on_submit(ids_by_label: dict[str, int], usernames_by_label: dict[str, str]) -> None:
+    chosen_label = st.session_state.get(TARGET_KEY)
+    new_password = st.session_state.get(PASSWORD_KEY, "")
+
+    if chosen_label not in ids_by_label:
+        st.session_state[ERROR_KEY] = "Välj en användare."
+        return
+
+    try:
+        error = auth.admin_change_user_password(ids_by_label[chosen_label], new_password)
+    except BackendUnavailable:
+        st.session_state[ERROR_KEY] = BACKEND_ERROR
+        return
+
+    if error:
+        st.session_state[ERROR_KEY] = error
+        return
+
+    st.session_state[PASSWORD_KEY] = ""
+    st.session_state.pop(ERROR_KEY, None)
+    st.session_state[FLASH_KEY] = (
+        f"Lösenordet för {usernames_by_label[chosen_label]} är uppdaterat. ✓"
+    )
 
 
 def _render_change_password_card() -> None:
@@ -48,7 +83,7 @@ def _render_change_password_card() -> None:
             st.info("Inga användare hittades.")
             return
 
-        labels = []
+        labels: list[str] = []
         ids_by_label: dict[str, int] = {}
         usernames_by_label: dict[str, str] = {}
 
@@ -59,41 +94,29 @@ def _render_change_password_card() -> None:
             ids_by_label[label] = int(user["id"])
             usernames_by_label[label] = str(user.get("username", "okänd användare"))
 
+        if form_error := st.session_state.pop(ERROR_KEY, None):
+            st.error(form_error)
+
         with st.form("fk_manage_accounts_change_password", border=False):
-            chosen_label = st.selectbox("Välj användare", options=labels, key="fk_manage_accounts_target")
-            new_password = st.text_input(
+            st.selectbox("Välj användare", options=labels, key=TARGET_KEY)
+            st.text_input(
                 "Nytt lösenord",
                 type="password",
                 help="Minst 6 tecken.",
-                key="fk_manage_accounts_new_password",
+                key=PASSWORD_KEY,
             )
             c1, c2 = st.columns(2)
             with c1:
-                submitted_ok = st.form_submit_button("OK", type="primary", use_container_width=True)
+                st.form_submit_button(
+                    "OK",
+                    type="primary",
+                    use_container_width=True,
+                    on_click=_on_submit,
+                    args=(ids_by_label, usernames_by_label),
+                )
             with c2:
-                submitted_cancel = st.form_submit_button("Avbryt", use_container_width=True)
-
-        if submitted_cancel:
-            st.session_state["fk_manage_accounts_new_password"] = ""
-            st.rerun()
-
-        if not submitted_ok:
-            return
-
-        target_user_id = ids_by_label[chosen_label]
-
-        try:
-            error = auth.admin_change_user_password(target_user_id, new_password)
-        except BackendUnavailable:
-            st.error(BACKEND_ERROR)
-            return
-
-        if error:
-            st.error(error)
-            return
-
-        st.session_state["fk_manage_accounts_new_password"] = ""
-        st.session_state["fk_manage_accounts_flash"] = (
-            f"Lösenordet för {usernames_by_label[chosen_label]} är uppdaterat. ✓"
-        )
-        st.rerun()
+                st.form_submit_button(
+                    "Avbryt",
+                    use_container_width=True,
+                    on_click=_on_cancel,
+                )
