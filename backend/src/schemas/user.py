@@ -127,3 +127,15 @@ class AdminUserUpdate(BaseModel):
     """
     role: Optional[Literal["user", "admin"]] = None
     can_chat: Optional[bool] = None
+
+
+class AdminPasswordUpdate(BaseModel):
+    """
+    Schema for an admin setting a new password for another user.
+    """
+    new_password: str = Field(..., min_length=MIN_PASSWORD_LENGTH)
+
+    @field_validator('new_password')
+    @classmethod
+    def password_must_be_strong(cls, v: str) -> str:
+        return check_password(v)

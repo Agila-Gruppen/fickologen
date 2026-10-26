@@ -21,6 +21,10 @@ NAV_ITEMS = [
     
 ]
 
+ADMIN_NAV_ITEMS = [
+    ("manage_accounts", "Hantera konton", "🧰"),
+]
+
 CRISIS_RESOURCES = [
     ("112", "Vid akut fara för liv – ring alltid 112."),
     ("1177", "Sjukvårdsrådgivning dygnet runt, för råd som inte är livshotande."),
@@ -47,8 +51,15 @@ def logo_path() -> Path:
 HIDDEN_VIEWS = {"account"}
 
 
+def _available_nav_items() -> list[tuple[str, str, str]]:
+    items = list(NAV_ITEMS)
+    if auth.is_admin():
+        items.extend(ADMIN_NAV_ITEMS)
+    return items
+
+
 def get_current_view() -> str:
-    valid = {key for key, _, _ in NAV_ITEMS} | HIDDEN_VIEWS
+    valid = {key for key, _, _ in _available_nav_items()} | HIDDEN_VIEWS
     view = st.query_params.get("view", "home")
     return view if view in valid else "home"
 
@@ -256,7 +267,7 @@ def render_sidebar() -> None:
 
         # Buttons rather than <a href> links: a link reloads the page, which
         # starts a new Streamlit session and wipes the chat and its unlock.
-        for key, label, icon in NAV_ITEMS:
+        for key, label, icon in _available_nav_items():
             state = "navactive" if key == current else "nav"
             if st.button(label, icon=icon, key=f"{state}_{key}", use_container_width=True):
                 go_to(key)

@@ -225,3 +225,39 @@ def update_my_data(fields: dict) -> tuple[dict | None, str | None]:
     if not resp.is_success:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     return resp.json(), None
+
+
+def admin_list_users() -> tuple[list[dict] | None, str | None]:
+    """List all users for admin tools.
+
+    Returns (users, None), or (None, error message).
+    """
+    resp = authed_request("GET", "/admin/users")
+    if resp.status_code == 403:
+        return None, "Du behöver adminbehörighet för att göra det här."
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None
+
+
+def admin_change_user_password(user_id: int, new_password: str) -> str | None:
+    """Set a new password for any user as admin. Returns an error message, or None."""
+    if len(new_password) < MIN_PASSWORD_LENGTH:
+        return f"Lösenordet behöver vara minst {MIN_PASSWORD_LENGTH} tecken."
+
+    resp = authed_request("PUT", f"/admin/users/{user_id}/password", {"new_password": new_password})
+    if resp.status_code == 403:
+        return "Du behöver adminbehörighet för att göra det här."
+    if resp.status_code == 404:
+        return "Användaren hittades inte."
+    if resp.status_code == 422:
+        return "Lösenordet godkändes inte. Kontrollera att det uppfyller kraven."
+    if resp.status_code in (401,):
+        log_out()
+        return SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return None
