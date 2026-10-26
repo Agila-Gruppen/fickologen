@@ -1,7 +1,7 @@
 import streamlit as st
 
 from components import get_current_view, load_css, logo_path, render_sidebar
-from views import account, chat, diary, history, home, safety, saved, treatment
+from views import account, chat, diary, history, home, manage_accounts, safety, saved, treatment
 
 st.set_page_config(
     page_title="Fickologen",
@@ -21,6 +21,7 @@ VIEWS = {
     "history": history.render,
     "saved": saved.render,
     "account": account.render,
+    "manage_accounts": manage_accounts.render,
     "safety": safety.render,
 }
 
