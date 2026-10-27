@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from ..models.cbt_progress import CbtProgress
 from ..models.conversation import Conversation
 from ..models.diary_entry import DiaryEntry
+from ..models.exercise_log import ExerciseLog
 from ..models.message import Message
 
 
@@ -26,6 +27,11 @@ def delete_conversations(user_id: int, db: Session) -> int:
 def delete_diary_entries(user_id: int, db: Session) -> int:
     """Deletes all the user's diary entries. Returns how many."""
     return db.query(DiaryEntry).filter(DiaryEntry.user_id == user_id).delete(synchronize_session=False)
+
+
+def delete_program_logs(user_id: int, db: Session) -> int:
+    """Deletes everything the user has saved in the CBT program. Returns how many exercise logs."""
+    return db.query(ExerciseLog).filter(ExerciseLog.user_id == user_id).delete(synchronize_session=False)
 
 
 def delete_cbt_progress(user_id: int, db: Session) -> int:

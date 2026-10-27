@@ -17,7 +17,12 @@ from ..utils.auth import get_current_user
 from ..utils.password import generate_recovery_code, hash_password, verify_password
 from ..utils.admin import is_admin_username
 from ..schemas.user_data import DeletedContent
-from ..services.user_data import delete_conversations, delete_cbt_progress, delete_diary_entries
+from ..services.user_data import (
+    delete_cbt_progress,
+    delete_conversations,
+    delete_diary_entries,
+    delete_program_logs,
+)
 
 router = APIRouter(
     prefix="/users",
@@ -187,7 +192,8 @@ async def delete_my_content(
 ):
     """
     Deletes everything the logged-in user has created – conversations with
-    their messages, diary entries and CBT progress – but keeps the account,
+    their messages, diary entries and CBT program progress with everything
+    written in it – but keeps the account,
     so they can go on using Fickologen with a clean slate.
 
     Returns:
@@ -200,6 +206,7 @@ async def delete_my_content(
     user = _get_own_user(current_user, db)
     conversations = delete_conversations(user.id, db)
     diary_entries = delete_diary_entries(user.id, db)
+    delete_program_logs(user.id, db)
     delete_cbt_progress(user.id, db)
     db.commit()
 
