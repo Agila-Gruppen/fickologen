@@ -16,12 +16,14 @@ NAV_ITEMS = [
     ("saved", "Sparade chattar", "💾"),
     ("diary", "Dagbok", "📓"),
     ("safety", "Trygghet & integritet", "🛡️"),
-    # ("treatment", "Behandling", "🌱"),
     # ("history", "Tidigare chattar", "🕰️"),
     
 ]
 
 ADMIN_NAV_ITEMS = [
+    # Övningsprogrammet (PLAN-92) är ett utkast som väntar på klinisk granskning.
+    # Flytta raden till NAV_ITEMS när texterna är godkända så syns det för alla.
+    ("treatment", "Övningsprogram", "🌱"),
     ("manage_accounts", "Hantera konton", "🧰"),
 ]
 
