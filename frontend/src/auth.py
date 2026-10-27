@@ -261,3 +261,28 @@ def admin_change_user_password(user_id: int, new_password: str) -> str | None:
     if not resp.is_success:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     return None
+
+
+def csv_downloader(kind: str):
+    """A function that fetches one CSV export ("account", "chats" or "diary").
+
+    Meant as st.download_button's data, so the file is only built when the
+    user clicks. Streamlit calls it outside the script run, where session
+    state is unavailable, so the login token is captured now.
+    """
+    token = st.session_state.get("fk_token", "")
+
+    def fetch() -> bytes:
+        try:
+            resp = httpx.get(
+                f"{BACKEND_URL}/users/me/export/{kind}",
+                headers={"Cookie": f"access_token={token}"},
+                timeout=TIMEOUT_SECONDS,
+            )
+        except httpx.HTTPError as exc:
+            raise BackendUnavailable(str(exc)) from exc
+        if not resp.is_success:
+            raise BackendUnavailable(f"HTTP {resp.status_code}")
+        return resp.content
+
+    return fetch
