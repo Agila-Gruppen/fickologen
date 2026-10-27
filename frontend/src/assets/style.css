@@ -757,6 +757,85 @@ div[class*="st-key-diary_confirmdelete_"] button:hover {
   color: #FFFFFF !important;
 }
 
+/* ---------- Diary week view ---------- */
+.fk-week-label {
+  text-align: center;
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.98rem;
+  color: var(--heading);
+}
+div[class*="st-key-diary_week_prev"] button,
+div[class*="st-key-diary_week_next"] button {
+  padding: 0.35rem 0.6rem !important;
+  min-height: 0 !important;
+}
+.fk-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0.8rem 0 0.5rem 0;
+}
+.fk-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.2rem 0.55rem 0.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.fk-week-today {
+  border-color: var(--sage);
+  background: var(--sage-tint);
+}
+.fk-week-future {
+  opacity: 0.45;
+}
+.fk-week-weekday {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fk-week-date {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--heading);
+}
+.fk-week-mood {
+  font-size: 1.25rem;
+  line-height: 1.6rem;
+}
+.fk-week-dot {
+  color: var(--sage);
+  font-size: 0.7rem;
+  line-height: 1.6rem;
+}
+.fk-week-none {
+  height: 1.6rem;
+}
+.fk-week-summary {
+  text-align: center;
+  color: var(--text-muted) !important;
+  font-size: 0.85rem;
+  margin: 0 0 1rem 0 !important;
+}
+.fk-week-day-heading {
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--sage-dark);
+  margin: 1.1rem 0 0.5rem 0.15rem;
+}
+@media (max-width: 600px) {
+  .fk-week-strip { gap: 0.2rem; }
+  .fk-week-day { padding: 0.45rem 0.1rem; }
+  .fk-week-weekday { font-size: 0.62rem; letter-spacing: 0; }
+  .fk-week-mood { font-size: 1.05rem; }
+}
+
 /* ---------- Misc ---------- */
 .fk-divider {
   border: none;

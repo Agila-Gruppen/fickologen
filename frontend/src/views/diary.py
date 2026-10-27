@@ -1,6 +1,6 @@
 import html
-from datetime import datetime
-from datetime_utils import to_local
+from datetime import date, datetime, timedelta
+from datetime_utils import STOCKHOLM, to_local
 
 import streamlit as st
 
@@ -23,6 +23,12 @@ MONTHS = [
     "juli", "augusti", "september", "oktober", "november", "december",
 ]
 
+WEEKDAYS_SHORT = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"]
+MONTHS_SHORT = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+MOOD_EMOJI = {mood: label.split(" ", 1)[0] for mood, label in MOODS.items()}
+
+VIEWS = {"week": "Vecka", "all": "Alla anteckningar"}
+
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
 
 
@@ -44,7 +50,19 @@ def render() -> None:
 
     try:
         _render_composer()
-        _render_entries(diary_api.list_entries())
+        view = st.segmented_control(
+            "Visa",
+            options=list(VIEWS),
+            format_func=VIEWS.get,
+            default="week",
+            key="fk_diary_view",
+            label_visibility="collapsed",
+        )
+        entries = diary_api.list_entries()
+        if view == "all":
+            _render_entries(entries)
+        else:
+            _render_week(entries)
     except diary_api.SessionExpired:
         st.error(auth.SESSION_EXPIRED)
     except BackendUnavailable:
@@ -98,6 +116,8 @@ def _render_composer() -> None:
                 st.warning("Skriv något i anteckningen innan du sparar.")
                 return
             diary_api.create_entry(title.strip(), content.strip(), mood)
+            # Jump to this week so the new entry is in view.
+            st.session_state["fk_diary_week_offset"] = 0
             st.toast("Anteckningen är sparad. 🌱")
 
 
@@ -116,6 +136,112 @@ def _render_entries(entries: list[dict]) -> None:
             _render_edit_form(entry)
         else:
             _render_entry(entry)
+
+
+def _today() -> date:
+    return datetime.now(STOCKHOLM).date()
+
+
+def _entry_day(entry: dict) -> date | None:
+    dt = to_local(entry["created_at"])
+    return dt.date() if dt else None
+
+
+def _week_label(monday: date) -> str:
+    sunday = monday + timedelta(days=6)
+    start = f"{monday.day} {MONTHS_SHORT[monday.month - 1]}"
+    if monday.year != sunday.year:
+        start += f" {monday.year}"
+    end = f"{sunday.day} {MONTHS_SHORT[sunday.month - 1]} {sunday.year}"
+    return f"Vecka {monday.isocalendar().week} · {start} – {end}"
+
+
+def _day_mood(day_entries: list[dict]) -> int | None:
+    """The day's mood: the average of the entries that have one, rounded."""
+    moods = [e["mood"] for e in day_entries if e.get("mood") in MOODS]
+    return round(sum(moods) / len(moods)) if moods else None
+
+
+def _render_week(entries: list[dict]) -> None:
+    offset = st.session_state.get("fk_diary_week_offset", 0)
+    today = _today()
+    monday = today - timedelta(days=today.weekday()) + timedelta(weeks=offset)
+    days = [monday + timedelta(days=i) for i in range(7)]
+
+    by_day: dict[date, list[dict]] = {day: [] for day in days}
+    for entry in entries:
+        day = _entry_day(entry)
+        if day in by_day:
+            by_day[day].append(entry)
+
+    prev, label, nxt = st.columns([1, 4, 1], vertical_alignment="center")
+    if prev.button("◀", key="diary_week_prev", help="Föregående vecka", use_container_width=True):
+        st.session_state["fk_diary_week_offset"] = offset - 1
+        st.rerun()
+    label.markdown(f'<div class="fk-week-label">{_week_label(monday)}</div>', unsafe_allow_html=True)
+    # No browsing into the future: nothing can be written there.
+    if nxt.button("▶", key="diary_week_next", help="Nästa vecka", disabled=offset >= 0, use_container_width=True):
+        st.session_state["fk_diary_week_offset"] = offset + 1
+        st.rerun()
+
+    cells = []
+    for day in days:
+        day_entries = by_day[day]
+        mood = _day_mood(day_entries)
+        if mood:
+            marker = f'<span class="fk-week-mood" title="{MOODS[mood]}">{MOOD_EMOJI[mood]}</span>'
+        elif day_entries:
+            marker = '<span class="fk-week-dot" title="Anteckning utan humör">●</span>'
+        else:
+            marker = '<span class="fk-week-none"></span>'
+        classes = "fk-week-day"
+        if day == today:
+            classes += " fk-week-today"
+        if day > today:
+            classes += " fk-week-future"
+        cells.append(
+            f'<div class="{classes}">'
+            f'<span class="fk-week-weekday">{WEEKDAYS_SHORT[day.weekday()]}</span>'
+            f'<span class="fk-week-date">{day.day}</span>'
+            f"{marker}</div>"
+        )
+    st.markdown(f'<div class="fk-week-strip">{"".join(cells)}</div>', unsafe_allow_html=True)
+
+    week_entries = [e for day in days for e in by_day[day]]
+    moods = [e["mood"] for e in week_entries if e.get("mood") in MOODS]
+    summary = f"{len(week_entries)} {'anteckning' if len(week_entries) == 1 else 'anteckningar'}"
+    if moods:
+        average = sum(moods) / len(moods)
+        decimal = f"{average:.1f}".replace(".", ",")
+        summary += f" · humör i snitt {MOODS[round(average)]} ({decimal})"
+    st.markdown(f'<p class="fk-week-summary">{summary}</p>', unsafe_allow_html=True)
+
+    if offset != 0 and st.button("Till den här veckan", key="diary_week_today"):
+        st.session_state["fk_diary_week_offset"] = 0
+        st.rerun()
+
+    if not week_entries:
+        st.markdown(
+            '<p class="fk-chat-intro" style="text-align:left;">'
+            "Inga anteckningar den här veckan.</p>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    # Newest day first, like the full list.
+    for day in reversed(days):
+        if not by_day[day]:
+            continue
+        st.markdown(
+            f'<div class="fk-week-day-heading">{WEEKDAYS[day.weekday()].capitalize()} '
+            f"{day.day} {MONTHS[day.month - 1]}</div>",
+            unsafe_allow_html=True,
+        )
+        for entry in by_day[day]:
+            if st.session_state.get("fk_diary_editing") == entry["id"]:
+                _render_edit_form(entry)
+            else:
+                _render_entry(entry)
 
 
 def _format_date(value: str) -> str:
