@@ -11,6 +11,7 @@ from ..config.database import Base
 if TYPE_CHECKING:
     from .conversation import Conversation
     from .diary_entry import DiaryEntry
+    from .exercise_log import ExerciseLog
 
 
 class User(Base):
@@ -44,6 +45,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         order_by="DiaryEntry.created_at.desc()",
+    )
+    exercise_logs: Mapped[list["ExerciseLog"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
     
     def __repr__(self):

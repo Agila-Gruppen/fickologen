@@ -38,7 +38,7 @@ def _tech_info(msg: dict[str, Any]) -> str | None:
     return line
 
 
-def _render_bubble(msg: dict[str, Any]) -> None:
+def render_bubble(msg: dict[str, Any]) -> None:
     role, content = msg["role"], msg["content"]
     if role == "assistant":
         st.markdown('<div class="fk-reflect-label">Fickologen reflekterar…</div>', unsafe_allow_html=True)
@@ -102,7 +102,7 @@ def render() -> None:
             st.rerun()
 
     for msg in get_messages():
-        _render_bubble(msg)
+        render_bubble(msg)
 
     user_text = st.chat_input("Skriv vad som helst – det finns ingen fel ordning.")
     if user_text:

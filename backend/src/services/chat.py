@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from google import genai
 
 from ..schemas.chat import ChatMessage
+from .program_content import week_chat_context
 from .retrieval import ContextChunk, retrieve_context
 
 load_dotenv()
@@ -100,7 +101,11 @@ def _load_engine() -> SimpleNamespace:
     )
 
 
-async def _generate_reply_router(messages: list[ChatMessage], use_knowledge: bool = False) -> ChatResult:
+async def _generate_reply_router(
+    messages: list[ChatMessage],
+    use_knowledge: bool = False,
+    program_week: int | None = None,
+) -> ChatResult:
     """
     The router engine: fixed, reviewed texts for crisis and sensitive topics,
     short fixed replies for greetings and thanks, and Gemini with the right
@@ -108,6 +113,8 @@ async def _generate_reply_router(messages: list[ChatMessage], use_knowledge: boo
 
     With use_knowledge the router also looks up the knowledge material for ordinary
     CBT questions (RAG); without it the reply is built from the prompt alone.
+    With program_week the week's text is added to the prompt, so the reply can help
+    with the week the user has open (never after a crisis; the router sees to that).
     """
     engine = _load_engine()
     # The backend keeps no state between requests, so the router rebuilds its
@@ -135,6 +142,7 @@ async def _generate_reply_router(messages: list[ChatMessage], use_knowledge: boo
         engine.classify,
         engine.generate,
         retrieve if use_knowledge else None,
+        week_chat_context(program_week) if program_week else None,
     )
     return ChatResult(
         reply=reply.text,
@@ -148,6 +156,7 @@ async def _generate_reply_router(messages: list[ChatMessage], use_knowledge: boo
 async def generate_reply(
     messages: list[ChatMessage],
     engine: Literal["legacy", "router", "rag"] = "rag",
+    program_week: int | None = None,
 ) -> ChatResult:
     """
     Generate the assistant's next reply.
@@ -156,6 +165,8 @@ async def generate_reply(
         messages: The conversation so far, ending with the user's new message
         engine: "legacy" = the original single-template engine, "router" = routing without
             knowledge material, "rag" = routing plus knowledge lookup (the latest version)
+        program_week: The exercise program week the user is on, if they chat from there
+            (ignored by the legacy engine)
 
     Returns:
         The reply, the context chunks it was grounded in, and how it was produced
@@ -165,4 +176,4 @@ async def generate_reply(
     """
     if engine == "legacy":
         return await _generate_reply_legacy(messages)
-    return await _generate_reply_router(messages, use_knowledge=(engine == "rag"))
+    return await _generate_reply_router(messages, use_knowledge=(engine == "rag"), program_week=program_week)

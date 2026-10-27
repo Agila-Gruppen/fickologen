@@ -10,9 +10,11 @@ from ..config.database import Base
 
 class CbtProgress(Base):
     """
-    A user's progress through the 9-week CBT program.
-    One row per user (unique user_id).
+    A user's progress through the 12-week CBT program.
+    One row per user (unique user_id); the row exists once the user has started the program.
+    current_week is the furthest week the user has unlocked (1-12).
     completed_weeks is a JSON array of week numbers already finished, e.g. [1, 2, 3].
+    What the user did in each week is stored in ExerciseLog.
     """
     __tablename__ = "cbt_progress"
 

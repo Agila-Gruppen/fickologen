@@ -120,18 +120,23 @@ def is_unlocked() -> bool:
     """True if the user is logged in and can therefore reach the chat endpoint."""
     return bool(st.session_state.get("fk_token"))
 
-def generate_pending_reply() -> None:
+def generate_pending_reply(program_week: int | None = None) -> None:
+    """Ask the backend for the reply to the last user message.
+
+    program_week is set when the user chats from a week of the exercise program,
+    so the reply can help with that week's theory and exercises.
+    """
     if not has_pending_reply() or not is_unlocked():
         return
+    payload = {
+        "messages": _history(),
+        "engine": get_engine(),
+        "conversation_id": st.session_state.get("fk_conversation_id"),
+    }
+    if program_week is not None:
+        payload["program_week"] = program_week
     try:
-        resp = _post(
-            "/chat/",
-            {
-                "messages": _history(),
-                "engine": get_engine(),
-                "conversation_id": st.session_state.get("fk_conversation_id"),
-            },
-        )
+        resp = _post("/chat/", payload)
         if resp.status_code == 403:
             reply = {
                 "role": "assistant",

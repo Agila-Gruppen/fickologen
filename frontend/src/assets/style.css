@@ -577,6 +577,65 @@ div[data-testid="stChatInput"] textarea::placeholder {
   border-color: var(--sage);
 }
 
+/* ---------- Exercise program ---------- */
+/* The week page is wider than the other pages, to make room for the chat beside the text. */
+.block-container:has(.fk-wide) {
+  max-width: 1240px;
+}
+.fk-week.fk-week-done {
+  background: var(--sage-tint);
+  color: var(--sage-dark);
+  border-color: var(--sage);
+}
+.fk-week.fk-week-locked {
+  opacity: 0.5;
+}
+.fk-note {
+  background: var(--peach-tint);
+  color: var(--text);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1.1rem;
+}
+.fk-program-chat-title {
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  color: var(--heading);
+  margin-bottom: 0.5rem;
+}
+/* Exercise, theory and chat boxes: explicit colors so they stay readable if Streamlit falls back to its dark theme. */
+div[class*="st-key-fk_ex_box_"],
+div[class*="st-key-fk_program_theory"],
+div[class*="st-key-fk_program_chatbox"] {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-soft);
+}
+div[class*="st-key-fk_ex_box_"],
+div[class*="st-key-fk_program_theory"] {
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.9rem;
+}
+div[class*="st-key-fk_ex_box_"] label,
+div[class*="st-key-fk_ex_box_"] label *,
+div[class*="st-key-fk_ex_box_"] [data-testid="stWidgetLabel"] *,
+div[class*="st-key-fk_program_theory"] * {
+  color: var(--text);
+}
+div[class*="st-key-fk_ex_box_"] textarea,
+div[class*="st-key-fk_ex_box_"] input {
+  background: var(--surface-muted) !important;
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+div[class*="st-key-fk_ex_box_"] div[data-testid="stForm"] {
+  border: none !important;
+  padding: 0 !important;
+}
+
 /* ---------- Safety page ---------- */
 .fk-safety-section {
   margin-bottom: 1.6rem;
