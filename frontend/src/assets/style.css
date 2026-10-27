@@ -24,6 +24,13 @@
   --radius-pill: 999px;
 }
 
+/* The app has one look, light, whatever the browser or OS theme. The Streamlit
+   theme itself is pinned in .streamlit/config.toml (base = "light"); this
+   keeps the browser's own controls (scrollbars, autofill, pickers) light too. */
+:root {
+  color-scheme: light only;
+}
+
 html, body, [class*="css"] {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text);

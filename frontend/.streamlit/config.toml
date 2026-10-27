@@ -1,3 +1,7 @@
+# Keep identical to .streamlit/config.toml in the repo root, which is used
+# when the app is started from there. base = "light" keeps the app light
+# even when the browser or OS is in dark mode.
+
 [theme]
 base = "light"
 primaryColor = "#7C9885"
