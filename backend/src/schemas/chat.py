@@ -22,6 +22,13 @@ class ChatRequest(BaseModel):
         default=None,
         description="Which conversation to append to. Omit (null) to start a new one.",
     )
+    program_week: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=12,
+        description="Set when the user chats from a week of the exercise program, so the "
+        "reply can help with that week. The server adds the week's text itself.",
+    )
 
 
 class ChatSource(BaseModel):

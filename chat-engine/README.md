@@ -75,6 +75,9 @@ Gemini nere, blockerat eller tomt svar ger en vänlig reservtext med 112/1177. B
 | `stilmatare.py` | Mäter hur stolpiga och upprepande svaren är (kör före/efter ändringar i prompterna) |
 | `knowledge/` | **Kunskapsmaterial för RAG** (PLAN-118): spec, konverterare från Word till markdown, och uppdelare i sökbara bitar. Se `knowledge/README.md`. |
 | `tests/test_backend_wiring.py`, `tests/test_knowledge.py` | Tester av backendkopplingen respektive materialuppdelningen |
+| `tests/test_program.py`, `test_program_chat.py`, `test_program_ui.py` | Övningsprogrammet (PLAN-92): innehåll och API, chatten med veckans kontext, och Streamlit-sidorna |
+
+**Övningsprogrammet:** när någon chattar från en programvecka skickar frontend `program_week` och backenden lägger veckans text (ur `backend/src/content/program/`) i prompten via `build_system_prompt(modul, kontext, program)`. Programtexten används aldrig i det försiktiga läget efter en kris.
 
 ## Köra och testa
 
