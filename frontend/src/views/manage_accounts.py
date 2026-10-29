@@ -33,6 +33,8 @@ def render() -> None:
         st.toast(flash)
 
     _render_change_password_card()
+    st.markdown("<div style='height:1.2rem;'></div>", unsafe_allow_html=True)
+    _render_reminders_card()
 
 
 def _on_cancel() -> None:
@@ -120,3 +122,32 @@ def _render_change_password_card() -> None:
                     use_container_width=True,
                     on_click=_on_cancel,
                 )
+
+
+def _render_reminders_card() -> None:
+    with st.container(border=True):
+        st.markdown('<div class="fk-section-title">Veckopåminnelser</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<p class="fk-card-text">Varje söndag kväll får alla som går programmet och har '
+            "slagit på påminnelser ett mejl om att en ny vecka börjar. Här kan du skicka dem "
+            "direkt, t.ex. för att prova. Den som redan fått dagens mejl får inget till.</p>",
+            unsafe_allow_html=True,
+        )
+        if not st.button("Skicka påminnelser nu", key="fk_admin_send_reminders"):
+            return
+        try:
+            result, error = auth.admin_send_reminders()
+        except BackendUnavailable:
+            st.error(BACKEND_ERROR)
+            return
+        if error:
+            st.error(error)
+            return
+        message = (
+            f"Skickade: {result['sent']} · redan skickade idag: {result['already_sent']} · "
+            f"misslyckades: {result['failed']}"
+        )
+        if result["failed"]:
+            st.warning(message + " – se backendens logg.")
+        else:
+            st.success(message)
