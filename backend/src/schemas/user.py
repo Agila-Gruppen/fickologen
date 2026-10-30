@@ -68,6 +68,7 @@ class UserData(BaseModel):
     phone: Optional[str] = None
     gender: Optional[str] = None
     city: Optional[str] = None
+    reminders_enabled: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -120,6 +121,22 @@ class UserSelfUpdate(BaseModel):
     phone: Optional[str] = Field(None, max_length=32)
     gender: Optional[str] = Field(None, max_length=32)
     city: Optional[str] = Field(None, max_length=100)
+
+class ReminderSettings(BaseModel):
+    """
+    Schema for turning the weekly program reminder emails on or off.
+    """
+    enabled: bool
+
+
+class ReminderRunResult(BaseModel):
+    """
+    What a run of the weekly reminders did.
+    """
+    sent: int
+    already_sent: int
+    failed: int
+
 
 class AdminUserUpdate(BaseModel):
     """

@@ -261,3 +261,51 @@ def admin_change_user_password(user_id: int, new_password: str) -> str | None:
     if not resp.is_success:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     return None
+
+
+EMAIL_NOT_SET_UP = "Mejlutskick är inte inställt på servern än. Prata med en admin."
+
+
+def set_reminders(enabled: bool) -> tuple[dict | None, str | None]:
+    """Turn the weekly program reminder emails on or off. Returns (user, None) or (None, error)."""
+    resp = authed_request("PUT", "/users/me/reminders", {"enabled": enabled})
+    if resp.status_code == 400:
+        return None, "Lägg till din e-postadress först."
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None
+
+
+def send_test_reminder() -> str | None:
+    """Send the weekly reminder to yourself right away. Returns an error message, or None."""
+    resp = authed_request("POST", "/users/me/reminders/test")
+    if resp.status_code == 400:
+        return "Lägg till din e-postadress först."
+    if resp.status_code == 503:
+        return EMAIL_NOT_SET_UP
+    if resp.status_code == 502:
+        return "Mejlservern kunde inte skicka mejlet just nu. Försök igen senare."
+    if resp.status_code in (401, 404):
+        log_out()
+        return SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return None
+
+
+def admin_send_reminders() -> tuple[dict | None, str | None]:
+    """Send this week's reminders now. Returns ({"sent", "already_sent", "failed"}, None) or (None, error)."""
+    resp = authed_request("POST", "/admin/reminders/send")
+    if resp.status_code == 503:
+        return None, "Mejlutskick är inte inställt: sätt SMTP_HOST med flera i backendens .env."
+    if resp.status_code == 403:
+        return None, "Du behöver adminbehörighet."
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None

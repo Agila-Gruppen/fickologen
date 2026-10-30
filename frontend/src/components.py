@@ -64,6 +64,11 @@ def _available_nav_items() -> list[tuple[str, str, str]]:
     return items
 
 
+def program_available() -> bool:
+    """Whether the logged-in user can see the 12-week program (admins only until it is reviewed)."""
+    return any(key == "treatment" for key, _, _ in _available_nav_items())
+
+
 def get_current_view() -> str:
     valid = {key for key, _, _ in _available_nav_items()} | HIDDEN_VIEWS
     view = st.query_params.get("view", "home")

@@ -11,6 +11,7 @@ from .routes.program import router as ProgramRouter
 from .config.database import SessionLocal
 from .models.user import User
 from .utils.admin import admin_usernames
+from .services.reminders import start_scheduler
 
 
 app = FastAPI(
@@ -54,6 +55,11 @@ async def sync_admin_roles() -> None:
                 print(f"Demoted from admin: {demoted}")
     finally:
         db.close()
+
+@app.on_event("startup")
+async def start_reminders() -> None:
+    """Starts the Sunday reminder emails (only if SMTP is configured)."""
+    start_scheduler()
 
 app.include_router(UserRouter)
 app.include_router(AuthRouter)
