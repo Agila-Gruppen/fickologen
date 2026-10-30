@@ -1,6 +1,6 @@
 """Konto-sida: profil, redigera uppgifter, säkerhet och datahantering."""
 import html
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 import streamlit as st
@@ -286,15 +286,50 @@ def _render_danger_zone() -> None:
         '<hr class="fk-divider" /><div class="fk-section-title">Datahantering</div>',
         unsafe_allow_html=True,
     )
+    _render_export_section()
+    st.markdown("<div style='height:0.8rem;'></div>", unsafe_allow_html=True)
     _render_delete_content_section()
     st.markdown("<div style='height:0.8rem;'></div>", unsafe_allow_html=True)
     _render_delete_account_section()
 
 
+EXPORTS = [
+    ("chats", "Chattar", "chattar"),
+    ("diary", "Dagbok", "dagbok"),
+    ("account", "Kontouppgifter", "konto"),
+]
+
+
+def _render_export_section() -> None:
+    with st.expander("Exportera din data (CSV)"):
+        st.markdown(
+            '<p class="fk-card-text">Ladda ner det du sparat som CSV-filer, som öppnas i '
+            "Excel, Numbers eller Google Kalkylark. Chattarna får en rad per meddelande "
+            "och dagboken en rad per anteckning. Ditt lösenord exporteras aldrig.</p>",
+            unsafe_allow_html=True,
+        )
+        today = date.today().isoformat()
+        columns = st.columns(len(EXPORTS))
+        for column, (kind, label, file_part) in zip(columns, EXPORTS):
+            with column:
+                st.download_button(
+                    label,
+                    # Built by the backend only when clicked.
+                    data=auth.csv_downloader(kind),
+                    file_name=f"fickologen-{file_part}-{today}.csv",
+                    mime="text/csv",
+                    icon=":material/download:",
+                    on_click="ignore",
+                    key=f"fk_export_{kind}",
+                    use_container_width=True,
+                )
+
+
 def _render_delete_content_section() -> None:
     with st.expander("Radera innehåll (behåll kontot)"):
         st.markdown(
-            '<p class="fk-card-text">Rensa det du sparat men behåll ditt konto. Det går inte att ångra.</p>',
+            '<p class="fk-card-text">Rensa det du sparat men behåll ditt konto. Det går inte att ångra – '
+            "vill du spara något, exportera det först.</p>",
             unsafe_allow_html=True,
         )
 

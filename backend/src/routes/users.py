@@ -1,3 +1,6 @@
+from datetime import date
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
@@ -26,6 +29,7 @@ from ..services.user_data import (
     delete_diary_entries,
     delete_program_logs,
 )
+from ..services.export import account_csv, chats_csv, diary_csv
 
 router = APIRouter(
     prefix="/users",
@@ -321,3 +325,49 @@ async def send_my_test_reminder(
         )
     print(f"Sent test reminder to user ID {user.id}")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+EXPORT_FILE_NAMES = {"account": "konto", "chats": "chattar", "diary": "dagbok"}
+
+
+@router.get(
+    "/me/export/{kind}",
+    response_class=Response,
+    responses={200: {"content": {"text/csv": {}}, "description": "CSV file"}},
+)
+async def export_my_data(
+    kind: Literal["account", "chats", "diary"],
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Exports the logged-in user's data as a CSV file made for Swedish Excel
+    (semicolon-separated, UTF-8 with BOM, Swedish time).
+
+    Args:
+        kind: "account" (account details), "chats" (every message) or
+            "diary" (every diary entry)
+
+    Returns:
+        The CSV file as an attachment, e.g. fickologen-chattar-2026-10-27.csv
+
+    Raises:
+        HTTPException: 401 if not logged in
+        HTTPException: 404 if the account no longer exists
+        HTTPException: 422 if kind is not one of the above
+    """
+    user = _get_own_user(current_user, db)
+    if kind == "account":
+        content = account_csv(user)
+    elif kind == "chats":
+        content = chats_csv(user.id, db)
+    else:
+        content = diary_csv(user.id, db)
+
+    file_name = f"fickologen-{EXPORT_FILE_NAMES[kind]}-{date.today().isoformat()}.csv"
+    print(f"User ID {user.id} exported {kind}")
+    return Response(
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+    )
