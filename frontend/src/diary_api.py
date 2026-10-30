@@ -1,4 +1,7 @@
 """Diary entries for the logged-in user, stored by the backend."""
+from typing import Any
+from urllib.parse import quote
+
 import auth
 from api import BackendUnavailable
 
@@ -7,7 +10,7 @@ class SessionExpired(Exception):
     """The login has expired; the user has been logged out."""
 
 
-def _call(method: str, path: str, json: dict | None = None):
+def _call(method: str, path: str, json: dict | None = None) -> Any:
     resp = auth.authed_request(method, path, json)
     if resp.status_code == 401:
         auth.log_out()
@@ -17,10 +20,16 @@ def _call(method: str, path: str, json: dict | None = None):
     return resp.json() if resp.content else None
 
 
-def list_entries() -> list[dict]:
-    """The user's entries, newest first."""
-    return _call("GET", "/diary/")
+def list_entries(search: str | None = None) -> list[dict]:
+    """The user's entries, newest first.
 
+    If `search` is given, only entries where the term appears in the title or
+    content (case-insensitive) are returned.
+    """
+    path = "/diary/"
+    if search and search.strip():
+        path = f"/diary/?search={quote(search.strip())}"
+    return _call("GET", path)
 
 def create_entry(title: str, content: str, mood: int | None) -> dict:
     return _call("POST", "/diary/", {"title": title or None, "content": content, "mood": mood})
