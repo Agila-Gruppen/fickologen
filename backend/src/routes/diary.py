@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..config.database import get_db
@@ -37,16 +40,31 @@ def _get_own_entry(entry_id: int, current_user: CurrentUser, db: Session) -> Dia
 
 
 @router.get("/", response_model=list[DiaryEntryData])
-async def list_entries(current_user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)):
+async def list_entries(
+    search: Optional[str] = Query(None, max_length=200),
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """
     Lists the logged-in user's diary entries, newest first.
+
+    If `search` is given, filters to entries where the term appears in the
+    title or content (case-insensitive substring match).
     """
-    return (
-        db.query(DiaryEntry)
-        .filter(DiaryEntry.user_id == current_user.user_id)
-        .order_by(DiaryEntry.created_at.desc(), DiaryEntry.id.desc())
-        .all()
-    )
+    query = db.query(DiaryEntry).filter(DiaryEntry.user_id == current_user.user_id)
+
+    if search:
+        term = search.strip()
+        if term:
+            pattern = f"%{term}%"
+            query = query.filter(
+                or_(
+                    DiaryEntry.title.ilike(pattern),
+                    DiaryEntry.content.ilike(pattern),
+                )
+            )
+
+    return query.order_by(DiaryEntry.created_at.desc(), DiaryEntry.id.desc()).all()
 
 
 @router.post("/", response_model=DiaryEntryData, status_code=status.HTTP_201_CREATED)
