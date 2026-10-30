@@ -11,6 +11,8 @@ exercises:
     required: true
     minutes: 25
     why: "Hjärnan lär sig av upprepning, inte av att det går perfekt en gång."
+    task: "Gör förra veckans steg igen, helst två gånger, och jämför ångesten med förra veckan."
+    write_label: "Hur gick det, och hur jämförde det sig med förra veckan?"
     steps:
       - "Gör ditt steg från förra veckan igen, helst två gånger."
       - "Skatta före och efter. Jämför med förra veckan."
@@ -21,8 +23,10 @@ exercises:
     required: false
     minutes: 25
     why: "När det förra steget känns tryggare är det dags att utmana dig lite mer."
+    task: "Välj nästa steg uppåt på stegen, gör det och skriv vad du upptäckte."
+    write_label: "Mitt nästa steg och vad jag upptäckte"
     steps:
-      - "Välj nästa steg på stegen, ungefär tio poäng högre."
+      - "Välj nästa steg uppåt på stegen, när det förra känns lättare."
       - "Gör det, skatta före och efter och skriv vad du upptäckte."
     measure_label: "Hur stor var ångesten (0–100)?"
 reflection_prompt: "Vad har blivit lättare sedan du började öva?"
@@ -36,8 +40,8 @@ Den här veckan handlar om att **upprepa**. Det som kändes jobbigt förra vecka
 Några saker att tänka på:
 
 - **Variera** gärna situationen lite. Gör samma sak med olika personer eller på olika platser, så att du lär dig att det fungerar överallt och inte bara en gång.
-- **Tänk frekvens.** Hellre ofta och kort än sällan och länge.
-- **Stega upp i lagom takt.** När ett steg ger mindre ångest, till exempel under 20–30, kan du ta ett steg till.
+- **Tänk frekvens.** Öva hellre ofta än sällan, helst flera gånger i veckan, och stanna kvar tills ångesten börjat sjunka.
+- **Stega upp i lagom takt.** När ångesten i ett steg har sjunkit till en låg nivå, ungefär 20–40, och steget känns lättare, kan du ta nästa steg.
 - **Räkna med tråkiga dagar.** Vissa övningar känns värre än tidigare. Det hör till och är inget bakslag.
 
 Du bygger upp en erfarenhet som ångesten inte kan ta ifrån dig: det du övat på klarar du.

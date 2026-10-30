@@ -11,6 +11,8 @@ exercises:
     required: true
     minutes: 20
     why: "Första gången är oftast svårast. Det blir lättare med upprepning."
+    task: "Gör ditt första steg och stanna kvar tills ångesten börjat sjunka. Skatta före och efter och skriv hur det gick."
+    write_label: "Vad hände, och blev det som jag trodde?"
     steps:
       - "Gör ditt första steg från stegen."
       - "Skatta ångesten före (0–100). Stanna kvar i situationen en stund, helst tills den har börjat minska."
@@ -22,6 +24,8 @@ exercises:
     required: false
     minutes: 20
     why: "Upprepning är det som gör att det sjunker."
+    task: "Gör samma steg en gång till, helst en annan dag, och skriv vad som skilde sig från första gången."
+    write_label: "Vad var annorlunda den här gången?"
     steps:
       - "Gör samma steg en gång till, helst en annan dag."
       - "Skatta före och efter, och notera om något skilde sig."
@@ -41,6 +45,8 @@ Några tips:
 - Gör övningen **utan** att skydda dig om du kan, till exempel utan att titta ner hela tiden eller förbereda varje mening.
 - Börja med något du tror att du klarar. Det är bättre att göra lite och lyckas än att göra för mycket och ge upp.
 - Gör samma steg **flera gånger** under veckan. Det är upprepningen som gör skillnad.
+- Ta inte alkohol eller lugnande tabletter för att klara övningen. Då hinner du inte upptäcka att ångesten går över av sig själv. Din vanliga medicin fortsätter du med som vanligt.
+- Kämpa inte emot ångesten. Låt den finnas där och rikta uppmärksamheten mot det som händer omkring dig.
 - Skriv ner hur det gick direkt efteråt, så minns du hur det verkligen var.
 
 Fira att du gjorde det, oavsett hur det kändes.

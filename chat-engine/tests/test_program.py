@@ -80,6 +80,19 @@ def test_varje_vecka_har_en_obligatorisk_ovning_och_en_reflektionsfraga():
         assert vecka.reflection_prompt.strip(), vecka.week
 
 
+def test_varje_ovning_har_en_kort_tydlig_uppgift_och_en_etikett_for_anteckningarna():
+    for vecka in program_content.load_program().values():
+        for ovning in vecka.exercises:
+            assert ovning.task.strip(), ovning.id
+            assert len(ovning.task.split()) <= 40, f"{ovning.id}: uppgiften är för lång"
+            assert ovning.write_label and len(ovning.write_label.split()) <= 15, ovning.id
+
+
+def test_chatten_far_veckans_uppgifter():
+    text = program_content.week_chat_context(1)
+    assert "Beskriv tre situationer" in text
+
+
 def test_veckorna_ar_inte_for_tunga():
     """Det får inte vara för mycket teori eller för många övningar (användaren ska inte bli överväldigad)."""
     for vecka in program_content.load_program().values():

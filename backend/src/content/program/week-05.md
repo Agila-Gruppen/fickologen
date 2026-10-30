@@ -11,6 +11,8 @@ exercises:
     required: true
     minutes: 10
     why: "En tydlig plan gör att du kan se vad som faktiskt hände."
+    task: "Välj en farhåga och planera ett litet test av den: vad tror du händer, och när och var prövar du?"
+    write_label: "Min farhåga, min gissning och planen"
     steps:
       - "Välj en farhåga, till exempel 'Om jag frågar om vägen kommer personen att tycka att jag är konstig.'"
       - "Skriv vad du tror ska hända och hur säker du är (0–100)."
@@ -22,6 +24,8 @@ exercises:
     required: true
     minutes: 15
     why: "Det är i verkligheten som tanken får sin prövning."
+    task: "Gör experimentet och skriv direkt efteråt vad som faktiskt hände, jämfört med vad du trodde."
+    write_label: "Vad hände, och vad lärde jag mig?"
     steps:
       - "Gör experimentet."
       - "Skriv direkt efteråt vad som faktiskt hände, och jämför med det du trodde."

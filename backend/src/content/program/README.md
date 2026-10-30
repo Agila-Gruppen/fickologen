@@ -2,7 +2,7 @@
 
 Tolv filer, `week-01.md` till `week-12.md`. Varje fil är en vecka: YAML mellan två `---`-rader (rubrik, övningar, reflektionsfråga, förslag på chattfrågor) och därefter veckans teori som vanlig markdown.
 
-> **Status: utkast.** Texterna är skrivna med egna ord utifrån KBT-principerna i CHAI-modulerna, och är **inte klinisk granskade**. Programmet syns därför bara för admins (`ADMIN_NAV_ITEMS` i `frontend/src/components.py`). Flytta raden till `NAV_ITEMS` när texterna är godkända. CHAI-modulernas egen text ska aldrig kopieras hit; den ligger krypterad i `chat-engine/knowledge/`.
+> **Status: utkast.** Texterna är skrivna med egna ord utifrån KBT-principerna i CHAI-modulerna, och är **inte klinisk granskade**. Programmet syns för alla inloggade (`USER_NAV_ITEMS` i `frontend/src/components.py`) men inte för besökare utan konto, och intro-sidan säger att texterna är ett utkast. CHAI-modulernas egen text ska aldrig kopieras hit; den ligger krypterad i `chat-engine/knowledge/`.
 
 ## Format
 
@@ -19,6 +19,8 @@ exercises:
     required: true           # obligatoriska övningar måste vara gjorda för att veckan ska kunna avslutas
     minutes: 15
     why: "Varför övningen är bra."
+    task: "En tydlig mening om vad man ska göra och skriva ner."   # visas först i övningen
+    write_label: "Vad anteckningsrutan ber om"                       # valfri
     steps: ["Steg 1", "Steg 2"]
     measure_label: "Valfri fråga som ger Före/Efter-skattning 0–100"
 reflection_prompt: "Frågan som avslutar veckan."
