@@ -1142,3 +1142,11 @@ div[class*="st-key-conv_del_"] button:hover {
   border-color: var(--sage) !important;
   background: var(--sage-tint) !important;
 }
+
+.fk-diary-mark {
+    background: rgba(201, 102, 73, 0.18);  /* ljus terrakotta-ton */
+    color: inherit;
+    padding: 0 0.15em;
+    border-radius: 3px;
+    font-weight: 500;
+}

@@ -1,4 +1,5 @@
 import html
+import re
 from datetime import date, datetime, timedelta
 from datetime_utils import STOCKHOLM, to_local
 
@@ -50,6 +51,7 @@ def render() -> None:
 
     try:
         _render_composer()
+        search = _render_search()
         view = st.segmented_control(
             "Visa",
             options=list(VIEWS),
@@ -58,9 +60,9 @@ def render() -> None:
             key="fk_diary_view",
             label_visibility="collapsed",
         )
-        entries = diary_api.list_entries()
-        if view == "all":
-            _render_entries(entries)
+        entries = diary_api.list_entries(search=search or None)
+        if view == "all" or search:
+            _render_entries(entries, search)
         else:
             _render_week(entries)
     except diary_api.SessionExpired:
@@ -119,23 +121,40 @@ def _render_composer() -> None:
             # Jump to this week so the new entry is in view.
             st.session_state["fk_diary_week_offset"] = 0
             st.toast("Anteckningen är sparad. 🌱")
+            
+def _render_search() -> str:
+    """Sökfält över anteckningslistan. Returnerar söktermen (stripad)."""
+    value = st.text_input(
+        "Sök i dagboken",
+        key="fk_diary_search",
+        placeholder="Sök bland dina anteckningar…",
+        label_visibility="collapsed",
+    )
+    return (value or "").strip()
 
 
-def _render_entries(entries: list[dict]) -> None:
+def _render_entries(entries: list[dict], search: str = "") -> None:
     st.markdown('<div class="fk-section-title">Dina anteckningar</div>', unsafe_allow_html=True)
     if not entries:
-        st.markdown(
-            '<p class="fk-chat-intro" style="text-align:left;">'
-            "Inga anteckningar än – det du skriver hamnar här.</p>",
-            unsafe_allow_html=True,
-        )
+        if search:
+            st.markdown(
+                '<p class="fk-chat-intro" style="text-align:left;">'
+                f"Inga anteckningar matchade <em>{html.escape(search)}</em>.</p>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<p class="fk-chat-intro" style="text-align:left;">'
+                "Inga anteckningar än – det du skriver hamnar här.</p>",
+                unsafe_allow_html=True,
+            )
         return
 
     for entry in entries:
         if st.session_state.get("fk_diary_editing") == entry["id"]:
             _render_edit_form(entry)
         else:
-            _render_entry(entry)
+            _render_entry(entry, search)
 
 
 def _today() -> date:
@@ -251,13 +270,25 @@ def _format_date(value: str) -> str:
     return f"{WEEKDAYS[dt.weekday()].capitalize()} {dt.day} {MONTHS[dt.month - 1]} {dt.year}, {dt:%H:%M}"
 
 
-def _render_entry(entry: dict) -> None:
+def _highlight(text: str, search: str) -> str:
+    """Omsluter varje case-insensitive match i söktermen med <mark>."""
+    if not search:
+        return text
+    pattern = re.compile(re.escape(search), re.IGNORECASE)
+    return pattern.sub(lambda m: f'<mark class="fk-diary-mark">{m.group(0)}</mark>', text)
+
+
+def _render_entry(entry: dict, search: str = "") -> None:
     entry_id = entry["id"]
     mood = f'<span class="fk-diary-mood">{MOODS[entry["mood"]]}</span>' if entry.get("mood") in MOODS else ""
-    title = f'<div class="fk-card-title">{html.escape(entry["title"])}</div>' if entry.get("title") else ""
+    title_html = _highlight(html.escape(entry["title"]), search) if entry.get("title") else ""
+    title = f'<div class="fk-card-title">{title_html}</div>' if entry.get("title") else ""
     # <br> rather than raw newlines: a blank line would end the HTML block and
     # let markdown take over the rest of the text.
-    content = html.escape(entry["content"]).replace("\r\n", "\n").replace("\n", "<br>")
+    content = _highlight(
+        html.escape(entry["content"]).replace("\r\n", "\n").replace("\n", "<br>"),
+        search,
+    )
     st.markdown(
         '<div class="fk-diary-entry">'
         f'<div class="fk-diary-meta"><span>{_format_date(entry["created_at"])}</span>{mood}</div>'
