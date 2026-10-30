@@ -10,6 +10,8 @@ exercises:
     required: true
     minutes: 20
     why: "Med en plan är du bättre rustad när det blir jobbigt igen."
+    task: "Skriv din plan för tiden efter programmet: vad som hjälpt, dina varningstecken, vad du gör då, tre mål och vem du kan vända dig till."
+    write_label: "Min åtgärdsplan"
     steps:
       - "Skriv vad som hjälpt dig mest under programmet."
       - "Skriv dina tidiga varningstecken på att du börjar undvika mer igen."
@@ -21,6 +23,8 @@ exercises:
     required: true
     minutes: 15
     why: "Framsteg är lätta att glömma bort när man är mitt i dem."
+    task: "Jämför med målet du skrev i vecka 1 och skriv tre saker du klarar nu som du inte klarade förut."
+    write_label: "Min tillbakablick"
     steps:
       - "Läs målet du satte i vecka 1. Hur nära är du nu?"
       - "Skriv tre saker du klarar i dag som du inte klarade när du började."
@@ -35,12 +39,13 @@ Du har kommit till slutet av programmet. Det är ett bra tillfälle att stanna u
 
 Det viktigaste från de här veckorna: ångesten hålls vid liv av undvikande och skydd, och den minskar när du **närmar dig** det du är rädd för. Du har lärt dig hitta och pröva dina tankar, testa dem i verkligheten och öva stegvis.
 
-**Bakslag är normala.** En jobbig period betyder inte att du är tillbaka där du började. Ett bakslag är en tillfällig svacka. Ett återfall betyder att du tappat de nya vanorna under lång tid. Du kan ofta förebygga det genom att fortsätta öva, även när det går bra.
+**Bakslag är normala.** En jobbig period betyder inte att du är tillbaka där du började. Ett bakslag är en tillfällig svacka, till exempel att du inte klarar en situation som du brukade klara. Ett återfall betyder att du är tillbaka på ruta ett, med lika mycket ångest i lika många situationer som före programmet. Du kan ofta förebygga det genom att fortsätta öva, även när det går bra.
 
 Några råd framåt:
 
 - Fortsätt göra små steg regelbundet, så behåller du det du lärt dig.
 - Märk tidiga varningstecken, som att du börjar undvika mer.
+- Om det kärvar: gå tillbaka och repetera de veckor som hjälpte dig mest. Det går oftast lättare andra gången.
 - Be om hjälp i tid om du fastnar.
 
 Behöver du mer stöd: prata med vårdcentralen eller ring 1177, eller sök en psykologmottagning. Programmet är ett verktyg och ingen ersättning för vård.

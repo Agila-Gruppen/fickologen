@@ -636,6 +636,61 @@ div[class*="st-key-fk_ex_box_"] div[data-testid="stForm"] {
   padding: 0 !important;
 }
 
+/* What the exercise asks you to do: the first thing you see in it. */
+.fk-task {
+  background: var(--sage-tint);
+  border-left: 4px solid var(--sage);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  margin: 0.4rem 0 0.9rem 0;
+  font-size: 0.97rem;
+  line-height: 1.55;
+}
+.fk-task-label {
+  color: var(--sage-dark);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+/* Checklist at the top of the exercises. */
+.fk-todo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.2rem 0 0.9rem 0;
+}
+.fk-todo-item {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  padding: 0.25rem 0.8rem;
+}
+.fk-todo-item.fk-todo-done {
+  background: var(--sage-tint);
+  border-color: var(--sage);
+  color: var(--sage-dark);
+}
+
+/* The chat beside a week follows you down the page on wide screens. */
+@media (min-width: 900px) {
+  div[data-testid="stColumn"]:has(.st-key-fk_program_chatpanel) {
+    position: sticky;
+    top: 4rem;
+    align-self: flex-start;
+  }
+}
+div[class*="st-key-fk_program_chatpanel"] div[class*="st-key-fk_chip_program"] button {
+  text-align: left;
+  justify-content: flex-start;
+  height: auto;
+  white-space: normal;
+}
+
 /* ---------- Safety page ---------- */
 .fk-safety-section {
   margin-bottom: 1.6rem;

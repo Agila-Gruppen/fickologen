@@ -10,6 +10,8 @@ exercises:
     required: true
     minutes: 20
     why: "Det handlar inte om att tänka positivt, utan om att komma närmare vad som är rimligt."
+    task: "Pröva två tankar: skatta hur mycket du tror på dem, skriv vad som talar för och emot, och formulera en mer rimlig tanke."
+    write_label: "Tanke 1 och 2: vad talar för, vad talar emot och min mer rimliga tanke"
     steps:
       - "Välj två tankar som ger dig mycket ångest."
       - "Skatta först hur mycket du tror på tanken (0–100)."

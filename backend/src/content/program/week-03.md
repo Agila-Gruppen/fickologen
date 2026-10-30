@@ -10,6 +10,8 @@ exercises:
     required: true
     minutes: 15
     why: "När du kan sätta namn på en tankefälla tappar den en del av sin makt."
+    task: "Välj tre tankar från din tankedagbok och skriv vilken tankefälla som passar på var och en."
+    write_label: "Tanke och tankefälla (en rad per tanke)"
     steps:
       - "Ta tre tankar från din tankedagbok i förra veckan."
       - "Läs listan över tankefällor i teorin och bestäm vilken som passar bäst på varje tanke."
@@ -20,6 +22,8 @@ exercises:
     required: false
     minutes: 5
     why: "De flesta har en eller två favoriter. Att veta vilka hjälper dig att fånga dem snabbare."
+    task: "Skriv vilken tankefälla du känner igen mest, och hur du märker att du är i den."
+    write_label: "Min vanligaste tankefälla"
     steps:
       - "Vilken tankefälla känner du igen mest? Hur märker du att du är i den?"
 reflection_prompt: "Vilken tankefälla var lättast att känna igen hos dig själv?"
@@ -33,8 +37,8 @@ chat_tips:
 - **Tankeläsning:** du är säker på att veta vad andra tänker, oftast något negativt om dig.
 - **Katastroftänkande:** du ser det värsta tänkbara utfallet som det mest sannolika.
 - **Allt eller inget:** antingen blir det perfekt eller så är det en katastrof.
-- **Negativt filter:** du lägger märke till det som gick fel och missar det som gick bra.
+- **Mentalt filter:** du lägger märke till det som gick fel och missar det som gick bra.
 - **Känslotänkande:** "Jag känner mig dum, alltså är jag dum."
-- **Borde:** hårda krav på dig själv, som "jag måste alltid ha något smart att säga".
+- **Måste/borde:** hårda krav på dig själv, som "jag måste alltid ha något smart att säga".
 
 Tankefällor är inte tecken på att du tänker fel eller är dum. Det är vanliga genvägar som huvudet tar när det försöker skydda dig. Den här veckan övar du bara på att **känna igen** dem.

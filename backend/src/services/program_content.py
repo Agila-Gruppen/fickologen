@@ -75,7 +75,7 @@ def week_chat_context(number: int) -> str | None:
     for exercise in week.exercises:
         steps = " ".join(f"{i}) {step}" for i, step in enumerate(exercise.steps, start=1))
         kind = "obligatorisk" if exercise.required else "valfri"
-        lines.append(f"- {exercise.title} ({kind}): {exercise.why} Steg: {steps}")
+        lines.append(f"- {exercise.title} ({kind}): {exercise.task} {exercise.why} Steg: {steps}")
     if week.safety_note:
         lines += ["", f"Säkerhet: {week.safety_note}"]
     return "\n".join(lines)

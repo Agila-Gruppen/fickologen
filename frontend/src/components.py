@@ -20,10 +20,12 @@ NAV_ITEMS = [
     
 ]
 
+# Visas bara för inloggade (programmet sparar framsteg per konto).
+LOGGED_IN_NAV_ITEMS = [
+    ("treatment", "12 veckor KBT", "🌱"),
+]
+
 ADMIN_NAV_ITEMS = [
-    # Övningsprogrammet (PLAN-92) är ett utkast som väntar på klinisk granskning.
-    # Flytta raden till NAV_ITEMS när texterna är godkända så syns det för alla.
-    ("treatment", "Övningsprogram", "🌱"),
     ("manage_accounts", "Hantera konton", "🧰"),
 ]
 
@@ -55,6 +57,8 @@ HIDDEN_VIEWS = {"account"}
 
 def _available_nav_items() -> list[tuple[str, str, str]]:
     items = list(NAV_ITEMS)
+    if auth.current_user():
+        items.extend(LOGGED_IN_NAV_ITEMS)
     if auth.is_admin():
         items.extend(ADMIN_NAV_ITEMS)
     return items

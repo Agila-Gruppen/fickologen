@@ -16,6 +16,10 @@ class ExerciseContent(BaseModel):
     required: bool = True
     minutes: int = Field(..., ge=1, le=120)
     why: str
+    # One clear sentence on what to do, shown first in the exercise.
+    task: str
+    # What the notes box asks for, for example "Mitt mål och mitt första lilla steg".
+    write_label: Optional[str] = None
     steps: list[str] = Field(..., min_length=1)
     # When set, the exercise asks for a before/after 0-100 rating with this question.
     measure_label: Optional[str] = None

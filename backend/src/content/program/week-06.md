@@ -10,6 +10,8 @@ exercises:
     required: true
     minutes: 20
     why: "En stege gör det möjligt att börja lätt och aldrig ta ett steg som är för stort."
+    task: "Skriv 8–10 situationer du undviker, sätt en ångestpoäng (0–100) på varje och sortera från lättast till svårast."
+    write_label: "Min stege (en rad per situation: situation och poäng)"
     steps:
       - "Skriv 8–10 situationer du undviker eller tycker är jobbiga."
       - "Skatta hur mycket ångest varje situation ger (0–100)."
@@ -20,8 +22,10 @@ exercises:
     required: true
     minutes: 10
     why: "Det första steget ska vara jobbigt men göra att du tror att du klarar det."
+    task: "Välj en av de lättare situationerna längst ner på din stege och planera när, var och hur länge du övar."
+    write_label: "Mitt första steg och min plan"
     steps:
-      - "Välj en situation som ligger runt 30–40 på din skala."
+      - "Välj en av de lättare situationerna längst ner på stegen, en du tror att du klarar även om det blir jobbigt."
       - "Skriv när, var och hur länge du ska öva, och vad du ska göra konkret."
 reflection_prompt: "Vilket steg på stegen känns lättast och vilket svårast att tänka på?"
 chat_tips:
