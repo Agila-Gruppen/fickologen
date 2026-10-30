@@ -1,4 +1,5 @@
 """Konto-sida: profil, redigera uppgifter, säkerhet och datahantering."""
+import html
 from datetime import date, datetime
 from typing import Any
 
@@ -9,7 +10,7 @@ import conversations as conv_api
 import diary_api
 from api import BackendUnavailable
 from chat_engine import start_new_conversation
-from components import page_header
+from components import page_header, program_available
 from datetime_utils import to_local
 
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
@@ -56,6 +57,9 @@ def render() -> None:
     _render_profile_form(data)
     st.markdown("<div style='height:1.6rem;'></div>", unsafe_allow_html=True)
     _render_security_section()
+    if program_available():
+        st.markdown("<div style='height:1.6rem;'></div>", unsafe_allow_html=True)
+        _render_reminders_section(data)
     st.markdown("<div style='height:1.6rem;'></div>", unsafe_allow_html=True)
     _render_danger_zone()
 
@@ -210,6 +214,54 @@ def _render_new_recovery_code() -> None:
             return
         st.session_state["fk_account_flash_main"] = "En ny återställningskod har skapats."
         st.rerun()
+
+
+def _render_reminders_section(data: dict[str, Any]) -> None:
+    st.markdown('<div class="fk-section-title">Påminnelser</div>', unsafe_allow_html=True)
+    email = data.get("email")
+    if not email:
+        st.markdown(
+            '<p class="fk-card-text">Vill du ha ett mejl på söndagar när en ny vecka i '
+            "programmet börjar? Lägg till din e-postadress under Personuppgifter ovan, "
+            "så kan du slå på det här.</p>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    enabled = data.get("reminders_enabled", False)
+    wanted = st.toggle(
+        "Mejla mig på söndagar när en ny programvecka börjar",
+        value=enabled,
+        key="fk_account_reminders",
+    )
+    st.markdown(
+        f'<p class="fk-card-text">Mejlet går till <strong>{html.escape(email)}</strong> på '
+        "söndagskvällen, med en länk till din nästa vecka. Vi använder bara adressen till "
+        "det här, och du kan stänga av det när du vill.</p>",
+        unsafe_allow_html=True,
+    )
+    if wanted != enabled:
+        try:
+            _, error = auth.set_reminders(wanted)
+        except BackendUnavailable:
+            error = BACKEND_ERROR
+        if error:
+            st.error(error)
+            return
+        st.session_state["fk_account_flash_main"] = (
+            "Påminnelser är påslagna. ✓" if wanted else "Påminnelser är avstängda."
+        )
+        st.rerun()
+
+    if enabled and st.button("Skicka ett testmejl", key="fk_account_test_reminder"):
+        try:
+            error = auth.send_test_reminder()
+        except BackendUnavailable:
+            error = BACKEND_ERROR
+        if error:
+            st.error(error)
+        else:
+            st.success(f"Ett testmejl är skickat till {email}. Hittar du det inte, titta i skräpposten.")
 
 
 def _count(n: int, singular: str, plural: str) -> str:

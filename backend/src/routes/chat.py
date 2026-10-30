@@ -127,7 +127,9 @@ async def chat(
         )
 
     try:
-        result = await generate_reply(chat_request.messages, chat_request.engine)
+        result = await generate_reply(
+            chat_request.messages, chat_request.engine, program_week=chat_request.program_week
+        )
     except Exception as exc:
         print(f"Chat failed: {exc!r}")
         raise HTTPException(

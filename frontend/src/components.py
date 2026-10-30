@@ -16,9 +16,13 @@ NAV_ITEMS = [
     ("saved", "Sparade chattar", "💾"),
     ("diary", "Dagbok", "📓"),
     ("safety", "Trygghet & integritet", "🛡️"),
-    # ("treatment", "Behandling", "🌱"),
     # ("history", "Tidigare chattar", "🕰️"),
     
+]
+
+# Visas bara för inloggade (programmet sparar framsteg per konto).
+LOGGED_IN_NAV_ITEMS = [
+    ("treatment", "12 veckor KBT", "🌱"),
 ]
 
 ADMIN_NAV_ITEMS = [
@@ -53,9 +57,16 @@ HIDDEN_VIEWS = {"account"}
 
 def _available_nav_items() -> list[tuple[str, str, str]]:
     items = list(NAV_ITEMS)
+    if auth.current_user():
+        items.extend(LOGGED_IN_NAV_ITEMS)
     if auth.is_admin():
         items.extend(ADMIN_NAV_ITEMS)
     return items
+
+
+def program_available() -> bool:
+    """Whether the logged-in user can see the 12-week program (admins only until it is reviewed)."""
+    return any(key == "treatment" for key, _, _ in _available_nav_items())
 
 
 def get_current_view() -> str:

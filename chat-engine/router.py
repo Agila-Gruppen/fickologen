@@ -82,8 +82,11 @@ def state_from_history(history) -> SessionState:
     return SessionState()
 
 
-def route(message, history, state, classify_fn=None, generate_fn=None, retrieve_fn=None) -> Reply:
-    """history: lista av {"role": "user"|"bot", "text": str} (tidigare turer)."""
+def route(message, history, state, classify_fn=None, generate_fn=None, retrieve_fn=None, program=None) -> Reply:
+    """history: lista av {"role": "user"|"bot", "text": str} (tidigare turer).
+
+    program: veckans innehåll som text när personen chattar från övningsprogrammet (valfritt).
+    """
     t = normalisera(message)
     risk_aktiv = state.risk_turns_left > 0
     state.risk_turns_left = max(0, state.risk_turns_left - 1)  # varje tur "kyler av"
@@ -143,7 +146,7 @@ def route(message, history, state, classify_fn=None, generate_fn=None, retrieve_
 
     samtal = list(history) + [{"role": "user", "text": message}]
     try:
-        text = generate_fn(build_system_prompt(modul, kontext), samtal)
+        text = generate_fn(build_system_prompt(modul, kontext, program), samtal)
     except Exception as e:
         log.warning("generate_fn misslyckades: %r", e)
         text = None

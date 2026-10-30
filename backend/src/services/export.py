@@ -70,6 +70,8 @@ def account_csv(user: User) -> bytes:
         ["Ort", user.city],
         ["Roll", user.role],
         ["Chatt-tillgång", "Ja" if user.can_chat else "Nej"],
+        ["Veckopåminnelser via e-post", "Ja" if user.reminders_enabled else "Nej"],
+        ["Senaste påminnelse skickad", _time(user.last_reminder_sent_at)],
         ["Konto skapat", _time(user.created_at)],
         ["Senast ändrat", _time(user.updated_at)],
         ["Lösenord", "Sparas bara krypterat och kan inte exporteras"],

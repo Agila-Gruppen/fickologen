@@ -7,9 +7,11 @@ from .routes.chat import router as ChatRouter
 from .routes.admin import router as AdminRouter
 from .routes.diary import router as DiaryRouter
 from .routes.conversations import router as ConversationsRouter
+from .routes.program import router as ProgramRouter
 from .config.database import SessionLocal
 from .models.user import User
 from .utils.admin import admin_usernames
+from .services.reminders import start_scheduler
 
 
 app = FastAPI(
@@ -54,12 +56,18 @@ async def sync_admin_roles() -> None:
     finally:
         db.close()
 
+@app.on_event("startup")
+async def start_reminders() -> None:
+    """Starts the Sunday reminder emails (only if SMTP is configured)."""
+    start_scheduler()
+
 app.include_router(UserRouter)
 app.include_router(AuthRouter)
 app.include_router(ChatRouter)
 app.include_router(AdminRouter)
 app.include_router(ConversationsRouter)
 app.include_router(DiaryRouter)
+app.include_router(ProgramRouter)
 
 @app.get("/")
 async def root():

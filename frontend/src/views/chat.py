@@ -38,10 +38,12 @@ def _tech_info(msg: dict[str, Any]) -> str | None:
     return line
 
 
-def _render_bubble(msg: dict[str, Any]) -> None:
+def render_bubble(msg: dict[str, Any], compact: bool = False) -> None:
+    """One chat message. `compact` leaves out the "reflekterar" label, for small chat panels."""
     role, content = msg["role"], msg["content"]
     if role == "assistant":
-        st.markdown('<div class="fk-reflect-label">Fickologen reflekterar…</div>', unsafe_allow_html=True)
+        if not compact:
+            st.markdown('<div class="fk-reflect-label">Fickologen reflekterar…</div>', unsafe_allow_html=True)
         # Blank lines around the content let Streamlit render the model's markdown.
         st.markdown(
             f'<div class="fk-bubble fk-bubble-bot">\n\n{html.escape(content, quote=False)}\n\n</div>',
@@ -102,7 +104,7 @@ def render() -> None:
             st.rerun()
 
     for msg in get_messages():
-        _render_bubble(msg)
+        render_bubble(msg)
 
     user_text = st.chat_input("Skriv vad som helst – det finns ingen fel ordning.")
     if user_text:

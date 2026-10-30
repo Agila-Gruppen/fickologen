@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import String
+from sqlalchemy import String, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -11,6 +11,7 @@ from ..config.database import Base
 if TYPE_CHECKING:
     from .conversation import Conversation
     from .diary_entry import DiaryEntry
+    from .exercise_log import ExerciseLog
 
 
 class User(Base):
@@ -32,6 +33,10 @@ class User(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(32))
     gender: Mapped[Optional[str]] = mapped_column(String(32))
     city: Mapped[Optional[str]] = mapped_column(String(100))
+    # Weekly program reminders by email, opt-in. last_reminder_sent_at (UTC) stops
+    # the same Sunday's reminder from going out twice.
+    reminders_enabled: Mapped[bool] = mapped_column(server_default=false())
+    last_reminder_sent_at: Mapped[Optional[datetime]] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
@@ -44,6 +49,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         order_by="DiaryEntry.created_at.desc()",
+    )
+    exercise_logs: Mapped[list["ExerciseLog"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
     
     def __repr__(self):
