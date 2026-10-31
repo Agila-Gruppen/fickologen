@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..config.database import get_db
@@ -49,22 +48,24 @@ async def list_entries(
     Lists the logged-in user's diary entries, newest first.
 
     If `search` is given, filters to entries where the term appears in the
-    title or content (case-insensitive substring match).
+    title or content (case-insensitive substring match). Title and content are
+    encrypted in the database, so the filtering happens here after decryption.
     """
-    query = db.query(DiaryEntry).filter(DiaryEntry.user_id == current_user.user_id)
+    entries = (
+        db.query(DiaryEntry)
+        .filter(DiaryEntry.user_id == current_user.user_id)
+        .order_by(DiaryEntry.created_at.desc(), DiaryEntry.id.desc())
+        .all()
+    )
 
-    if search:
-        term = search.strip()
-        if term:
-            pattern = f"%{term}%"
-            query = query.filter(
-                or_(
-                    DiaryEntry.title.ilike(pattern),
-                    DiaryEntry.content.ilike(pattern),
-                )
-            )
+    term = search.strip().casefold() if search else ""
+    if term:
+        entries = [
+            entry for entry in entries
+            if term in (entry.title or "").casefold() or term in entry.content.casefold()
+        ]
 
-    return query.order_by(DiaryEntry.created_at.desc(), DiaryEntry.id.desc()).all()
+    return entries
 
 
 @router.post("/", response_model=DiaryEntryData, status_code=status.HTTP_201_CREATED)

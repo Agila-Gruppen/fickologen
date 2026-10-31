@@ -18,6 +18,7 @@ _dir = tempfile.mkdtemp()
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(_dir, 'test.db').as_posix()}"
 os.environ["BACKEND_URL"] = "http://127.0.0.1:9"  # ingen riktig server
 os.environ.setdefault("SECRET_KEY", "test")
+os.environ.setdefault("DATA_ENCRYPTION_KEY", "81_35OPrUSSzx-DSO81sLnCN5cWyysSICmBRRnVIOYw=")
 
 from fastapi.testclient import TestClient  # noqa: E402
 from streamlit.testing.v1 import AppTest  # noqa: E402
