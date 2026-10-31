@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from ..config.database import Base
+from ..utils.crypto import EncryptedText
 
 if TYPE_CHECKING:
     from .user import User
@@ -16,6 +17,7 @@ class Conversation(Base):
     """
     A chat conversation belonging to a user.
     Messages are stored in the messages table and reference this conversation.
+    title is encrypted at rest, since it is built from the user's first message.
     """
     __tablename__ = "conversations"
 
@@ -23,7 +25,7 @@ class Conversation(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    title: Mapped[Optional[str]] = mapped_column(String(200))
+    title: Mapped[Optional[str]] = mapped_column(EncryptedText)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now(), index=True

@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text
+from sqlalchemy import CheckConstraint, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from ..config.database import Base
+from ..utils.crypto import EncryptedText
 
 if TYPE_CHECKING:
     from .user import User
@@ -18,6 +19,7 @@ class DiaryEntry(Base):
     mood is an optional 1-5 self-rating; the frontend decides what the scale means.
     The CheckConstraint enforces the range at the DB level too, so a bad value
     can never land there even if a client bypasses Pydantic.
+    title and content are encrypted at rest (see utils/crypto.py).
     """
     __tablename__ = "diary_entries"
     __table_args__ = (
@@ -36,8 +38,8 @@ class DiaryEntry(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    title: Mapped[Optional[str]] = mapped_column(String(200))
-    content: Mapped[str] = mapped_column(Text)
+    title: Mapped[Optional[str]] = mapped_column(EncryptedText)
+    content: Mapped[str] = mapped_column(EncryptedText)
     mood: Mapped[Optional[int]] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
