@@ -16,6 +16,8 @@
   --sage-tint: #E7EFE8;
   --peach: #E8B792;
   --peach-tint: #FBEDE0;
+  --beige: #F1E6D6;
+  --beige-strong: #E9DBC6;
   --terracotta: #C57A5F;
   --terracotta-deep: #94503A;
   --terracotta-tint: #F6E6DF;
@@ -72,6 +74,57 @@ a:focus-visible {
 }
 
 /* ---------- App shell ---------- */
+/* Open and close the menu. Streamlit hides the close button until the sidebar is hovered,
+   which never happens on a touch screen, so it is always shown here, with a tap-sized target
+   and our own icons in place of the faint double arrows. */
+[data-testid="stSidebarCollapseButton"] {
+  visibility: visible !important;
+  width: auto !important;
+}
+[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarCollapseButton"] button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  width: 44px !important;
+  height: 44px !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--beige-strong) !important;
+  box-shadow: 0 1px 2px rgba(74, 58, 40, 0.06), 0 6px 14px -8px rgba(150, 96, 56, 0.4) !important;
+  color: var(--sage-deep) !important;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+[data-testid="stExpandSidebarButton"]:hover,
+[data-testid="stSidebarCollapseButton"] button:hover {
+  background: var(--beige) !important;
+  border-color: var(--border-strong) !important;
+}
+[data-testid="stExpandSidebarButton"] > span,
+[data-testid="stSidebarCollapseButton"] button > span {
+  display: none !important;
+}
+[data-testid="stExpandSidebarButton"]::before,
+[data-testid="stSidebarCollapseButton"] button::before {
+  content: "";
+  flex: none;
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  -webkit-mask: var(--fk-toggle-icon) center / contain no-repeat;
+  mask: var(--fk-toggle-icon) center / contain no-repeat;
+}
+/* Three soft lines, the last one shorter: "there is a menu here". */
+[data-testid="stExpandSidebarButton"] {
+  --fk-toggle-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M5 7h14M5 12h14M5 17h8.5'/%3E%3C/svg%3E");
+}
+/* A soft chevron back towards the edge: "put the menu away". */
+[data-testid="stSidebarCollapseButton"] button {
+  --fk-toggle-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 6 8.5 12l6 6'/%3E%3C/svg%3E");
+}
+
 /* Morning light: a warm, very low wash from the top of the page. */
 .stApp {
   background:
@@ -88,7 +141,7 @@ div[data-testid="stAppDeployButton"] { display: none; }
 /* On a phone the menu icon stays on screen, so text scrolling under it needs a backdrop. */
 @media (max-width: 640px) {
   header[data-testid="stHeader"] {
-    background: rgba(250, 247, 241, 0.92);
+    background: linear-gradient(to bottom, rgba(250, 247, 241, 0.95) 55%, rgba(250, 247, 241, 0));
   }
 }
 
@@ -517,7 +570,8 @@ div[class*="st-key-fk_card_login_"] .fk-card-text {
 /* One copy of the image (--fk-logo, set by load_css), wherever the logo appears. */
 .fk-logo {
   background: var(--fk-logo) center / contain no-repeat;
-  filter: drop-shadow(0 14px 18px rgba(92, 66, 42, 0.2)) drop-shadow(0 2px 3px rgba(92, 66, 42, 0.12));
+  /* A warm halo all the way around, with a little more weight underneath. */
+  filter: drop-shadow(0 0 14px rgba(214, 150, 96, 0.42)) drop-shadow(0 8px 14px rgba(150, 96, 56, 0.22));
 }
 
 /* ---------- Hero (Home) ---------- */
@@ -606,12 +660,6 @@ div[class*="st-key-fk_card_login_"] .fk-card-text {
   max-width: 540px;
   margin: 0 auto !important;
 }
-.fk-stitch {
-  width: 91px;
-  height: 3px;
-  margin: 1.3rem auto 0 auto;
-  background: var(--stitch) center / auto repeat-x;
-}
 /* A running conversation needs the room: the logo stays, the rest steps back. */
 .fk-page-head-compact {
   margin-bottom: 1.4rem;
@@ -622,75 +670,23 @@ div[class*="st-key-fk_card_login_"] .fk-card-text {
   margin-bottom: 0.2rem;
 }
 
-/* ---------- Composer (big LLM-style prompt box) ---------- */
+/* ---------- Composer (the big prompt box on Home) ---------- */
+/* The same chat input as on the Chat page (styled below), just roomier. */
 div[class*="st-key-fk_composer"] {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 0.55rem 0.7rem 0.55rem 1.35rem;
-  box-shadow: var(--shadow-soft-lg);
   margin: 1rem 0 0.9rem 0;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-div[class*="st-key-fk_composer"]:focus-within {
-  border-color: var(--sage);
-  box-shadow: var(--focus-ring), var(--shadow-soft-lg);
+div[class*="st-key-fk_composer"] [data-testid="stChatInput"] {
+  border-radius: 24px;
+  padding: 0.4rem 0.4rem 0.4rem 0.6rem;
 }
-/* Keep the send button beside the text on a phone, where columns otherwise stack. */
-div[class*="st-key-fk_composer"] [data-testid="stHorizontalBlock"] {
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-div[class*="st-key-fk_composer"] [data-testid="stColumn"]:first-child {
-  flex: 1 1 auto !important;
-  width: auto !important;
-  min-width: 0 !important;
-}
-div[class*="st-key-fk_composer"] [data-testid="stColumn"]:last-child {
-  flex: 0 0 44px !important;
-  width: 44px !important;
-  min-width: 44px !important;
-}
-div[class*="st-key-fk_composer"] [data-testid="stTextAreaRootElement"],
-div[class*="st-key-fk_composer"] textarea {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-div[class*="st-key-fk_composer"] textarea {
-  resize: none !important;
-  font-family: var(--font-body) !important;
+div[class*="st-key-fk_composer"] [data-testid="stChatInput"] textarea {
   font-size: 1.1rem !important;
-  line-height: 1.5 !important;
-  padding: 1.15rem 0.2rem 0.6rem 0.2rem !important;
+  min-height: 3.2rem;
 }
-div[class*="st-key-fk_composer"] textarea:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-div[class*="st-key-fk_composer"] div[data-testid="stForm"] {
-  border: none !important;
-  padding: 0 !important;
-}
-div[class*="st-key-fk_composer"] [data-testid="stFormSubmitButton"] button {
-  background: var(--sage-dark) !important;
-  color: #FFFFFF !important;
-  border: none !important;
-  border-radius: 50% !important;
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  padding: 0 !important;
-}
-div[class*="st-key-fk_composer"] [data-testid="stFormSubmitButton"] button:hover {
-  background: var(--sage-deep) !important;
-}
+
 /* The word stays for screen readers; the icon is what you see. */
 div[class*="st-key-conv_edit_"] button [data-testid="stMarkdownContainer"],
-div[class*="st-key-conv_del_"] button [data-testid="stMarkdownContainer"],
-div[class*="st-key-fk_composer"] [data-testid="stFormSubmitButton"] button [data-testid="stMarkdownContainer"] {
+div[class*="st-key-conv_del_"] button [data-testid="stMarkdownContainer"] {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -706,9 +702,9 @@ div[class*="st-key-fk_composer"] [data-testid="stFormSubmitButton"] button [data
 }
 
 div[class*="st-key-fk_chip_"] button {
-  background: rgba(255, 253, 249, 0.6) !important;
-  color: var(--text-muted) !important;
-  border: 1px solid var(--border) !important;
+  background: var(--beige) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--beige-strong) !important;
   border-radius: var(--radius-pill) !important;
   padding: 0.34rem 0.8rem !important;
   min-height: 0 !important;
@@ -719,7 +715,7 @@ div[class*="st-key-fk_chip_"] button p {
   font-weight: 500 !important;
 }
 div[class*="st-key-fk_chip_"] button:hover {
-  background: var(--surface) !important;
+  background: var(--beige-strong) !important;
   border-color: var(--border-strong) !important;
   color: var(--heading) !important;
   box-shadow: var(--shadow-soft) !important;

@@ -53,10 +53,12 @@ def render_bubble(msg: dict[str, Any], compact: bool = False) -> None:
         if info:
             st.caption(info)
     else:
+        # <br> rather than raw newlines: a blank line would end the HTML block.
+        text = html.escape(content).replace("\r\n", "\n").replace("\n", "<br>")
         _, col = st.columns([1, 5])
         with col:
             st.markdown(
-                f'<div class="fk-bubble fk-bubble-user">{html.escape(content)}</div>',
+                f'<div class="fk-bubble fk-bubble-user">{text}</div>',
                 unsafe_allow_html=True,
             )
     st.markdown("<div style='height: 1.1rem;'></div>", unsafe_allow_html=True)

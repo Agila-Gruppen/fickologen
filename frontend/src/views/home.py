@@ -26,7 +26,7 @@ def render() -> None:
         unsafe_allow_html=True,
     )
 
-    submitted, prompt_value = _render_composer()
+    prompt_value = _render_composer()
     chosen_chip = _render_chips()
 
     st.markdown(
@@ -45,7 +45,7 @@ def render() -> None:
     if chosen_chip:
         _handle_message(chosen_chip)
 
-    if submitted and prompt_value and prompt_value.strip():
+    if prompt_value and prompt_value.strip():
         _handle_message(prompt_value)
 
     # st.markdown('<div class="fk-divider"></div>', unsafe_allow_html=True)
@@ -59,21 +59,10 @@ def render() -> None:
     #     _render_feature_overview()
 
 
-def _render_composer():
+def _render_composer() -> str | None:
+    """Enter sends, Shift+Enter makes a new line. In a container so it stays here instead of at the page bottom."""
     with st.container(key="fk_composer"):
-        with st.form("fk_composer_form", clear_on_submit=True, border=False):
-            c1, c2 = st.columns([9, 1], vertical_alignment="center")
-            with c1:
-                prompt_value = st.text_area(
-                    "prompt",
-                    key="home_prompt",
-                    placeholder="Skriv vad du vill prata om…",
-                    label_visibility="collapsed",
-                    height=68,
-                )
-            with c2:
-                submitted = st.form_submit_button("Skicka", icon=":material/arrow_upward:")
-    return submitted, prompt_value
+        return st.chat_input("Skriv vad du vill prata om…", key="home_prompt")
 
 
 def _render_chips():

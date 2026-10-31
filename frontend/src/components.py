@@ -335,7 +335,7 @@ def page_header(eyebrow: str, title: str, subtitle: str = "", compact: bool = Fa
     sub = f'<p class="fk-page-sub">{subtitle}</p>' if subtitle else ""
     st.markdown(
         f'<div class="fk-page-head">{LOGO_MARK.replace("fk-logo", "fk-logo fk-page-mark")}'
-        f'<div class="fk-eyebrow">{eyebrow}</div><h1>{title}</h1>{sub}<div class="fk-stitch"></div></div>',
+        f'<div class="fk-eyebrow">{eyebrow}</div><h1>{title}</h1>{sub}</div>',
         unsafe_allow_html=True,
     )
 
