@@ -1,0 +1,19 @@
+# Streamlit reads this file because it lies next to the app's main script, so it
+# applies whichever folder the app is started from (tested on Streamlit 1.65, the lowest
+# version in requirements.txt). base = "light" keeps the app light even when the browser
+# or OS is in dark mode.
+
+[theme]
+base = "light"
+primaryColor = "#7C9885"
+backgroundColor = "#FAF7F1"
+secondaryBackgroundColor = "#F1EAE0"
+textColor = "#3A3733"
+font = "sans serif"
+
+[server]
+headless = true
+runOnSave = true
+
+[browser]
+gatherUsageStats = false

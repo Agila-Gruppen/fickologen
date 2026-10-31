@@ -39,10 +39,21 @@
 }
 
 /* The app has one look, light, whatever the browser or OS theme. The Streamlit
-   theme itself is pinned in .streamlit/config.toml (base = "light"); this
+   theme itself is pinned in frontend/src/.streamlit/config.toml (base = "light"); this
    keeps the browser's own controls (scrollbars, autofill, pickers) light too. */
 :root {
   color-scheme: light only;
+}
+/* A safety net should that file not be read: Streamlit's dark theme would otherwise paint
+   these nearly white on our light surfaces. */
+[data-testid="stWidgetLabel"] p,
+[role="dialog"] [role="tab"],
+[role="dialog"] [role="tab"] p {
+  color: var(--text) !important;
+}
+[role="dialog"] [role="tab"][aria-selected="true"],
+[role="dialog"] [role="tab"][aria-selected="true"] p {
+  color: var(--sage-deep) !important;
 }
 
 html, body, [class*="css"] {
