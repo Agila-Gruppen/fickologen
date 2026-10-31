@@ -10,24 +10,42 @@ from api import BackendUnavailable
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 
+# The logo as an element, drawn from the one copy of the image in the CSS.
+LOGO_MARK = '<div class="fk-logo" role="img" aria-label="Fickologen"></div>'
+
 NAV_ITEMS = [
-    ("home", "Hem", "🏡"),
-    ("chat", "Chatt", "💬"),
-    ("saved", "Sparade chattar", "💾"),
-    ("diary", "Dagbok", "📓"),
-    ("safety", "Trygghet & integritet", "🛡️"),
-    # ("history", "Tidigare chattar", "🕰️"),
-    
+    ("home", "Hem"),
+    ("chat", "Chatt"),
+    ("saved", "Sparade chattar"),
+    ("diary", "Dagbok"),
+    # ("history", "Tidigare chattar"),
 ]
 
 # Visas bara för inloggade (programmet sparar framsteg per konto).
 LOGGED_IN_NAV_ITEMS = [
-    ("treatment", "12 veckor KBT", "🌱"),
+    ("treatment", "12 veckor KBT"),
 ]
 
+SAFETY_NAV_ITEM = ("safety", "Trygghet & integritet")
+
 ADMIN_NAV_ITEMS = [
-    ("manage_accounts", "Hantera konton", "🧰"),
+    ("manage_accounts", "Hantera konton"),
 ]
+
+# Runs once after navigating: on a phone the open sidebar would otherwise cover the page
+# you just asked for. Constant script, nothing from users or the model goes into it.
+_CLOSE_SIDEBAR_JS = """
+<script>
+setTimeout(function () {
+  if (window.innerWidth > 640) { return; }
+  // The button toggles, so leave it alone when the sidebar is already closed.
+  var sidebar = document.querySelector('[data-testid="stSidebar"]');
+  if (!sidebar || sidebar.getBoundingClientRect().right <= 0) { return; }
+  var button = document.querySelector('[data-testid="stSidebarCollapseButton"] button');
+  if (button) { button.click(); }
+}, 80);
+</script>
+"""
 
 CRISIS_RESOURCES = [
     ("112", "Vid akut fara för liv – ring alltid 112."),
@@ -39,7 +57,10 @@ CRISIS_RESOURCES = [
 
 def load_css() -> None:
     css_path = ASSETS_DIR / "style.css"
-    st.markdown(f"<style>{css_path.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+    st.markdown(
+        f"<style>{css_path.read_text(encoding='utf-8')}:root {{ --fk-logo: url('{logo_data_uri()}'); }}</style>",
+        unsafe_allow_html=True,
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -55,10 +76,11 @@ def logo_path() -> Path:
 HIDDEN_VIEWS = {"account"}
 
 
-def _available_nav_items() -> list[tuple[str, str, str]]:
+def _available_nav_items() -> list[tuple[str, str]]:
     items = list(NAV_ITEMS)
     if auth.current_user():
         items.extend(LOGGED_IN_NAV_ITEMS)
+    items.append(SAFETY_NAV_ITEM)
     if auth.is_admin():
         items.extend(ADMIN_NAV_ITEMS)
     return items
@@ -66,17 +88,18 @@ def _available_nav_items() -> list[tuple[str, str, str]]:
 
 def program_available() -> bool:
     """Whether the logged-in user can see the 12-week program (admins only until it is reviewed)."""
-    return any(key == "treatment" for key, _, _ in _available_nav_items())
+    return any(key == "treatment" for key, _ in _available_nav_items())
 
 
 def get_current_view() -> str:
-    valid = {key for key, _, _ in _available_nav_items()} | HIDDEN_VIEWS
+    valid = {key for key, _ in _available_nav_items()} | HIDDEN_VIEWS
     view = st.query_params.get("view", "home")
     return view if view in valid else "home"
 
 
 def go_to(view: str) -> None:
     st.query_params["view"] = view
+    st.session_state["fk_close_sidebar"] = True
     st.rerun()
 
 
@@ -90,9 +113,9 @@ def _crisis_dialog() -> None:
     )
     for label, desc in CRISIS_RESOURCES:
         st.markdown(
-            f"""<div class="fk-card" style="padding:1.1rem 1.3rem; margin-bottom:0.7rem;">
-                <div style="font-weight:600; color:var(--terracotta); margin-bottom:0.2rem;">{label}</div>
-                <div style="color:var(--text-muted); font-size:0.9rem;">{desc}</div>
+            f"""<div class="fk-resource">
+                <div class="fk-resource-label">{label}</div>
+                <div class="fk-resource-text">{desc}</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -176,7 +199,7 @@ def _recovery_code_dialog(code: str) -> None:
     )
     st.markdown(f'<div class="fk-recovery-code">{html.escape(code)}</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="fk-data-note">🔒 Koden visas bara den här gången. Varje kod fungerar '
+        '<div class="fk-data-note">Koden visas bara den här gången. Varje kod fungerar '
         "en gång – när du använt den får du en ny.</div>",
         unsafe_allow_html=True,
     )
@@ -204,27 +227,26 @@ def _render_account() -> None:
                 <div class="fk-account">
                     <span class="fk-account-avatar">{username[:1].upper()}</span>
                     <span class="fk-account-text">
-                        <span class="fk-account-label">Inloggad som</span>
                         <span class="fk-account-name">{username}</span>
-                        <span class="fk-account-label">Konto-ID {user["user_id"]}</span>
+                        <span class="fk-account-label">Inloggad</span>
                     </span>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-            if st.button("Mitt konto", key="account_btn", use_container_width=True):
+            account, logout = st.columns(2, gap="small")
+            if account.button("Mitt konto", key="account_btn", use_container_width=True):
                 go_to("account")
-            if st.button("Logga ut", key="logout_btn", use_container_width=True):
+            if logout.button("Logga ut", key="logout_btn", use_container_width=True):
                 auth.log_out()
                 st.rerun()
         else:
             st.markdown(
                 """
                 <div class="fk-account">
-                    <span class="fk-account-avatar">?</span>
                     <span class="fk-account-text">
                         <span class="fk-account-name">Inte inloggad</span>
-                        <span class="fk-account-label">Logga in eller skapa ett konto</span>
+                        <span class="fk-account-label">Du behöver inte uppge vem du är.</span>
                     </span>
                 </div>
                 """,
@@ -266,11 +288,8 @@ def render_sidebar() -> None:
         st.markdown(
             f"""
             <div class="fk-brand">
-                <img src="{logo_data_uri()}" class="fk-brand-mark" alt="Fickologen" />
-                <span class="fk-brand-text">
-                    <span class="fk-brand-title">Fickologen</span>
-                    <span class="fk-brand-tagline">Din trygga plats att tänka högt</span>
-                </span>
+                <span class="fk-brand-title">Fickologen</span>
+                <span class="fk-brand-tagline">Din trygga plats att tänka högt</span>
             </div>
             """,
             unsafe_allow_html=True,
@@ -278,33 +297,60 @@ def render_sidebar() -> None:
 
         # Buttons rather than <a href> links: a link reloads the page, which
         # starts a new Streamlit session and wipes the chat and its unlock.
-        for key, label, icon in _available_nav_items():
-            state = "navactive" if key == current else "nav"
-            if st.button(label, icon=icon, key=f"{state}_{key}", use_container_width=True):
-                go_to(key)
+        with st.container(key="fk_nav"):
+            for key, label in _available_nav_items():
+                state = "navactive" if key == current else "nav"
+                if st.button(label, key=f"{state}_{key}", use_container_width=True):
+                    go_to(key)
 
         render_demo_settings()
 
-        st.markdown('<div class="fk-sidebar-spacer"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="fk-sidebar-footer">', unsafe_allow_html=True)
-        if st.button("🆘 Behöver du akut stöd?", key="crisis_btn", use_container_width=True):
+        if st.button("Behöver du akut stöd?", key="crisis_btn", use_container_width=True):
             _crisis_dialog()
-        st.markdown("</div>", unsafe_allow_html=True)
 
         _render_account()
 
 
-def page_header(eyebrow: str, title: str, subtitle: str = "") -> None:
+def close_sidebar_after_navigation() -> None:
+    """Call last on the page: a script element earlier on would shift everything after it."""
+    if st.session_state.pop("fk_close_sidebar", False):
+        st.html(_CLOSE_SIDEBAR_JS, unsafe_allow_javascript=True)
+
+
+def page_header(eyebrow: str, title: str, subtitle: str = "", compact: bool = False) -> None:
+    """The logo, always in the middle, above the page title. `compact` is for a running conversation."""
+    if compact:
+        st.markdown(
+            f"""
+            <div class="fk-page-head fk-page-head-compact">
+                {LOGO_MARK.replace("fk-logo", "fk-logo fk-page-mark")}
+                <div class="fk-eyebrow">{eyebrow}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        return
+    # One line on purpose: an empty subtitle in a multi-line string leaves a blank line,
+    # which ends the HTML block and prints the rest of it as code.
+    sub = f'<p class="fk-page-sub">{subtitle}</p>' if subtitle else ""
     st.markdown(
-        f"""
-        <div style="margin-bottom: 1.6rem;">
-            <div class="fk-hero-eyebrow" style="text-align:left;">{eyebrow}</div>
-            <h1 style="font-size:2rem; margin-bottom:0.5rem;">{title}</h1>
-            {f'<p style="color:var(--text-muted); font-size:1rem; line-height:1.65; max-width:560px;">{subtitle}</p>' if subtitle else ''}
-        </div>
-        """,
+        f'<div class="fk-page-head">{LOGO_MARK.replace("fk-logo", "fk-logo fk-page-mark")}'
+        f'<div class="fk-eyebrow">{eyebrow}</div><h1>{title}</h1>{sub}<div class="fk-stitch"></div></div>',
         unsafe_allow_html=True,
     )
+
+
+def login_prompt(title: str, text: str, key: str) -> None:
+    """Shown instead of a page's content when the visitor isn't logged in."""
+    with st.container(key=f"fk_card_login_{key}"):
+        st.markdown(
+            f'<div class="fk-card-title">{title}</div><p class="fk-card-text">{text}</p>',
+            unsafe_allow_html=True,
+        )
+        _, middle, _ = st.columns([1, 2, 1])
+        with middle:
+            if st.button("Logga in / skapa konto", type="primary", use_container_width=True, key=key):
+                open_account_dialog()
 
 
 def placeholder_module(icon: str, title: str, description: str, detail: str, cta_key: str) -> None:
@@ -321,4 +367,4 @@ def placeholder_module(icon: str, title: str, description: str, detail: str, cta
         unsafe_allow_html=True,
     )
     if st.button("Säg till när det är klart", key=cta_key):
-        st.toast("Tack! Vi hör av oss så snart det är redo. 🌱")
+        st.toast("Tack! Vi hör av oss så snart det är redo.")

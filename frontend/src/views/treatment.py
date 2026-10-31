@@ -22,7 +22,7 @@ from chat_engine import (
     send_user_message,
     start_new_conversation,
 )
-from components import open_account_dialog, page_header
+from components import LOGO_MARK, login_prompt, page_header
 from views.chat import render_bubble
 
 PROGRAM_NAME = "12 veckor KBT"
@@ -32,7 +32,7 @@ SCROLL_TOP_KEY = "fk_program_scroll_top"  # set when the page should start at th
 EXERCISE_KEY_PREFIX = "fk_ex_"      # widget keys of the exercise forms, cleared when the program is reset
 TOTAL_WEEKS = 12
 CHAT_HEIGHT = 440
-STATUS_MARKS = {"done": "✓", "open": "", "locked": "🔒"}
+STATUS_MARKS = {"done": "✓", "open": "●", "locked": "–"}
 KIND_LABELS = {
     "reflektion": "Reflektion",
     "tankedagbok": "Tankedagbok",
@@ -71,12 +71,15 @@ setTimeout(fkScrollChat, 600);
 
 
 def render() -> None:
-    page_header(
-        PROGRAM_NAME,
-        "Tolv veckor, ett litet steg i taget",
-        "Lite teori och några övningar varje vecka. Du går i din egen takt, och "
-        "Fickologen finns i chatten bredvid om du undrar över något.",
-    )
+    number = st.session_state.get(WEEK_KEY)
+    # A week page has its own heading, beside the text instead of above it.
+    if not number or not is_unlocked():
+        page_header(
+            PROGRAM_NAME,
+            "Tolv veckor, ett litet steg i taget",
+            "Lite teori och några övningar varje vecka. Du går i din egen takt, och "
+            "Fickologen finns i chatten bredvid om du undrar över något.",
+        )
     if not is_unlocked():
         _render_login_cta()
         return
@@ -85,7 +88,6 @@ def render() -> None:
     if st.session_state.pop(SCROLL_TOP_KEY, False):
         st.html(_SCROLL_TOP_JS, unsafe_allow_javascript=True)
     try:
-        number = st.session_state.get(WEEK_KEY)
         if number:
             _render_week_page(number)
         else:
@@ -95,19 +97,12 @@ def render() -> None:
 
 
 def _render_login_cta() -> None:
-    st.markdown(
-        '<div class="fk-card" style="text-align:center;">'
-        '<span class="fk-card-icon">🌱</span>'
-        '<div class="fk-card-title">Logga in för att börja</div>'
-        '<p class="fk-card-text">Programmet sparar dina övningar och hur långt du kommit, '
-        "så du behöver ett konto för att använda det.</p>"
-        "</div>",
-        unsafe_allow_html=True,
+    login_prompt(
+        "Logga in för att börja",
+        "Programmet sparar dina övningar och hur långt du kommit, "
+        "så du behöver ett konto för att använda det.",
+        key="fk_program_login",
     )
-    _, middle, _ = st.columns([1, 2, 1])
-    with middle:
-        if st.button("Logga in / skapa konto", type="primary", use_container_width=True, key="fk_program_login"):
-            open_account_dialog()
 
 
 # ---------- Overview ----------
@@ -126,35 +121,43 @@ def _render_overview() -> None:
     if overview["finished"]:
         st.success("Du har gått igenom alla tolv veckorna. Det är något att vara stolt över.")
     else:
-        st.markdown(f"**Vecka {overview['current_week']} av {TOTAL_WEEKS}** · {done} klara")
-    st.progress(done / TOTAL_WEEKS)
+        st.markdown(
+            f'<div class="fk-program-status"><strong>Vecka {overview["current_week"]} av {TOTAL_WEEKS}</strong> · '
+            f'{done} {"klar" if done == 1 else "klara"}</div>',
+            unsafe_allow_html=True,
+        )
     _render_timeline(weeks)
 
     if not overview["finished"]:
         current = weeks[overview["current_week"] - 1]
-        st.markdown(
-            f"""
-            <div class="fk-card">
-                <div class="fk-badge">Din vecka</div>
+        with st.container(key="fk_card_current_week"):
+            st.markdown(
+                f"""
+                <div class="fk-eyebrow">Din vecka</div>
                 <div class="fk-card-title">Vecka {current["week"]}: {html.escape(current["title"])}</div>
-                <p class="fk-card-text">{html.escape(current["summary"])}</p>
-                <p class="fk-card-text" style="font-size:0.82rem;">Cirka {current["minutes"]} minuter</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        if st.button(f"Fortsätt med vecka {current['week']}", type="primary", key="fk_program_continue"):
-            _open_week(current["week"])
+                <p class="fk-card-text">{html.escape(current["summary"])} · cirka {current["minutes"]} minuter</p>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button(f"Fortsätt med vecka {current['week']}", type="primary", key="fk_program_continue"):
+                _open_week(current["week"])
 
     with st.expander("Alla veckor", expanded=done > 0):
-        for week in weeks:
-            left, right = st.columns([5, 1], vertical_alignment="center")
-            mark = STATUS_MARKS[week["status"]] or "●"
-            left.markdown(f"{mark} **Vecka {week['week']}:** {week['title']}")
-            if week["status"] == "locked":
-                right.caption("Öppnas senare")
-            elif right.button("Öppna", key=f"fk_program_open_{week['week']}"):
-                _open_week(week["week"])
+        with st.container(key="fk_program_weeks"):
+            for week in weeks:
+                left, right = st.columns([5, 1], vertical_alignment="center")
+                locked = week["status"] == "locked"
+                left.markdown(
+                    f'<div class="fk-week-row{" fk-week-row-locked" if locked else ""}">'
+                    f'<span class="fk-week-row-mark">{STATUS_MARKS[week["status"]]}</span>'
+                    f'<span class="fk-week-row-number">Vecka {week["week"]}:</span>'
+                    f'<span>{html.escape(week["title"])}</span></div>',
+                    unsafe_allow_html=True,
+                )
+                if locked:
+                    right.markdown('<div class="fk-week-row-note">Öppnas senare</div>', unsafe_allow_html=True)
+                elif right.button("Öppna", key=f"fk_program_open_{week['week']}"):
+                    _open_week(week["week"])
     if not overview["finished"] and overview["current_week"] < TOTAL_WEEKS:
         st.caption(f"Vecka {overview['current_week'] + 1}–{TOTAL_WEEKS} öppnas en i taget, när veckan före är klar.")
 
@@ -175,7 +178,6 @@ def _render_intro() -> None:
     st.markdown(
         """
         <div class="fk-card">
-            <span class="fk-card-icon">🌱</span>
             <div class="fk-badge">Utkast</div>
             <div class="fk-card-title">Så här fungerar programmet</div>
             <p class="fk-card-text">
@@ -189,7 +191,7 @@ def _render_intro() -> None:
                 och det är okej att ta längre tid. Du kan alltid gå tillbaka till en tidigare
                 vecka. Om något är oklart kan du fråga i chatten som ligger bredvid texten.
             </p>
-            <p class="fk-card-text" style="font-size:0.82rem;">
+            <p class="fk-card-text fk-card-text-small">
                 Programmet är ett stöd och ersätter inte vård. Mår du dåligt: ring 1177,
                 eller 112 vid akut fara. Texterna är ett utkast som ännu inte är klinisk granskade.
             </p>
@@ -208,7 +210,7 @@ def _render_intro() -> None:
 def _render_timeline(weeks: list[dict]) -> None:
     circles = []
     for week in weeks:
-        extra = {"done": " fk-week-done", "open": " fk-week-active", "locked": " fk-week-locked"}[week["status"]]
+        extra = {"done": " fk-week-done", "open": " fk-week-active", "locked": ""}[week["status"]]
         mark = "✓" if week["status"] == "done" else week["week"]
         circles.append(f'<div class="fk-week{extra}" title="{html.escape(week["title"])}">{mark}</div>')
     st.markdown(f'<div class="fk-timeline">{"".join(circles)}</div>', unsafe_allow_html=True)
@@ -272,7 +274,7 @@ def _render_week_navigation(number: int, weeks: list[dict]) -> bool:
     picker.selectbox(
         "Byt vecka",
         list(range(1, TOTAL_WEEKS + 1)),
-        format_func=lambda n: f"{STATUS_MARKS[statuses[n]]} Vecka {n}: {titles[n]}".strip(),
+        format_func=lambda n: f"Vecka {n}: {titles[n]}" + {"done": " ✓", "locked": " (låst)"}.get(statuses[n], ""),
         key=picker_key,
         label_visibility="collapsed",
         on_change=_jump_to_week,
@@ -284,7 +286,7 @@ def _render_week_navigation(number: int, weeks: list[dict]) -> bool:
         help="Nästa vecka öppnas när du är klar med den här." if next_locked and number < TOTAL_WEEKS else None,
     ):
         _open_week(number + 1)
-    chat_on = chat.toggle("💬 Chatten bredvid", value=True, key="fk_program_chat_on")
+    chat_on = chat.toggle("Chatten bredvid", value=True, key="fk_program_chat_on")
     st.caption("Tryck på Spara längst ner innan du byter vecka, så följer det du skrivit med.")
     return chat_on
 
@@ -307,15 +309,18 @@ def _render_week_content(week: dict) -> None:
     st.markdown(
         f"""
         <div class="fk-week-head">
-            <div class="fk-hero-eyebrow" style="text-align:left;">Vecka {number} av {TOTAL_WEEKS}</div>
-            <h2 style="margin:0 0 0.4rem 0;">{html.escape(week["title"])}</h2>
-            <p class="fk-card-text">{html.escape(week["summary"])} · cirka {week["minutes"]} minuter</p>
+            {LOGO_MARK}
+            <div>
+                <div class="fk-eyebrow">Vecka {number} av {TOTAL_WEEKS}</div>
+                <h2>{html.escape(week["title"])}</h2>
+                <p class="fk-card-text">{html.escape(week["summary"])} · cirka {week["minutes"]} minuter</p>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
     if week.get("safety_note"):
-        st.markdown(f'<div class="fk-note">🛟 {html.escape(week["safety_note"])}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="fk-note">{html.escape(week["safety_note"])}</div>', unsafe_allow_html=True)
 
     st.markdown("#### 1. Läs")
     with st.container(border=True, key="fk_program_theory"):
@@ -485,11 +490,11 @@ def _handle_submit(week: dict, logs: dict[str, dict], values: dict[str, dict], p
         st.error(error)
         return
     if number == TOTAL_WEEKS:
-        st.session_state[FLASH_KEY] = "Bra jobbat! Du har gått igenom hela programmet. 🌱"
+        st.session_state[FLASH_KEY] = "Bra jobbat! Du har gått igenom hela programmet."
         st.session_state.pop(WEEK_KEY, None)
         st.session_state[SCROLL_TOP_KEY] = True
         st.rerun()
-    st.session_state[FLASH_KEY] = f"Bra jobbat! Vecka {number + 1} är öppen. 🌱"
+    st.session_state[FLASH_KEY] = f"Bra jobbat! Vecka {number + 1} är öppen."
     _open_week(number + 1)
 
 
@@ -499,8 +504,8 @@ def _render_chat_panel(week: dict) -> None:
     number = week["week"]
     with st.container(key="fk_program_chatpanel"):
         title, new_chat = st.columns([3, 2], vertical_alignment="center")
-        title.markdown(f'<div class="fk-program-chat-title">💬 Fråga om vecka {number}</div>', unsafe_allow_html=True)
-        if new_chat.button("➕ Ny chatt", key="fk_program_new_chat", use_container_width=True):
+        title.markdown(f'<div class="fk-program-chat-title">Fråga om vecka {number}</div>', unsafe_allow_html=True)
+        if new_chat.button("Ny chatt", key="fk_program_new_chat", use_container_width=True):
             start_new_conversation()
             st.rerun()
 
@@ -509,7 +514,7 @@ def _render_chat_panel(week: dict) -> None:
         with box:
             if not messages:
                 st.markdown(
-                    '<div class="fk-chat-intro" style="margin:0.6rem 0 0.8rem 0;">Undrar du över något i teorin eller '
+                    '<div class="fk-chat-intro fk-chat-intro-panel">Undrar du över något i teorin eller '
                     "en övning? Skriv nedan, eller välj en fråga:</div>",
                     unsafe_allow_html=True,
                 )

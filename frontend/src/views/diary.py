@@ -1,32 +1,26 @@
 import html
 import re
 from datetime import date, datetime, timedelta
-from datetime_utils import STOCKHOLM, to_local
+from datetime_utils import MONTHS, STOCKHOLM, to_local
 
 import streamlit as st
 
 import auth
 import diary_api
 from api import BackendUnavailable
-from components import open_account_dialog, page_header
+from components import login_prompt, page_header
 
 MOODS = {
-    1: "😞 Tungt",
-    2: "🙁 Lite tungt",
-    3: "😐 Okej",
-    4: "🙂 Ganska bra",
-    5: "😊 Bra",
+    1: "Tungt",
+    2: "Lite tungt",
+    3: "Okej",
+    4: "Ganska bra",
+    5: "Bra",
 }
 
 WEEKDAYS = ["måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag", "söndag"]
-MONTHS = [
-    "januari", "februari", "mars", "april", "maj", "juni",
-    "juli", "augusti", "september", "oktober", "november", "december",
-]
-
 WEEKDAYS_SHORT = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"]
 MONTHS_SHORT = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
-MOOD_EMOJI = {mood: label.split(" ", 1)[0] for mood, label in MOODS.items()}
 
 VIEWS = {"week": "Vecka", "all": "Alla anteckningar"}
 
@@ -72,22 +66,13 @@ def render() -> None:
 
 
 def _render_logged_out() -> None:
-    st.markdown(
-        """
-        <div class="fk-card">
-            <span class="fk-card-icon">📓</span>
-            <div class="fk-card-title">Din dagbok</div>
-            <p class="fk-card-text">
-                Dagboken sparas på ditt konto, så att du kan komma tillbaka till den.
-                Logga in eller skapa ett konto för att börja skriva – du behöver inte
-                uppge vem du är.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    login_prompt(
+        "Din dagbok",
+        "Dagboken sparas på ditt konto, så att du kan komma tillbaka till den. "
+        "Logga in eller skapa ett konto för att börja skriva – du behöver inte "
+        "uppge vem du är.",
+        key="diary_login_btn",
     )
-    if st.button("Logga in / skapa konto", key="diary_login_btn", type="primary"):
-        open_account_dialog()
 
 
 def _mood_picker(key: str, default: int | None = None) -> int | None:
@@ -120,7 +105,7 @@ def _render_composer() -> None:
             diary_api.create_entry(title.strip(), content.strip(), mood)
             # Jump to this week so the new entry is in view.
             st.session_state["fk_diary_week_offset"] = 0
-            st.toast("Anteckningen är sparad. 🌱")
+            st.toast("Anteckningen är sparad.")
             
 def _render_search() -> str:
     """Sökfält över anteckningslistan. Returnerar söktermen (stripad)."""
@@ -138,13 +123,13 @@ def _render_entries(entries: list[dict], search: str = "") -> None:
     if not entries:
         if search:
             st.markdown(
-                '<p class="fk-chat-intro" style="text-align:left;">'
+                '<p class="fk-empty-note">'
                 f"Inga anteckningar matchade <em>{html.escape(search)}</em>.</p>",
                 unsafe_allow_html=True,
             )
         else:
             st.markdown(
-                '<p class="fk-chat-intro" style="text-align:left;">'
+                '<p class="fk-empty-note">'
                 "Inga anteckningar än – det du skriver hamnar här.</p>",
                 unsafe_allow_html=True,
             )
@@ -194,12 +179,12 @@ def _render_week(entries: list[dict]) -> None:
             by_day[day].append(entry)
 
     prev, label, nxt = st.columns([1, 4, 1], vertical_alignment="center")
-    if prev.button("◀", key="diary_week_prev", help="Föregående vecka", use_container_width=True):
+    if prev.button("‹", key="diary_week_prev", help="Föregående vecka", use_container_width=True):
         st.session_state["fk_diary_week_offset"] = offset - 1
         st.rerun()
     label.markdown(f'<div class="fk-week-label">{_week_label(monday)}</div>', unsafe_allow_html=True)
     # No browsing into the future: nothing can be written there.
-    if nxt.button("▶", key="diary_week_next", help="Nästa vecka", disabled=offset >= 0, use_container_width=True):
+    if nxt.button("›", key="diary_week_next", help="Nästa vecka", disabled=offset >= 0, use_container_width=True):
         st.session_state["fk_diary_week_offset"] = offset + 1
         st.rerun()
 
@@ -208,11 +193,11 @@ def _render_week(entries: list[dict]) -> None:
         day_entries = by_day[day]
         mood = _day_mood(day_entries)
         if mood:
-            marker = f'<span class="fk-week-mood" title="{MOODS[mood]}">{MOOD_EMOJI[mood]}</span>'
+            marker = f'<span class="fk-mood-dot fk-mood-{mood}" title="{MOODS[mood]}"></span>'
         elif day_entries:
-            marker = '<span class="fk-week-dot" title="Anteckning utan humör">●</span>'
+            marker = '<span class="fk-mood-dot" title="Anteckning utan humör"></span>'
         else:
-            marker = '<span class="fk-week-none"></span>'
+            marker = ""
         classes = "fk-week-day"
         if day == today:
             classes += " fk-week-today"
@@ -222,7 +207,7 @@ def _render_week(entries: list[dict]) -> None:
             f'<div class="{classes}">'
             f'<span class="fk-week-weekday">{WEEKDAYS_SHORT[day.weekday()]}</span>'
             f'<span class="fk-week-date">{day.day}</span>'
-            f"{marker}</div>"
+            f'<span class="fk-week-marker">{marker}</span></div>'
         )
     st.markdown(f'<div class="fk-week-strip">{"".join(cells)}</div>', unsafe_allow_html=True)
 
@@ -241,7 +226,7 @@ def _render_week(entries: list[dict]) -> None:
 
     if not week_entries:
         st.markdown(
-            '<p class="fk-chat-intro" style="text-align:left;">'
+            '<p class="fk-empty-note">'
             "Inga anteckningar den här veckan.</p>",
             unsafe_allow_html=True,
         )
@@ -260,7 +245,7 @@ def _render_week(entries: list[dict]) -> None:
             if st.session_state.get("fk_diary_editing") == entry["id"]:
                 _render_edit_form(entry)
             else:
-                _render_entry(entry)
+                _render_entry(entry, day_shown=True)
 
 
 def _format_date(value: str) -> str:
@@ -278,9 +263,17 @@ def _highlight(text: str, search: str) -> str:
     return pattern.sub(lambda m: f'<mark class="fk-diary-mark">{m.group(0)}</mark>', text)
 
 
-def _render_entry(entry: dict, search: str = "") -> None:
+def _render_entry(entry: dict, search: str = "", day_shown: bool = False) -> None:
+    """One entry. `day_shown`: a day heading is already above it, so the time is enough."""
     entry_id = entry["id"]
-    mood = f'<span class="fk-diary-mood">{MOODS[entry["mood"]]}</span>' if entry.get("mood") in MOODS else ""
+    mood = ""
+    if entry.get("mood") in MOODS:
+        mood = (
+            f'<span class="fk-diary-mood"><span class="fk-mood-dot fk-mood-{entry["mood"]}"></span>'
+            f'{MOODS[entry["mood"]]}</span>'
+        )
+    local = to_local(entry["created_at"])
+    when = f"{local:%H:%M}" if day_shown and local else _format_date(entry["created_at"])
     title_html = _highlight(html.escape(entry["title"]), search) if entry.get("title") else ""
     title = f'<div class="fk-card-title">{title_html}</div>' if entry.get("title") else ""
     # <br> rather than raw newlines: a blank line would end the HTML block and
@@ -291,7 +284,7 @@ def _render_entry(entry: dict, search: str = "") -> None:
     )
     st.markdown(
         '<div class="fk-diary-entry">'
-        f'<div class="fk-diary-meta"><span>{_format_date(entry["created_at"])}</span>{mood}</div>'
+        f'<div class="fk-diary-meta"><span>{when}</span>{mood}</div>'
         f'{title}'
         f'<div class="fk-diary-content">{content}</div>'
         '</div>',
@@ -313,7 +306,7 @@ def _render_entry(entry: dict, search: str = "") -> None:
             st.session_state.pop("fk_diary_deleting", None)
             st.rerun()
     else:
-        edit, delete, _ = st.columns([1, 1, 3])
+        edit, delete, _ = st.columns([1, 1, 4])
         if edit.button("Redigera", key=f"diary_edit_{entry_id}", use_container_width=True):
             st.session_state["fk_diary_editing"] = entry_id
             st.session_state.pop("fk_diary_deleting", None)
@@ -321,7 +314,7 @@ def _render_entry(entry: dict, search: str = "") -> None:
         if delete.button("Radera", key=f"diary_delete_{entry_id}", use_container_width=True):
             st.session_state["fk_diary_deleting"] = entry_id
             st.rerun()
-    st.markdown('<div style="height:0.8rem;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="fk-spacer-entry"></div>', unsafe_allow_html=True)
 
 
 def _render_edit_form(entry: dict) -> None:

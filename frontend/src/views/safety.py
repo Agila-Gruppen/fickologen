@@ -46,17 +46,9 @@ def render() -> None:
         "",
     )
 
-    for title, text in SECTIONS:
-        _section(title, text)
+    sections = "".join(_section(title, text) for title, text in SECTIONS)
+    st.markdown(f'<div class="fk-safety-sheet">{sections}</div>', unsafe_allow_html=True)
 
 
-def _section(title: str, text: str) -> None:
-    st.markdown(
-        f"""
-        <div class="fk-safety-section">
-            <h3>{title}</h3>
-            <p>{text}</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+def _section(title: str, text: str) -> str:
+    return f'<div class="fk-safety-section"><h3>{title}</h3><p>{text}</p></div>'

@@ -63,12 +63,12 @@ def _on_submit(ids_by_label: dict[str, int], usernames_by_label: dict[str, str])
     st.session_state[PASSWORD_KEY] = ""
     st.session_state.pop(ERROR_KEY, None)
     st.session_state[FLASH_KEY] = (
-        f"Lösenordet för {usernames_by_label[chosen_label]} är uppdaterat. ✓"
+        f"Lösenordet för {usernames_by_label[chosen_label]} är uppdaterat."
     )
 
 
 def _render_change_password_card() -> None:
-    with st.container(border=True):
+    with st.container(key="fk_card_admin_password"):
         st.markdown('<div class="fk-section-title">Ändra lösenord</div>', unsafe_allow_html=True)
 
         try:
@@ -125,7 +125,7 @@ def _render_change_password_card() -> None:
 
 
 def _render_reminders_card() -> None:
-    with st.container(border=True):
+    with st.container(key="fk_card_admin_reminders"):
         st.markdown('<div class="fk-section-title">Veckopåminnelser</div>', unsafe_allow_html=True)
         st.markdown(
             '<p class="fk-card-text">Varje söndag kväll får alla som går programmet och har '
