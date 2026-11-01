@@ -49,7 +49,7 @@ def render() -> None:
         view = st.segmented_control(
             "Visa",
             options=list(VIEWS),
-            format_func=VIEWS.get,
+            format_func=lambda key: VIEWS[key],
             default="week",
             key="fk_diary_view",
             label_visibility="collapsed",
@@ -175,7 +175,7 @@ def _render_week(entries: list[dict]) -> None:
     by_day: dict[date, list[dict]] = {day: [] for day in days}
     for entry in entries:
         day = _entry_day(entry)
-        if day in by_day:
+        if day is not None and day in by_day:
             by_day[day].append(entry)
 
     prev, label, nxt = st.columns([1, 4, 1], vertical_alignment="center")
