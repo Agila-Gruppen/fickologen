@@ -1,21 +1,21 @@
 """Saved chats: list the logged-in user's conversations, open, rename or delete them."""
 import html
 from datetime import datetime
-from datetime_utils import to_local
+from datetime_utils import format_day, to_local
 
 import streamlit as st
 
 import auth
 import conversations as conv_api
 from chat_engine import load_conversation, start_new_conversation
-from components import go_to, page_header
+from components import go_to, login_prompt, page_header
 
 
 def _format_dt(iso: str) -> str:
     dt = to_local(iso)
     if dt is None:
         return iso
-    return dt.strftime("%Y-%m-%d %H:%M")
+    return f"{format_day(dt)}, {dt:%H:%M}"
 
 
 def _open(conversation_id: int) -> None:
@@ -78,7 +78,11 @@ def render() -> None:
     )
 
     if not auth.current_user():
-        st.info("Logga in för att se dina sparade chattar.")
+        login_prompt(
+            "Logga in för att se dina samtal",
+            "Dina chattar sparas på ditt konto, så att du kan läsa dem igen och fortsätta när du vill.",
+            key="saved_login_btn",
+        )
         return
 
     with st.spinner("Hämtar dina chattar..."):
@@ -95,20 +99,20 @@ def render() -> None:
     for conv in conversations:
         title = conv.get("title") or "Namnlös chatt"
         is_open = st.session_state.get("fk_conversation_id") == conv["id"]
-        with st.container(border=True):
-            c1, c2, c3, c4 = st.columns([6, 2, 1, 1])
+        with st.container(key=f"fk_card_saved_{conv['id']}"):
+            c1, c2, c3, c4 = st.columns([6, 2, 1, 1], vertical_alignment="center")
             with c1:
-                marker = "🟢 " if is_open else ""
-                st.markdown(f'<div class="fk-saved-title">{marker}{html.escape(title)}</div>', unsafe_allow_html=True)
+                marker = '<span class="fk-saved-open">Öppen nu</span>' if is_open else ""
+                st.markdown(f'<div class="fk-saved-title">{html.escape(title)}{marker}</div>', unsafe_allow_html=True)
                 st.caption(f"Senast uppdaterad {_format_dt(conv['updated_at'])}")
             with c2:
                 if st.button("Öppna", key=f"open_{conv['id']}", use_container_width=True):
                     _open(conv["id"])
             with c3:
-                if st.button("✏️", key=f"conv_edit_{conv['id']}", use_container_width=True, help="Byt namn"):
+                if st.button("Byt namn", icon=":material/edit:", key=f"conv_edit_{conv['id']}", use_container_width=True, help="Byt namn"):
                     _rename_dialog(conv["id"], conv.get("title") or "")
             with c4:
-                if st.button("🗑️", key=f"conv_del_{conv['id']}", use_container_width=True, help="Radera chatten"):
+                if st.button("Radera", icon=":material/delete:", key=f"conv_del_{conv['id']}", use_container_width=True, help="Radera chatten"):
                     st.session_state["fk_pending_delete"] = conv["id"]
                     _confirm_delete_dialog(conv["id"], title)
 

@@ -1,7 +1,7 @@
 import streamlit as st
 
 from chat_engine import is_unlocked, send_user_message, start_new_conversation
-from components import go_to, logo_data_uri, open_account_dialog
+from components import LOGO_MARK, go_to, open_account_dialog
 
 SUGGESTIONS = [
     "Jag vet inte var jag ska börja",
@@ -11,17 +11,11 @@ SUGGESTIONS = [
 
 
 def render() -> None:
-    st.markdown('<div class="fk-glow"></div>', unsafe_allow_html=True)
-    # Rendered as its own markdown block: bundling it with the <h1> below causes
-    # Streamlit's heading-anchor processing to silently drop this <img>.
     st.markdown(
-        f'<img src="{logo_data_uri()}" class="fk-hero-logo" alt="Fickologen" />',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
+        f"""
         <div class="fk-hero">
-            <div class="fk-hero-eyebrow">Fickologen</div>
+            <div class="fk-hero-mark">{LOGO_MARK}</div>
+            <div class="fk-hero-wordmark">Fickologen</div>
             <h1>Vad vill du prata om idag?</h1>
             <p class="fk-hero-sub">
                 Skriv precis som tankarna kommer. Det finns inget rätt sätt att
@@ -32,14 +26,13 @@ def render() -> None:
         unsafe_allow_html=True,
     )
 
-    submitted, prompt_value = _render_composer()
+    prompt_value = _render_composer()
+    chosen_chip = _render_chips()
 
     st.markdown(
         '<div class="fk-composer-hint">Fickologen lyssnar utan att döma – i din takt.</div>',
         unsafe_allow_html=True,
     )
-
-    chosen_chip = _render_chips()
 
     def _handle_message(text: str) -> None:
         if not is_unlocked():
@@ -52,7 +45,7 @@ def render() -> None:
     if chosen_chip:
         _handle_message(chosen_chip)
 
-    if submitted and prompt_value and prompt_value.strip():
+    if prompt_value and prompt_value.strip():
         _handle_message(prompt_value)
 
     # st.markdown('<div class="fk-divider"></div>', unsafe_allow_html=True)
@@ -66,21 +59,10 @@ def render() -> None:
     #     _render_feature_overview()
 
 
-def _render_composer():
+def _render_composer() -> str | None:
+    """Enter sends, Shift+Enter makes a new line. In a container so it stays here instead of at the page bottom."""
     with st.container(key="fk_composer"):
-        with st.form("fk_composer_form", clear_on_submit=True, border=False):
-            c1, c2 = st.columns([9, 1], vertical_alignment="center")
-            with c1:
-                prompt_value = st.text_area(
-                    "prompt",
-                    key="home_prompt",
-                    placeholder="Skriv vad du vill prata om…",
-                    label_visibility="collapsed",
-                    height=68,
-                )
-            with c2:
-                submitted = st.form_submit_button("➤", use_container_width=True)
-    return submitted, prompt_value
+        return st.chat_input("Skriv vad du vill prata om…", key="home_prompt")
 
 
 def _render_chips():
