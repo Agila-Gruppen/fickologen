@@ -73,7 +73,7 @@ def logo_path() -> Path:
     return ASSETS_DIR / "logo-mark.png"
 
 
-HIDDEN_VIEWS = {"account"}
+HIDDEN_VIEWS = {"account", "password_reset"}
 
 
 def _available_nav_items() -> list[tuple[str, str]]:
@@ -166,24 +166,61 @@ def _account_dialog() -> None:
             _submit_account_form(auth.sign_up, username, password, password_again)
 
     with reset_tab:
-        st.markdown(
-            '<p class="fk-card-text">Använd återställningskoden du fick när du skapade '
-            "kontot för att välja ett nytt lösenord.</p>",
-            unsafe_allow_html=True,
+        method = st.segmented_control(
+            "Hur vill du återställa?",
+            options=["email", "code"],
+            format_func=lambda m: "📧 Via e-post" if m == "email" else "🔑 Med återställningskod",
+            default="email",
+            key="fk_reset_method",
+            label_visibility="collapsed",
         )
-        with st.form("fk_reset_form", border=False):
-            username = st.text_input("Användarnamn", key="fk_reset_username")
-            recovery_code = st.text_input(
-                "Återställningskod",
-                key="fk_reset_code",
-                placeholder="XXXX-XXXX-XXXX-XXXX",
-            )
-            password = st.text_input("Nytt lösenord", type="password", key="fk_reset_password", help="Minst 6 tecken.")
-            password_again = st.text_input("Upprepa det nya lösenordet", type="password", key="fk_reset_password_again")
-            submitted = st.form_submit_button("Byt lösenord och logga in", type="primary", use_container_width=True)
-        if submitted:
-            _submit_account_form(auth.reset_password, username, recovery_code, password, password_again)
 
+        if method == "email":
+            st.markdown(
+                '<p class="fk-card-text">Om du har en registrerad e-postadress kan vi skicka '
+                "en återställningslänk dit. Länken gäller i 1 timme.</p>",
+                unsafe_allow_html=True,
+            )
+            with st.form("fk_reset_email_form", border=False):
+                identifier = st.text_input(
+                    "E-postadress eller användarnamn",
+                    key="fk_reset_identifier",
+                    placeholder="din@email.se eller användarnamn",
+                )
+                submitted = st.form_submit_button(
+                    "Skicka återställningslänk", type="primary", use_container_width=True
+                )
+            if submitted:
+                try:
+                    error = auth.request_password_reset_email(identifier)
+                except BackendUnavailable:
+                    st.error("Kunde inte nå servern just nu. Försök igen om en liten stund.")
+                else:
+                    if error:
+                        st.warning(error)
+                    else:
+                        st.success(
+                            "Om kontot finns har en återställningslänk skickats till e-postadressen. "
+                            "Titta i inboxen – och i skräpposten. Länken gäller i 1 timme."
+                        )
+        else:  # method == "code"
+            st.markdown(
+                '<p class="fk-card-text">Använd återställningskoden du fick när du skapade '
+                "kontot för att välja ett nytt lösenord.</p>",
+                unsafe_allow_html=True,
+            )
+            with st.form("fk_reset_form", border=False):
+                username = st.text_input("Användarnamn", key="fk_reset_username")
+                recovery_code = st.text_input(
+                    "Återställningskod",
+                    key="fk_reset_code",
+                    placeholder="XXXX-XXXX-XXXX-XXXX",
+                )
+                password = st.text_input("Nytt lösenord", type="password", key="fk_reset_password", help="Minst 6 tecken.")
+                password_again = st.text_input("Upprepa det nya lösenordet", type="password", key="fk_reset_password_again")
+                submitted = st.form_submit_button("Byt lösenord och logga in", type="primary", use_container_width=True)
+            if submitted:
+                _submit_account_form(auth.reset_password, username, recovery_code, password, password_again)
 
 def open_account_dialog() -> None:
     _account_dialog()
