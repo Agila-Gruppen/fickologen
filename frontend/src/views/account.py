@@ -224,27 +224,38 @@ def _render_new_recovery_code() -> None:
 def _render_reminders_section(data: dict[str, Any]) -> None:
     st.markdown('<div class="fk-section-title">Påminnelser</div>', unsafe_allow_html=True)
     email = data.get("email")
+    enabled = data.get("reminders_enabled", False)
+
+    st.markdown(
+        '<p class="fk-card-text">Få ett mejl på söndagskvällar när en ny vecka i '
+        "programmet börjar – med en länk direkt till ditt nästa steg.</p>",
+        unsafe_allow_html=True,
+    )
+
+    wanted = st.toggle(
+    "Mejla mig på söndagar när en ny programvecka börjar",
+        value=enabled if email else False,
+        key="fk_account_reminders",
+        disabled=not email,
+        help="Du behöver registrera en e-postadress för att aktivera veckopåminnelser." if not email else None,
+    )
+
     if not email:
-        st.markdown(
-            '<p class="fk-card-text">Vill du ha ett mejl på söndagar när en ny vecka i '
-            "programmet börjar? Lägg till din e-postadress under Personuppgifter ovan, "
-            "så kan du slå på det här.</p>",
-            unsafe_allow_html=True,
+        st.info(
+            "**För att aktivera detta behöver du registrera en e-postadress.** "
+            "Lägg till din e-post under **Personuppgifter** ovan, så kan du slå på "
+            "veckopåminnelser här.",
+            icon="📧",
         )
         return
 
-    enabled = data.get("reminders_enabled", False)
-    wanted = st.toggle(
-        "Mejla mig på söndagar när en ny programvecka börjar",
-        value=enabled,
-        key="fk_account_reminders",
-    )
     st.markdown(
         f'<p class="fk-card-text">Mejlet går till <strong>{html.escape(email)}</strong> på '
         "söndagskvällen, med en länk till din nästa vecka. Vi använder bara adressen till "
         "det här, och du kan stänga av det när du vill.</p>",
         unsafe_allow_html=True,
     )
+
     if wanted != enabled:
         try:
             _, error = auth.set_reminders(wanted)

@@ -50,3 +50,26 @@ class PasswordResetResponse(BaseModel):
     """
     message: str
     recovery_code: str
+    
+
+
+class ForgotPasswordRequest(BaseModel):
+    """
+    Schema for requesting a password reset email.
+    Accepts either email or username — same user may use either.
+    """
+    email_or_username: str
+
+
+class PasswordResetWithToken(BaseModel):
+    """
+    Schema for completing a password reset using the one-time token
+    received by email.
+    """
+    token: str
+    new_password: str = Field(..., min_length=MIN_PASSWORD_LENGTH)
+
+    @field_validator('new_password')
+    @classmethod
+    def password_must_be_strong(cls, v: str) -> str:
+        return check_password(v)

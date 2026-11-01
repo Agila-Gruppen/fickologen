@@ -22,6 +22,7 @@ from src.models.message import Message  # noqa: F401
 from src.models.diary_entry import DiaryEntry  # noqa: F401
 from src.models.cbt_progress import CbtProgress  # noqa: F401
 from src.models.exercise_log import ExerciseLog  # noqa: F401
+from src.models.password_reset_token import PasswordResetToken  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

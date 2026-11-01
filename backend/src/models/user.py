@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .conversation import Conversation
     from .diary_entry import DiaryEntry
     from .exercise_log import ExerciseLog
+    from .password_reset_token import PasswordResetToken
 
 
 class User(Base):
@@ -51,6 +52,10 @@ class User(Base):
         order_by="DiaryEntry.created_at.desc()",
     )
     exercise_logs: Mapped[list["ExerciseLog"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
