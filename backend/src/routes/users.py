@@ -28,6 +28,7 @@ from ..services.user_data import (
     delete_conversations,
     delete_diary_entries,
     delete_program_logs,
+    delete_account,
 )
 from ..services.export import account_csv, chats_csv, diary_csv
 
@@ -117,10 +118,7 @@ async def delete_my_account(response: Response, current_user: CurrentUser = Depe
     and clears the login cookie.
     """
     user = _get_own_user(current_user, db)
-
-    # Conversations, messages, diary entries and CBT progress go with it
-    # through ON DELETE CASCADE on their user_id foreign keys.
-    db.delete(user)
+    delete_account(user.id, db)
     db.commit()
 
     response.delete_cookie(key="access_token")

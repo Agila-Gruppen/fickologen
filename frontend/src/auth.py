@@ -373,3 +373,20 @@ def admin_send_reminders() -> tuple[dict | None, str | None]:
     if not resp.is_success:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     return resp.json(), None
+
+
+def admin_delete_user(user_id: int) -> str | None:
+    """Delete another user's account and all its data as admin. Returns an error message, or None."""
+    resp = authed_request("DELETE", f"/admin/users/{user_id}")
+    if resp.status_code == 400:
+        return "Admins kan inte raderas här. Ta bort namnet från ADMIN_USERNAMES först."
+    if resp.status_code == 403:
+        return "Du behöver adminbehörighet för att göra det här."
+    if resp.status_code == 404:
+        return "Användaren finns inte längre."
+    if resp.status_code == 401:
+        log_out()
+        return SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return None

@@ -1208,6 +1208,7 @@ div[class*="st-key-fk_program_chatpanel"] .fk-bubble {
 /* Delete buttons: terracotta like the crisis button, to signal care */
 div[class*="st-key-fk_account_delete_acc_btn"] button,
 div[class*="st-key-fk_account_delete_data_btn"] button,
+div[class*="st-key-fk_admin_delete_user_btn"] button,
 div[class*="st-key-diary_confirmdelete_"] button {
   background: var(--terracotta-tint) !important;
   color: var(--terracotta-deep) !important;
@@ -1216,13 +1217,15 @@ div[class*="st-key-diary_confirmdelete_"] button {
 }
 div[class*="st-key-fk_account_delete_acc_btn"] button:hover:not(:disabled),
 div[class*="st-key-fk_account_delete_data_btn"] button:hover:not(:disabled),
+div[class*="st-key-fk_admin_delete_user_btn"] button:hover:not(:disabled),
 div[class*="st-key-diary_confirmdelete_"] button:hover {
   background: var(--terracotta-deep) !important;
   color: #FFFFFF !important;
   border-color: var(--terracotta-deep) !important;
 }
 div[class*="st-key-fk_account_delete_acc_btn"] button:disabled,
-div[class*="st-key-fk_account_delete_data_btn"] button:disabled {
+div[class*="st-key-fk_account_delete_data_btn"] button:disabled,
+div[class*="st-key-fk_admin_delete_user_btn"] button:disabled {
   background: transparent !important;
   color: #A39C8E !important;
   border-color: var(--border) !important;
