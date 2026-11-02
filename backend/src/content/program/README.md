@@ -2,7 +2,7 @@
 
 Tolv filer, `week-01.md` till `week-12.md`. Varje fil är en vecka: YAML mellan två `---`-rader (rubrik, övningar, reflektionsfråga, förslag på chattfrågor) och därefter veckans teori som vanlig markdown.
 
-> **Status: utkast.** Texterna är skrivna med egna ord utifrån KBT-principerna i CHAI-modulerna, och är **inte klinisk granskade**. Programmet syns för alla inloggade (`USER_NAV_ITEMS` i `frontend/src/components.py`) men inte för besökare utan konto, och intro-sidan säger att texterna är ett utkast. CHAI-modulernas egen text ska aldrig kopieras hit; den ligger krypterad i `chat-engine/knowledge/`.
+> **Status: utkast.** Texterna är skrivna med egna ord utifrån KBT-principerna i CHAI-modulerna, och är **inte klinisk granskade**. Programmet finns i menyn för alla (`NAV_ITEMS` i `frontend/src/components.py`), men besökare utan konto ser bara en uppmaning att logga in eller skapa konto, och intro-sidan säger att texterna är ett utkast. CHAI-modulernas egen text ska aldrig kopieras hit; den ligger krypterad i `chat-engine/knowledge/`.
 
 ## Format
 
@@ -11,7 +11,7 @@ week: 3                      # måste matcha filnamnet
 title: "Tankefällor"
 summary: "En mening som visas på översikten."
 minutes: 25                  # ungefär hur lång veckan är
-safety_note: "Valfri säkerhetsruta överst."
+safety_note: "Valfri. Visas inte på sidan, men chatten får veckans säkerhetsråd. Lägg det som användaren behöver veta i teorin."
 exercises:
   - id: w03-namnge           # w + veckonummer + "-" + namn, unikt i hela programmet
     title: "Namnge tankefällorna"
@@ -21,8 +21,9 @@ exercises:
     why: "Varför övningen är bra."
     task: "En tydlig mening om vad man ska göra och skriva ner."   # visas först i övningen
     write_label: "Vad anteckningsrutan ber om"                       # valfri
+    example: "Rad ett.\nRad två."   # kort påhittat exempel på ett ifyllt svar, \n = ny rad
     steps: ["Steg 1", "Steg 2"]
-    measure_label: "Valfri fråga som ger Före/Efter-skattning 0–100"
+    measure_label: "Valfri. Ger Före/Efter-skattning 0–100; texten förklarar vad Före och Efter betyder i just den här övningen"
 reflection_prompt: "Frågan som avslutar veckan."
 chat_tips: ["Förslag på frågor man kan ställa i chatten"]
 ```

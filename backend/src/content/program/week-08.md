@@ -13,10 +13,11 @@ exercises:
     why: "Hjärnan lär sig av upprepning, inte av att det går perfekt en gång."
     task: "Gör förra veckans steg igen, helst två gånger, och jämför ångesten med förra veckan."
     write_label: "Hur gick det, och hur jämförde det sig med förra veckan?"
+    example: "Gjorde kaféstegen två gånger. Första: före 40, efter 25. Andra: före 30, efter 15.\nVeckan innan började jag på 55, så det är lättare nu."
     steps:
       - "Gör ditt steg från förra veckan igen, helst två gånger."
       - "Skatta före och efter. Jämför med förra veckan."
-    measure_label: "Hur stor var ångesten (0–100)?"
+    measure_label: "Före: ångesten precis innan du börjar. Efter: ångesten direkt när du är klar. Har du gjort det två gånger skriver du den andra gångens siffror i rutan nedan."
   - id: w08-nasta
     title: "Ett steg uppåt"
     kind: exponering
@@ -25,10 +26,11 @@ exercises:
     why: "När det förra steget känns tryggare är det dags att utmana dig lite mer."
     task: "Välj nästa steg uppåt på stegen, gör det och skriv vad du upptäckte."
     write_label: "Mitt nästa steg och vad jag upptäckte"
+    example: "Nästa steg på stegen: be om hjälp i en affär (35). Före: 50, efter: 30.\nJag upptäckte att expediten tyckte att det var helt vanligt."
     steps:
       - "Välj nästa steg uppåt på stegen, när det förra känns lättare."
       - "Gör det, skatta före och efter och skriv vad du upptäckte."
-    measure_label: "Hur stor var ångesten (0–100)?"
+    measure_label: "Före: ångesten precis innan du börjar. Efter: ångesten direkt när du är klar. 0 = ingen alls, 100 = värsta tänkbara."
 reflection_prompt: "Vad har blivit lättare sedan du började öva?"
 chat_tips:
   - "Hur vet jag när det är dags för nästa steg?"

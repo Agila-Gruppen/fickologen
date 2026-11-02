@@ -12,6 +12,7 @@ exercises:
     why: "Det är en träning du kan göra var som helst, och den gör det lättare att lyckas i övningarna."
     task: "Stanna upp fem minuter om dagen och lägg märke till tre saker du ser, tre du hör och tre du känner. Skriv hur det gick."
     write_label: "Vad märkte du, och hur svårt var det att hålla fokus utåt?"
+    example: "Vid busshållplatsen. Ser: en röd cykel, en hund, ett träd. Hör: bilar, en barnröst, en fågel. Känner: fötterna mot marken, solen i ansiktet, väskan mot axeln.\nTankarna drog mig inåt två gånger, men jag tog mig tillbaka."
     steps:
       - "Vid något tillfälle varje dag i en vecka: stanna upp i fem minuter och lägg märke till tre saker du ser, tre du hör och tre du känner mot kroppen."
       - "Märker du att tankarna drar dig inåt: led dem tillbaka utåt, utan att skälla på dig själv."
@@ -23,10 +24,11 @@ exercises:
     why: "När du tittar utåt får du mer tid över för att faktiskt vara i situationen."
     task: "Gör ett steg på stegen med blicken utåt, på det som händer omkring dig, och jämför ångesten med en tidigare övning."
     write_label: "Vad hände när jag tittade utåt?"
+    example: "Steg: småprata med en granne. Jag lyssnade på vad hen sa och tittade på omgivningen i stället för att tänka på hur jag lät.\nFöre: 50, efter: 25 (förra gången slutade jag på 35)."
     steps:
       - "Gör en exponering på din stege, men rikta uppmärksamheten på det som sker: vad personen säger, och hur rummet ser ut."
       - "Skatta ångesten före och efter. Jämför med en tidigare övning."
-    measure_label: "Hur stor var ångesten (0–100)?"
+    measure_label: "Före: ångesten precis innan du börjar. Efter: ångesten direkt när du är klar. 0 = ingen alls, 100 = värsta tänkbara."
 reflection_prompt: "Vad märkte du när du tittade utåt i stället för inåt?"
 chat_tips:
   - "Varför blir jag så fokuserad på mig själv när jag är nervös?"

@@ -12,6 +12,7 @@ exercises:
     why: "Det är lättare att förändra något man har satt ord på."
     task: "Beskriv tre situationer där du blir nervös för vad andra tycker. För varje: vad händer i kroppen, vad tänker du och vad gör du för att skydda dig?"
     write_label: "Skriv dina tre situationer (några meningar var)"
+    example: "Situation: Jag ska presentera i klassen.\nKroppen: hjärtat bultar och jag rodnar.\nTanke: 'Alla ser att jag är nervös.'\nSkydd: jag läser rakt från pappret och undviker ögonkontakt."
     steps:
       - "Välj tre situationer där du blir nervös för vad andra ska tycka."
       - "Skriv för varje situation: vad händer i kroppen, vad tänker du, och vad gör du för att skydda dig?"
@@ -24,6 +25,7 @@ exercises:
     why: "Ett konkret mål gör att du ser framsteg, även små."
     task: "Skriv ett mål du vill nå om tolv veckor, och en liten sak du kan göra redan den här veckan."
     write_label: "Mitt mål och mitt första lilla steg"
+    example: "Mål: Jag vill kunna äta lunch med kollegorna utan att gömma mig.\nFörsta steg den här veckan: sätta mig vid deras bord en gång."
     steps:
       - "Tänk dig något du vill kunna göra om tolv veckor. Gör det konkret, till exempel: 'Jag vill kunna sitta kvar vid bordet under hela middagen.'"
       - "Skriv målet, och en liten sak du kan göra redan den här veckan som pekar åt rätt håll."

@@ -20,8 +20,10 @@ class ExerciseContent(BaseModel):
     task: str
     # What the notes box asks for, for example "Mitt mål och mitt första lilla steg".
     write_label: Optional[str] = None
+    # A short made-up example of what a filled-in answer can look like. "\n" starts a new line.
+    example: str
     steps: list[str] = Field(..., min_length=1)
-    # When set, the exercise asks for a before/after 0-100 rating with this question.
+    # When set, the exercise asks for a before/after 0-100 rating; this text explains what Före and Efter mean.
     measure_label: Optional[str] = None
 
 

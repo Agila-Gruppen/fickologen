@@ -655,6 +655,25 @@ div[class*="st-key-fk_ex_box_"] div[data-testid="stForm"] {
   text-transform: uppercase;
   margin-bottom: 0.2rem;
 }
+/* A made-up example of a filled-in answer. */
+.fk-example {
+  background: var(--surface-muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  padding: 0.65rem 1rem;
+  margin: 0.5rem 0 0.9rem 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.fk-example-label {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
 /* Checklist at the top of the exercises. */
 .fk-todo {
   display: flex;

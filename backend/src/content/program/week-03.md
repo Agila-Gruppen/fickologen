@@ -12,6 +12,7 @@ exercises:
     why: "När du kan sätta namn på en tankefälla tappar den en del av sin makt."
     task: "Välj tre tankar från din tankedagbok och skriv vilken tankefälla som passar på var och en."
     write_label: "Tanke och tankefälla (en rad per tanke)"
+    example: "Tanke: 'Hon svarade inte på mitt meddelande, hon är säkert arg på mig.'\nTankefälla: Tankeläsning, jag är säker på vad hon tänker."
     steps:
       - "Ta tre tankar från din tankedagbok i förra veckan."
       - "Läs listan över tankefällor i teorin och bestäm vilken som passar bäst på varje tanke."
@@ -24,6 +25,7 @@ exercises:
     why: "De flesta har en eller två favoriter. Att veta vilka hjälper dig att fånga dem snabbare."
     task: "Skriv vilken tankefälla du känner igen mest, och hur du märker att du är i den."
     write_label: "Min vanligaste tankefälla"
+    example: "Min vanligaste: Tankeläsning.\nJag märker det när jag tänker 'han tycker säkert att jag är tråkig' utan att ha frågat."
     steps:
       - "Vilken tankefälla känner du igen mest? Hur märker du att du är i den?"
 reflection_prompt: "Vilken tankefälla var lättast att känna igen hos dig själv?"

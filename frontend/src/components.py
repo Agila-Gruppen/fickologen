@@ -16,13 +16,10 @@ NAV_ITEMS = [
     ("saved", "Sparade chattar", "💾"),
     ("diary", "Dagbok", "📓"),
     ("safety", "Trygghet & integritet", "🛡️"),
-    # ("history", "Tidigare chattar", "🕰️"),
-    
-]
-
-# Visas bara för inloggade (programmet sparar framsteg per konto).
-LOGGED_IN_NAV_ITEMS = [
+    # Syns för alla. Utan konto visar sidan en uppmaning att logga in (programmet sparar framsteg per konto).
     ("treatment", "12 veckor KBT", "🌱"),
+    # ("history", "Tidigare chattar", "🕰️"),
+
 ]
 
 ADMIN_NAV_ITEMS = [
@@ -57,8 +54,6 @@ HIDDEN_VIEWS = {"account"}
 
 def _available_nav_items() -> list[tuple[str, str, str]]:
     items = list(NAV_ITEMS)
-    if auth.current_user():
-        items.extend(LOGGED_IN_NAV_ITEMS)
     if auth.is_admin():
         items.extend(ADMIN_NAV_ITEMS)
     return items

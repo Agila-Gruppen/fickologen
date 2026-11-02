@@ -12,6 +12,7 @@ exercises:
     why: "Med en plan är du bättre rustad när det blir jobbigt igen."
     task: "Skriv din plan för tiden efter programmet: vad som hjälpt, dina varningstecken, vad du gör då, tre mål och vem du kan vända dig till."
     write_label: "Min åtgärdsplan"
+    example: "Det som hjälpt: att öva små steg ofta.\nVarningstecken: jag börjar tacka nej till fika.\nDå gör jag: ett litet steg samma vecka.\nTre mål: hålla ett kort tal, gå på en träff, säga min åsikt på möten.\nStöd: min syster och 1177."
     steps:
       - "Skriv vad som hjälpt dig mest under programmet."
       - "Skriv dina tidiga varningstecken på att du börjar undvika mer igen."
@@ -25,6 +26,7 @@ exercises:
     why: "Framsteg är lätta att glömma bort när man är mitt i dem."
     task: "Jämför med målet du skrev i vecka 1 och skriv tre saker du klarar nu som du inte klarade förut."
     write_label: "Min tillbakablick"
+    example: "Mitt mål i vecka 1: sitta kvar vid middagsbordet.\nNu klarar jag: hela middagar, att fråga om vägen och att säga min åsikt på möten.\nBelöning: en bio-kväll."
     steps:
       - "Läs målet du satte i vecka 1. Hur nära är du nu?"
       - "Skriv tre saker du klarar i dag som du inte klarade när du började."

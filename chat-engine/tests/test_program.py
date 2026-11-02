@@ -88,6 +88,15 @@ def test_varje_ovning_har_en_kort_tydlig_uppgift_och_en_etikett_for_anteckningar
             assert ovning.write_label and len(ovning.write_label.split()) <= 15, ovning.id
 
 
+def test_varje_ovning_har_ett_kort_exempel_och_forklarar_fore_och_efter():
+    for vecka in program_content.load_program().values():
+        for ovning in vecka.exercises:
+            assert ovning.example.strip(), ovning.id
+            assert len(ovning.example.split()) <= 70, f"{ovning.id}: exemplet är för långt"
+            if ovning.measure_label:
+                assert "Före" in ovning.measure_label and "Efter" in ovning.measure_label, ovning.id
+
+
 def test_chatten_far_veckans_uppgifter():
     text = program_content.week_chat_context(1)
     assert "Beskriv tre situationer" in text

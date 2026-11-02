@@ -33,13 +33,6 @@ EXERCISE_KEY_PREFIX = "fk_ex_"      # widget keys of the exercise forms, cleared
 TOTAL_WEEKS = 12
 CHAT_HEIGHT = 440
 STATUS_MARKS = {"done": "✓", "open": "", "locked": "🔒"}
-KIND_LABELS = {
-    "reflektion": "Reflektion",
-    "tankedagbok": "Tankedagbok",
-    "ovning": "Övning",
-    "experiment": "Experiment",
-    "exponering": "Exponering",
-}
 
 # Scroll helpers. Constant scripts, nothing from users or the model goes into them.
 _SCROLL_TOP_JS = """
@@ -138,7 +131,6 @@ def _render_overview() -> None:
                 <div class="fk-badge">Din vecka</div>
                 <div class="fk-card-title">Vecka {current["week"]}: {html.escape(current["title"])}</div>
                 <p class="fk-card-text">{html.escape(current["summary"])}</p>
-                <p class="fk-card-text" style="font-size:0.82rem;">Cirka {current["minutes"]} minuter</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -284,9 +276,7 @@ def _render_week_navigation(number: int, weeks: list[dict]) -> bool:
         help="Nästa vecka öppnas när du är klar med den här." if next_locked and number < TOTAL_WEEKS else None,
     ):
         _open_week(number + 1)
-    chat_on = chat.toggle("💬 Chatten bredvid", value=True, key="fk_program_chat_on")
-    st.caption("Tryck på Spara längst ner innan du byter vecka, så följer det du skrivit med.")
-    return chat_on
+    return chat.toggle("💬 Chatten bredvid", value=True, key="fk_program_chat_on")
 
 
 def _jump_to_week(current: int, statuses: dict[int, str]) -> None:
@@ -309,13 +299,11 @@ def _render_week_content(week: dict) -> None:
         <div class="fk-week-head">
             <div class="fk-hero-eyebrow" style="text-align:left;">Vecka {number} av {TOTAL_WEEKS}</div>
             <h2 style="margin:0 0 0.4rem 0;">{html.escape(week["title"])}</h2>
-            <p class="fk-card-text">{html.escape(week["summary"])} · cirka {week["minutes"]} minuter</p>
+            <p class="fk-card-text">{html.escape(week["summary"])}</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    if week.get("safety_note"):
-        st.markdown(f'<div class="fk-note">🛟 {html.escape(week["safety_note"])}</div>', unsafe_allow_html=True)
 
     st.markdown("#### 1. Läs")
     with st.container(border=True, key="fk_program_theory"):
@@ -384,14 +372,11 @@ def _render_week_form(week: dict, logs: dict[str, dict]) -> tuple[dict, bool] | 
 def _render_exercise(exercise: dict, log: dict | None) -> dict:
     """One exercise card with its fields. Returns what is currently typed (only final after a submit)."""
     exercise_id = exercise["id"]
-    required = "Obligatorisk" if exercise["required"] else "Valfri"
+    optional = "" if exercise["required"] else " (valfri)"
     steps = "\n".join(f"{i}. {step}" for i, step in enumerate(exercise["steps"], start=1))
     with st.container(border=True, key=f"{EXERCISE_KEY_PREFIX}box_{exercise_id}"):
         st.markdown(
-            f"""
-            <div class="fk-badge">{required} · {KIND_LABELS.get(exercise["kind"], "Övning")} · cirka {exercise["minutes"]} min</div>
-            <div class="fk-card-title">{html.escape(exercise["title"])}</div>
-            """,
+            f'<div class="fk-card-title">{html.escape(exercise["title"])}{optional}</div>',
             unsafe_allow_html=True,
         )
         # .get: during a deploy the frontend can be newer than the backend for a few minutes.
@@ -402,6 +387,12 @@ def _render_exercise(exercise: dict, log: dict | None) -> dict:
             )
         st.markdown("**Så här gör du**")
         st.markdown(steps)
+        if example := exercise.get("example"):
+            lines = "<br>".join(html.escape(line) for line in example.split("\n"))
+            st.markdown(
+                f'<div class="fk-example"><div class="fk-example-label">Exempel</div>{lines}</div>',
+                unsafe_allow_html=True,
+            )
         st.caption("Varför: " + exercise["why"])
 
         before = after = None
