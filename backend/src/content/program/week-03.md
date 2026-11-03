@@ -3,6 +3,8 @@ week: 3
 title: "Tankefällor"
 summary: "Du lär dig känna igen vanliga mönster i hur ångesten tolkar saker."
 minutes: 25
+figure_after: 1
+figure_caption: "De sex vanligaste tankefällorna, med exempel."
 exercises:
   - id: w03-namnge
     title: "Namnge tankefällorna"

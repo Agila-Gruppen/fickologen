@@ -3,6 +3,8 @@ week: 2
 title: "Tankar, känslor och kropp"
 summary: "Du lär dig upptäcka de automatiska tankar som sätter igång ångesten."
 minutes: 25
+figure_after: 1
+figure_caption: "En händelse sätter igång en tanke, en känsla och en reaktion i kroppen. De påverkar varandra."
 exercises:
   - id: w02-tankedagbok
     title: "Tankedagbok: tre tillfällen"

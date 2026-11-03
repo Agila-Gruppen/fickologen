@@ -3,6 +3,8 @@ week: 9
 title: "Uppmärksamhet: titta utåt"
 summary: "Du övar på att flytta fokus från dig själv till omgivningen."
 minutes: 30
+figure_after: 2
+figure_caption: "Fokus inåt gör att du missar vad som händer. Fokus utåt hjälper dig vara kvar i situationen."
 exercises:
   - id: w09-fokus
     title: "Fem minuter utåt"

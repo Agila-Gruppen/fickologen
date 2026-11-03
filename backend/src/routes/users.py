@@ -1,3 +1,6 @@
+from datetime import date
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
@@ -10,12 +13,15 @@ from ..schemas.user import (
     UserCreated,
     UserData,
     UserSelfUpdate,
+    ReminderSettings,
 )
 from ..config.database import get_db
 from ..models.user import User
 from ..utils.auth import get_current_user
 from ..utils.password import generate_recovery_code, hash_password, verify_password
 from ..utils.admin import is_admin_username
+from ..services import email
+from ..services.reminders import send_test_reminder
 from ..schemas.user_data import DeletedContent
 from ..services.user_data import (
     delete_cbt_progress,
@@ -23,6 +29,7 @@ from ..services.user_data import (
     delete_diary_entries,
     delete_program_logs,
 )
+from ..services.export import account_csv, chats_csv, diary_csv
 
 router = APIRouter(
     prefix="/users",
@@ -212,3 +219,155 @@ async def delete_my_content(
 
     print(f"Deleted all content for user ID {user.id}: {conversations} conversations, {diary_entries} diary entries")
     return DeletedContent(conversations=conversations, diary_entries=diary_entries)
+
+
+@router.patch("/me", response_model=UserData)
+async def update_my_data(
+    update: UserSelfUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Updates the logged-in user's own details. Only the fields that are sent
+    are changed; null clears an optional field. Clearing the email also turns
+    reminders off, since there is nowhere to send them.
+
+    Raises:
+        HTTPException: 400 if the email is used by another account
+        HTTPException: 401 if not logged in
+        HTTPException: 404 if the account no longer exists
+    """
+    user = _get_own_user(current_user, db)
+    changes = update.model_dump(exclude_unset=True)
+    for key, value in changes.items():
+        if isinstance(value, str):
+            changes[key] = value.strip() or None
+
+    new_email = changes.get("email")
+    if new_email and new_email != user.email:
+        if db.query(User).filter(User.email == new_email, User.id != user.id).first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="E-postadressen används redan av ett annat konto."
+            )
+
+    for key, value in changes.items():
+        setattr(user, key, value)
+    if "email" in changes and not changes["email"]:
+        user.reminders_enabled = False
+
+    db.commit()
+    db.refresh(user)
+    print(f"User ID {user.id} updated {sorted(changes)}")
+    return user
+
+
+@router.put("/me/reminders", response_model=UserData)
+async def set_my_reminders(
+    settings: ReminderSettings,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Turns the weekly program reminder emails on or off.
+
+    Raises:
+        HTTPException: 400 if turning them on without an email address
+        HTTPException: 401 if not logged in
+        HTTPException: 404 if the account no longer exists
+    """
+    user = _get_own_user(current_user, db)
+    if settings.enabled and not user.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Add an email address before turning reminders on"
+        )
+    user.reminders_enabled = settings.enabled
+    db.commit()
+    db.refresh(user)
+    print(f"User ID {user.id} turned reminders {'on' if settings.enabled else 'off'}")
+    return user
+
+
+@router.post("/me/reminders/test", status_code=status.HTTP_204_NO_CONTENT)
+async def send_my_test_reminder(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Sends the weekly reminder to the logged-in user right away, to check that
+    it arrives. It does not count as this week's reminder.
+
+    Raises:
+        HTTPException: 400 if the user has no email address
+        HTTPException: 401 if not logged in
+        HTTPException: 502 if the mail server refused or could not be reached
+        HTTPException: 503 if sending email is not set up (no SMTP_HOST)
+    """
+    user = _get_own_user(current_user, db)
+    if not user.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Add an email address first"
+        )
+    if not email.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Sending email is not set up"
+        )
+    try:
+        send_test_reminder(user, db)
+    except Exception as exc:
+        print(f"Test reminder to user ID {user.id} failed: {exc!r}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="The mail server could not send the email"
+        )
+    print(f"Sent test reminder to user ID {user.id}")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+EXPORT_FILE_NAMES = {"account": "konto", "chats": "chattar", "diary": "dagbok"}
+
+
+@router.get(
+    "/me/export/{kind}",
+    response_class=Response,
+    responses={200: {"content": {"text/csv": {}}, "description": "CSV file"}},
+)
+async def export_my_data(
+    kind: Literal["account", "chats", "diary"],
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Exports the logged-in user's data as a CSV file made for Swedish Excel
+    (semicolon-separated, UTF-8 with BOM, Swedish time).
+
+    Args:
+        kind: "account" (account details), "chats" (every message) or
+            "diary" (every diary entry)
+
+    Returns:
+        The CSV file as an attachment, e.g. fickologen-chattar-2026-10-27.csv
+
+    Raises:
+        HTTPException: 401 if not logged in
+        HTTPException: 404 if the account no longer exists
+        HTTPException: 422 if kind is not one of the above
+    """
+    user = _get_own_user(current_user, db)
+    if kind == "account":
+        content = account_csv(user)
+    elif kind == "chats":
+        content = chats_csv(user.id, db)
+    else:
+        content = diary_csv(user.id, db)
+
+    file_name = f"fickologen-{EXPORT_FILE_NAMES[kind]}-{date.today().isoformat()}.csv"
+    print(f"User ID {user.id} exported {kind}")
+    return Response(
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+    )

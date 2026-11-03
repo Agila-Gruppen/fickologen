@@ -3,6 +3,8 @@ week: 4
 title: "Pröva tankarna"
 summary: "Du lär dig ställa frågor till tankarna i stället för att ta dem för sanna."
 minutes: 30
+figure_after: 3
+figure_caption: "Att pröva en tanke: vad som talar för och emot, och hur mycket du tror på den före och efter."
 exercises:
   - id: w04-prova
     title: "Pröva två tankar"

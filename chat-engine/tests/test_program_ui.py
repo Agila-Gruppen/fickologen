@@ -18,6 +18,7 @@ _dir = tempfile.mkdtemp()
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(_dir, 'test.db').as_posix()}"
 os.environ["BACKEND_URL"] = "http://127.0.0.1:9"  # ingen riktig server
 os.environ.setdefault("SECRET_KEY", "test")
+os.environ.setdefault("DATA_ENCRYPTION_KEY", "81_35OPrUSSzx-DSO81sLnCN5cWyysSICmBRRnVIOYw=")
 
 from fastapi.testclient import TestClient  # noqa: E402
 from streamlit.testing.v1 import AppTest  # noqa: E402
@@ -163,6 +164,17 @@ def test_varje_ovning_visar_en_tydlig_uppgift_och_vad_man_ska_skriva():
     assert "Beskriv tre situationer där du blir nervös" in text
     etiketter = {t.key: t.label for t in at.text_area}
     assert etiketter["fk_ex_note_w01-mal"] == "Mitt mål och mitt första lilla steg"
+
+
+def test_veckans_bild_visas_i_lasrutan_efter_ratt_stycke():
+    at, _ = starta_vecka_1()
+    bilder = at.get("image")
+    assert len(bilder) == 1
+    assert "Cirkeln: situation, tanke, kropp och skydd" in bilder[0].captions[0]
+    # bilden ligger efter andra stycket (cirkeln) och före det tredje
+    markdown = [m.value for m in at.markdown]
+    assert any("Ångesten hålls oftast vid liv av en cirkel" in m for m in markdown)
+    assert any("Programmet bryter cirkeln" in m for m in markdown)
 
 
 def test_varje_ovning_har_ett_exempel_och_inga_sma_extratexter():

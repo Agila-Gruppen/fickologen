@@ -3,6 +3,8 @@ week: 5
 title: "Beteendeexperiment"
 summary: "Du testar en av dina farhågor i verkligheten, i liten skala."
 minutes: 35
+figure_after: 3
+figure_caption: "Ett beteendeexperiment i fyra steg."
 safety_note: "Välj ett experiment som är litet och riskfritt. Du ska aldrig behöva göra något som känns farligt eller kränker någon."
 exercises:
   - id: w05-planera

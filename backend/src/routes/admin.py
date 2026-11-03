@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 
 from ..config.database import get_db
 from ..models.user import User
-from ..schemas.user import AdminPasswordUpdate, AdminUserUpdate, UserData
+from ..schemas.user import AdminPasswordUpdate, AdminUserUpdate, ReminderRunResult, UserData
+from ..services import email
+from ..services.reminders import send_weekly_reminders
 from ..utils.auth import get_current_admin
 from ..utils.password import hash_password
 
@@ -72,3 +74,23 @@ async def admin_change_password(
 
     print(f"Admin {admin.username} changed password for user {user.username}")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/reminders/send", response_model=ReminderRunResult)
+async def send_reminders_now(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """
+    Sends the weekly program reminders right away instead of waiting for
+    Sunday. Admin only. Users who already got one today are skipped, so
+    running it twice does not send twice.
+
+    Raises:
+        HTTPException: 503 if sending email is not set up (no SMTP_HOST)
+    """
+    if not email.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Sending email is not set up"
+        )
+    result = send_weekly_reminders(db)
+    print(f"Admin {admin.username} sent the weekly reminders by hand")
+    return ReminderRunResult(sent=result.sent, already_sent=result.already_sent, failed=result.failed)

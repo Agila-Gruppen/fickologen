@@ -3,6 +3,8 @@ week: 12
 title: "Bakslag och vägen framåt"
 summary: "Du summerar vad du lärt dig, förbereder dig för jobbiga perioder och planerar nästa steg."
 minutes: 35
+figure_after: 3
+figure_caption: "Framsteg går sällan rakt uppåt. Ett bakslag är en svacka, inte ruta ett."
 exercises:
   - id: w12-plan
     title: "Skriv din åtgärdsplan"

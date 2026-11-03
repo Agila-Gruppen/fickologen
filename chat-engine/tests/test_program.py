@@ -15,6 +15,7 @@ sys.path.insert(0, str(REPO))
 _dir = tempfile.mkdtemp()
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(_dir, 'test.db').as_posix()}"
 os.environ.setdefault("SECRET_KEY", "test")
+os.environ.setdefault("DATA_ENCRYPTION_KEY", "81_35OPrUSSzx-DSO81sLnCN5cWyysSICmBRRnVIOYw=")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -95,6 +96,19 @@ def test_varje_ovning_har_ett_kort_exempel_och_forklarar_fore_och_efter():
             assert len(ovning.example.split()) <= 70, f"{ovning.id}: exemplet är för långt"
             if ovning.measure_label:
                 assert "Före" in ovning.measure_label and "Efter" in ovning.measure_label, ovning.id
+
+
+def test_varje_vecka_har_en_bild_pa_ratt_plats_och_med_bildtext():
+    import re
+
+    bilder = REPO / "frontend" / "src" / "assets" / "illustrations"
+    for vecka in program_content.load_program().values():
+        fil = bilder / f"vecka-{vecka.week:02d}.svg"
+        assert fil.exists(), f"bild saknas: {fil.name}"
+        assert fil.read_text(encoding="utf-8").lstrip().startswith("<svg"), fil.name
+        block = re.split(r"\n\s*\n", vecka.theory.strip())
+        assert vecka.figure_after and 1 <= vecka.figure_after < len(block), f"vecka {vecka.week}: bilden ska ligga inne i texten"
+        assert vecka.figure_caption and len(vecka.figure_caption.split()) <= 25, vecka.week
 
 
 def test_chatten_far_veckans_uppgifter():

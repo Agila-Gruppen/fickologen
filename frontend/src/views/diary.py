@@ -1,27 +1,28 @@
 import html
-from datetime import datetime
-from datetime_utils import to_local
+import re
+from datetime import date, datetime, timedelta
+from datetime_utils import MONTHS, STOCKHOLM, to_local
 
 import streamlit as st
 
 import auth
 import diary_api
 from api import BackendUnavailable
-from components import open_account_dialog, page_header
+from components import login_prompt, page_header
 
 MOODS = {
-    1: "😞 Tungt",
-    2: "🙁 Lite tungt",
-    3: "😐 Okej",
-    4: "🙂 Ganska bra",
-    5: "😊 Bra",
+    1: "Tungt",
+    2: "Lite tungt",
+    3: "Okej",
+    4: "Ganska bra",
+    5: "Bra",
 }
 
 WEEKDAYS = ["måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag", "söndag"]
-MONTHS = [
-    "januari", "februari", "mars", "april", "maj", "juni",
-    "juli", "augusti", "september", "oktober", "november", "december",
-]
+WEEKDAYS_SHORT = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"]
+MONTHS_SHORT = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+
+VIEWS = {"week": "Vecka", "all": "Alla anteckningar"}
 
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
 
@@ -44,7 +45,20 @@ def render() -> None:
 
     try:
         _render_composer()
-        _render_entries(diary_api.list_entries())
+        search = _render_search()
+        view = st.segmented_control(
+            "Visa",
+            options=list(VIEWS),
+            format_func=lambda key: VIEWS[key],
+            default="week",
+            key="fk_diary_view",
+            label_visibility="collapsed",
+        )
+        entries = diary_api.list_entries(search=search or None)
+        if view == "all" or search:
+            _render_entries(entries, search)
+        else:
+            _render_week(entries)
     except diary_api.SessionExpired:
         st.error(auth.SESSION_EXPIRED)
     except BackendUnavailable:
@@ -52,22 +66,13 @@ def render() -> None:
 
 
 def _render_logged_out() -> None:
-    st.markdown(
-        """
-        <div class="fk-card">
-            <span class="fk-card-icon">📓</span>
-            <div class="fk-card-title">Din dagbok</div>
-            <p class="fk-card-text">
-                Dagboken sparas på ditt konto, så att du kan komma tillbaka till den.
-                Logga in eller skapa ett konto för att börja skriva – du behöver inte
-                uppge vem du är.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    login_prompt(
+        "Din dagbok",
+        "Dagboken sparas på ditt konto, så att du kan komma tillbaka till den. "
+        "Logga in eller skapa ett konto för att börja skriva – du behöver inte "
+        "uppge vem du är.",
+        key="diary_login_btn",
     )
-    if st.button("Logga in / skapa konto", key="diary_login_btn", type="primary"):
-        open_account_dialog()
 
 
 def _mood_picker(key: str, default: int | None = None) -> int | None:
@@ -98,24 +103,149 @@ def _render_composer() -> None:
                 st.warning("Skriv något i anteckningen innan du sparar.")
                 return
             diary_api.create_entry(title.strip(), content.strip(), mood)
-            st.toast("Anteckningen är sparad. 🌱")
+            # Jump to this week so the new entry is in view.
+            st.session_state["fk_diary_week_offset"] = 0
+            st.toast("Anteckningen är sparad.")
+            
+def _render_search() -> str:
+    """Sökfält över anteckningslistan. Returnerar söktermen (stripad)."""
+    value = st.text_input(
+        "Sök i dagboken",
+        key="fk_diary_search",
+        placeholder="Sök bland dina anteckningar…",
+        label_visibility="collapsed",
+    )
+    return (value or "").strip()
 
 
-def _render_entries(entries: list[dict]) -> None:
+def _render_entries(entries: list[dict], search: str = "") -> None:
     st.markdown('<div class="fk-section-title">Dina anteckningar</div>', unsafe_allow_html=True)
     if not entries:
-        st.markdown(
-            '<p class="fk-chat-intro" style="text-align:left;">'
-            "Inga anteckningar än – det du skriver hamnar här.</p>",
-            unsafe_allow_html=True,
-        )
+        if search:
+            st.markdown(
+                '<p class="fk-empty-note">'
+                f"Inga anteckningar matchade <em>{html.escape(search)}</em>.</p>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<p class="fk-empty-note">'
+                "Inga anteckningar än – det du skriver hamnar här.</p>",
+                unsafe_allow_html=True,
+            )
         return
 
     for entry in entries:
         if st.session_state.get("fk_diary_editing") == entry["id"]:
             _render_edit_form(entry)
         else:
-            _render_entry(entry)
+            _render_entry(entry, search)
+
+
+def _today() -> date:
+    return datetime.now(STOCKHOLM).date()
+
+
+def _entry_day(entry: dict) -> date | None:
+    dt = to_local(entry["created_at"])
+    return dt.date() if dt else None
+
+
+def _week_label(monday: date) -> str:
+    sunday = monday + timedelta(days=6)
+    start = f"{monday.day} {MONTHS_SHORT[monday.month - 1]}"
+    if monday.year != sunday.year:
+        start += f" {monday.year}"
+    end = f"{sunday.day} {MONTHS_SHORT[sunday.month - 1]} {sunday.year}"
+    return f"Vecka {monday.isocalendar().week} · {start} – {end}"
+
+
+def _day_mood(day_entries: list[dict]) -> int | None:
+    """The day's mood: the average of the entries that have one, rounded."""
+    moods = [e["mood"] for e in day_entries if e.get("mood") in MOODS]
+    return round(sum(moods) / len(moods)) if moods else None
+
+
+def _render_week(entries: list[dict]) -> None:
+    offset = st.session_state.get("fk_diary_week_offset", 0)
+    today = _today()
+    monday = today - timedelta(days=today.weekday()) + timedelta(weeks=offset)
+    days = [monday + timedelta(days=i) for i in range(7)]
+
+    by_day: dict[date, list[dict]] = {day: [] for day in days}
+    for entry in entries:
+        day = _entry_day(entry)
+        if day is not None and day in by_day:
+            by_day[day].append(entry)
+
+    prev, label, nxt = st.columns([1, 4, 1], vertical_alignment="center")
+    if prev.button("‹", key="diary_week_prev", help="Föregående vecka", use_container_width=True):
+        st.session_state["fk_diary_week_offset"] = offset - 1
+        st.rerun()
+    label.markdown(f'<div class="fk-week-label">{_week_label(monday)}</div>', unsafe_allow_html=True)
+    # No browsing into the future: nothing can be written there.
+    if nxt.button("›", key="diary_week_next", help="Nästa vecka", disabled=offset >= 0, use_container_width=True):
+        st.session_state["fk_diary_week_offset"] = offset + 1
+        st.rerun()
+
+    cells = []
+    for day in days:
+        day_entries = by_day[day]
+        mood = _day_mood(day_entries)
+        if mood:
+            marker = f'<span class="fk-mood-dot fk-mood-{mood}" title="{MOODS[mood]}"></span>'
+        elif day_entries:
+            marker = '<span class="fk-mood-dot" title="Anteckning utan humör"></span>'
+        else:
+            marker = ""
+        classes = "fk-week-day"
+        if day == today:
+            classes += " fk-week-today"
+        if day > today:
+            classes += " fk-week-future"
+        cells.append(
+            f'<div class="{classes}">'
+            f'<span class="fk-week-weekday">{WEEKDAYS_SHORT[day.weekday()]}</span>'
+            f'<span class="fk-week-date">{day.day}</span>'
+            f'<span class="fk-week-marker">{marker}</span></div>'
+        )
+    st.markdown(f'<div class="fk-week-strip">{"".join(cells)}</div>', unsafe_allow_html=True)
+
+    week_entries = [e for day in days for e in by_day[day]]
+    moods = [e["mood"] for e in week_entries if e.get("mood") in MOODS]
+    summary = f"{len(week_entries)} {'anteckning' if len(week_entries) == 1 else 'anteckningar'}"
+    if moods:
+        average = sum(moods) / len(moods)
+        decimal = f"{average:.1f}".replace(".", ",")
+        summary += f" · humör i snitt {MOODS[round(average)]} ({decimal})"
+    st.markdown(f'<p class="fk-week-summary">{summary}</p>', unsafe_allow_html=True)
+
+    if offset != 0 and st.button("Till den här veckan", key="diary_week_today"):
+        st.session_state["fk_diary_week_offset"] = 0
+        st.rerun()
+
+    if not week_entries:
+        st.markdown(
+            '<p class="fk-empty-note">'
+            "Inga anteckningar den här veckan.</p>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    # Newest day first, like the full list.
+    for day in reversed(days):
+        if not by_day[day]:
+            continue
+        st.markdown(
+            f'<div class="fk-week-day-heading">{WEEKDAYS[day.weekday()].capitalize()} '
+            f"{day.day} {MONTHS[day.month - 1]}</div>",
+            unsafe_allow_html=True,
+        )
+        for entry in by_day[day]:
+            if st.session_state.get("fk_diary_editing") == entry["id"]:
+                _render_edit_form(entry)
+            else:
+                _render_entry(entry, day_shown=True)
 
 
 def _format_date(value: str) -> str:
@@ -125,16 +255,36 @@ def _format_date(value: str) -> str:
     return f"{WEEKDAYS[dt.weekday()].capitalize()} {dt.day} {MONTHS[dt.month - 1]} {dt.year}, {dt:%H:%M}"
 
 
-def _render_entry(entry: dict) -> None:
+def _highlight(text: str, search: str) -> str:
+    """Omsluter varje case-insensitive match i söktermen med <mark>."""
+    if not search:
+        return text
+    pattern = re.compile(re.escape(search), re.IGNORECASE)
+    return pattern.sub(lambda m: f'<mark class="fk-diary-mark">{m.group(0)}</mark>', text)
+
+
+def _render_entry(entry: dict, search: str = "", day_shown: bool = False) -> None:
+    """One entry. `day_shown`: a day heading is already above it, so the time is enough."""
     entry_id = entry["id"]
-    mood = f'<span class="fk-diary-mood">{MOODS[entry["mood"]]}</span>' if entry.get("mood") in MOODS else ""
-    title = f'<div class="fk-card-title">{html.escape(entry["title"])}</div>' if entry.get("title") else ""
+    mood = ""
+    if entry.get("mood") in MOODS:
+        mood = (
+            f'<span class="fk-diary-mood"><span class="fk-mood-dot fk-mood-{entry["mood"]}"></span>'
+            f'{MOODS[entry["mood"]]}</span>'
+        )
+    local = to_local(entry["created_at"])
+    when = f"{local:%H:%M}" if day_shown and local else _format_date(entry["created_at"])
+    title_html = _highlight(html.escape(entry["title"]), search) if entry.get("title") else ""
+    title = f'<div class="fk-card-title">{title_html}</div>' if entry.get("title") else ""
     # <br> rather than raw newlines: a blank line would end the HTML block and
     # let markdown take over the rest of the text.
-    content = html.escape(entry["content"]).replace("\r\n", "\n").replace("\n", "<br>")
+    content = _highlight(
+        html.escape(entry["content"]).replace("\r\n", "\n").replace("\n", "<br>"),
+        search,
+    )
     st.markdown(
         '<div class="fk-diary-entry">'
-        f'<div class="fk-diary-meta"><span>{_format_date(entry["created_at"])}</span>{mood}</div>'
+        f'<div class="fk-diary-meta"><span>{when}</span>{mood}</div>'
         f'{title}'
         f'<div class="fk-diary-content">{content}</div>'
         '</div>',
@@ -156,7 +306,7 @@ def _render_entry(entry: dict) -> None:
             st.session_state.pop("fk_diary_deleting", None)
             st.rerun()
     else:
-        edit, delete, _ = st.columns([1, 1, 3])
+        edit, delete, _ = st.columns([1, 1, 4])
         if edit.button("Redigera", key=f"diary_edit_{entry_id}", use_container_width=True):
             st.session_state["fk_diary_editing"] = entry_id
             st.session_state.pop("fk_diary_deleting", None)
@@ -164,7 +314,7 @@ def _render_entry(entry: dict) -> None:
         if delete.button("Radera", key=f"diary_delete_{entry_id}", use_container_width=True):
             st.session_state["fk_diary_deleting"] = entry_id
             st.rerun()
-    st.markdown('<div style="height:0.8rem;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="fk-spacer-entry"></div>', unsafe_allow_html=True)
 
 
 def _render_edit_form(entry: dict) -> None:

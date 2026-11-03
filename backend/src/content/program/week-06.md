@@ -3,6 +3,8 @@ week: 6
 title: "Förbered exponering: din stege"
 summary: "Du bygger en stege av situationer från lätt till svårt, och väljer ditt första steg."
 minutes: 30
+figure_after: 2
+figure_caption: "Ett exempel på en stege. Din egen blir annorlunda."
 exercises:
   - id: w06-stege
     title: "Bygg din stege"

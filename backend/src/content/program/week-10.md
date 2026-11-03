@@ -3,6 +3,8 @@ week: 10
 title: "Säkerhetsbeteenden: släpp krycka"
 summary: "Du upptäcker hur dina skydd hjälper och stjälper, och testar att klara dig utan ett av dem."
 minutes: 35
+figure_after: 1
+figure_caption: "Skyddet känns tryggt, men du får inte veta om du klarar dig utan det."
 safety_note: "Börja med ett skydd som är litet. Du behöver inte släppa alla på en gång."
 exercises:
   - id: w10-lista

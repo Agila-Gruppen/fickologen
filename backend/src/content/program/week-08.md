@@ -3,6 +3,8 @@ week: 8
 title: "Upprepa och ta nästa steg"
 summary: "Du fortsätter öva, och tar när det känns lagom ett steg upp på stegen."
 minutes: 40
+figure_after: 1
+figure_caption: "Ett exempel: ångesten sjunker med upprepning, även om en dag kan vara tyngre."
 safety_note: "Ta nästa steg först när det förra känns lättare. Går det trögt är det helt okej att stanna kvar eller ta ett lättare steg."
 exercises:
   - id: w08-upprepa

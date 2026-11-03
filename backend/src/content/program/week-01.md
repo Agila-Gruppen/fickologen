@@ -3,6 +3,8 @@ week: 1
 title: "Så fungerar social ångest"
 summary: "Du lär känna cirkeln som håller ångesten vid liv, och sätter ett litet mål."
 minutes: 25
+figure_after: 2
+figure_caption: "Cirkeln: situation, tanke, kropp och skydd håller ångesten vid liv."
 exercises:
   - id: w01-kartlagg
     title: "Kartlägg ditt mönster"

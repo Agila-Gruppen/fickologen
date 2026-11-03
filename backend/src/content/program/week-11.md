@@ -3,6 +3,8 @@ week: 11
 title: "Svårare steg och samtal"
 summary: "Du tar ett svårare steg på stegen och övar några enkla samtalsfärdigheter."
 minutes: 40
+figure_after: 3
+figure_caption: "Ett exempel på ett samtal med de tre verktygen."
 safety_note: "Välj ett steg du tror att du klarar, även om det är svårare än tidigare. Det är okej att vänta en vecka med steget om det känns för stort."
 exercises:
   - id: w11-expo

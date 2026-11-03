@@ -1,5 +1,6 @@
 """Konto-sida: profil, redigera uppgifter, säkerhet och datahantering."""
-from datetime import datetime
+import html
+from datetime import date, datetime
 from typing import Any
 
 import streamlit as st
@@ -9,8 +10,8 @@ import conversations as conv_api
 import diary_api
 from api import BackendUnavailable
 from chat_engine import start_new_conversation
-from components import page_header
-from datetime_utils import to_local
+from components import login_prompt, page_header, program_available
+from datetime_utils import format_day, to_local
 
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
 PROFILE_FIELDS = [
@@ -34,7 +35,11 @@ def render() -> None:
     )
 
     if not auth.current_user():
-        st.info("Logga in för att se dina kontouppgifter.")
+        login_prompt(
+            "Logga in för att se ditt konto",
+            "Här hanterar du dina uppgifter, ditt lösenord och din data när du är inloggad.",
+            key="account_login_btn",
+        )
         return
 
     if flash := st.session_state.pop("fk_account_flash_main", None):
@@ -56,6 +61,9 @@ def render() -> None:
     _render_profile_form(data)
     st.markdown("<div style='height:1.6rem;'></div>", unsafe_allow_html=True)
     _render_security_section()
+    if program_available():
+        st.markdown("<div style='height:1.6rem;'></div>", unsafe_allow_html=True)
+        _render_reminders_section(data)
     st.markdown("<div style='height:1.6rem;'></div>", unsafe_allow_html=True)
     _render_danger_zone()
 
@@ -64,33 +72,34 @@ def _format_member_since(iso: str | None) -> str | None:
     if not iso:
         return None
     dt = to_local(iso)
-    return dt.strftime("%Y-%m-%d") if dt else None
+    return format_day(dt) if dt else None
 
 
 def _render_profile_header(data: dict[str, Any]) -> None:
-    username = data.get("username") or "?"
+    username = html.escape(data.get("username") or "?")
     initial = username[:1].upper()
     role = data.get("role", "user")
     member_since = _format_member_since(data.get("created_at"))
     can_chat = data.get("can_chat") or role == "admin"
 
-    with st.container(border=True):
-        c1, c2 = st.columns([1, 4], vertical_alignment="center")
-        with c1:
-            st.markdown(
-                f'<div style="width:72px;height:72px;border-radius:50%;background:var(--terracotta-tint);'
-                f'color:var(--terracotta);display:flex;align-items:center;justify-content:center;'
-                f'font-size:1.9rem;font-weight:700;">{initial}</div>',
-                unsafe_allow_html=True,
-            )
-        with c2:
-            role_tag = " 🛡️ Admin" if role == "admin" else ""
-            st.markdown(f"### {username}{role_tag}")
-            st.caption(f"Konto-ID {data['id']}")
-            if member_since:
-                st.caption(f"Medlem sedan {member_since}")
-            chat_state = "aktiv ✓" if can_chat else "väntar på godkännande"
-            st.caption(f"Chatt-tillgång: {chat_state}")
+    role_tag = '<span class="fk-badge">Admin</span>' if role == "admin" else ""
+    details = [f"Konto-ID {data['id']}"]
+    if member_since:
+        details.append(f"Medlem sedan {member_since}")
+    details.append(f"Chatt-tillgång: {'aktiv' if can_chat else 'väntar på godkännande'}")
+    with st.container(key="fk_card_profile"):
+        st.markdown(
+            f"""
+            <div class="fk-profile">
+                <div class="fk-profile-avatar">{initial}</div>
+                <div>
+                    <div class="fk-profile-name">{username}{role_tag}</div>
+                    <div class="fk-profile-meta">{" · ".join(details)}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def _render_profile_form(data: dict[str, Any]) -> None:
@@ -154,7 +163,7 @@ def _render_profile_form(data: dict[str, Any]) -> None:
     if error:
         st.error(error)
         return
-    st.session_state["fk_account_flash_main"] = "Dina uppgifter är sparade. ✓"
+    st.session_state["fk_account_flash_main"] = "Dina uppgifter är sparade."
     st.rerun()
 
 
@@ -182,7 +191,7 @@ def _render_change_password() -> None:
         if error:
             st.error(error)
             return
-        st.session_state["fk_account_flash_main"] = "Lösenordet är ändrat. ✓"
+        st.session_state["fk_account_flash_main"] = "Lösenordet är ändrat."
         st.rerun()
 
 
@@ -212,6 +221,65 @@ def _render_new_recovery_code() -> None:
         st.rerun()
 
 
+def _render_reminders_section(data: dict[str, Any]) -> None:
+    st.markdown('<div class="fk-section-title">Påminnelser</div>', unsafe_allow_html=True)
+    email = data.get("email")
+    enabled = data.get("reminders_enabled", False)
+
+    st.markdown(
+        '<p class="fk-card-text">Få ett mejl på söndagskvällar när en ny vecka i '
+        "programmet börjar – med en länk direkt till ditt nästa steg.</p>",
+        unsafe_allow_html=True,
+    )
+
+    wanted = st.toggle(
+    "Mejla mig på söndagar när en ny programvecka börjar",
+        value=enabled if email else False,
+        key="fk_account_reminders",
+        disabled=not email,
+        help="Du behöver registrera en e-postadress för att aktivera veckopåminnelser." if not email else None,
+    )
+
+    if not email:
+        st.info(
+            "**För att aktivera detta behöver du registrera en e-postadress.** "
+            "Lägg till din e-post under **Personuppgifter** ovan, så kan du slå på "
+            "veckopåminnelser här.",
+            icon="📧",
+        )
+        return
+
+    st.markdown(
+        f'<p class="fk-card-text">Mejlet går till <strong>{html.escape(email)}</strong> på '
+        "söndagskvällen, med en länk till din nästa vecka. Vi använder bara adressen till "
+        "det här, och du kan stänga av det när du vill.</p>",
+        unsafe_allow_html=True,
+    )
+
+    if wanted != enabled:
+        try:
+            _, error = auth.set_reminders(wanted)
+        except BackendUnavailable:
+            error = BACKEND_ERROR
+        if error:
+            st.error(error)
+            return
+        st.session_state["fk_account_flash_main"] = (
+            "Påminnelser är påslagna." if wanted else "Påminnelser är avstängda."
+        )
+        st.rerun()
+
+    if enabled and st.button("Skicka ett testmejl", key="fk_account_test_reminder"):
+        try:
+            error = auth.send_test_reminder()
+        except BackendUnavailable:
+            error = BACKEND_ERROR
+        if error:
+            st.error(error)
+        else:
+            st.success(f"Ett testmejl är skickat till {email}. Hittar du det inte, titta i skräpposten.")
+
+
 def _count(n: int, singular: str, plural: str) -> str:
     return f"{n} {singular if n == 1 else plural}"
 
@@ -234,15 +302,50 @@ def _render_danger_zone() -> None:
         '<hr class="fk-divider" /><div class="fk-section-title">Datahantering</div>',
         unsafe_allow_html=True,
     )
+    _render_export_section()
+    st.markdown("<div style='height:0.8rem;'></div>", unsafe_allow_html=True)
     _render_delete_content_section()
     st.markdown("<div style='height:0.8rem;'></div>", unsafe_allow_html=True)
     _render_delete_account_section()
 
 
+EXPORTS = [
+    ("chats", "Chattar", "chattar"),
+    ("diary", "Dagbok", "dagbok"),
+    ("account", "Kontouppgifter", "konto"),
+]
+
+
+def _render_export_section() -> None:
+    with st.expander("Exportera din data (CSV)"):
+        st.markdown(
+            '<p class="fk-card-text">Ladda ner det du sparat som CSV-filer, som öppnas i '
+            "Excel, Numbers eller Google Kalkylark. Chattarna får en rad per meddelande "
+            "och dagboken en rad per anteckning. Ditt lösenord exporteras aldrig.</p>",
+            unsafe_allow_html=True,
+        )
+        today = date.today().isoformat()
+        columns = st.columns(len(EXPORTS))
+        for column, (kind, label, file_part) in zip(columns, EXPORTS):
+            with column:
+                st.download_button(
+                    label,
+                    # Built by the backend only when clicked.
+                    data=auth.csv_downloader(kind),
+                    file_name=f"fickologen-{file_part}-{today}.csv",
+                    mime="text/csv",
+                    icon=":material/download:",
+                    on_click="ignore",
+                    key=f"fk_export_{kind}",
+                    use_container_width=True,
+                )
+
+
 def _render_delete_content_section() -> None:
     with st.expander("Radera innehåll (behåll kontot)"):
         st.markdown(
-            '<p class="fk-card-text">Rensa det du sparat men behåll ditt konto. Det går inte att ångra.</p>',
+            '<p class="fk-card-text">Rensa det du sparat men behåll ditt konto. Det går inte att ångra – '
+            "vill du spara något, exportera det först.</p>",
             unsafe_allow_html=True,
         )
 

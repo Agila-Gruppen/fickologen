@@ -3,6 +3,8 @@ week: 7
 title: "Exponering: de första stegen"
 summary: "Du övar på ditt första steg, flera gånger, och ser vad som händer."
 minutes: 40
+figure_after: 2
+figure_caption: "Ångesten sjunker oftast av sig själv om du stannar kvar."
 safety_note: "Om det blir för jobbigt: gör steget mindre, ta en paus eller byt till ett lättare. Du ska aldrig utsätta dig för något farligt. Om du mår mycket dåligt, kontakta vården (1177) eller någon du litar på."
 exercises:
   - id: w07-expo1

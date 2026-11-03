@@ -33,6 +33,10 @@ class WeekContent(BaseModel):
     title: str
     summary: str
     minutes: int = Field(..., ge=1, le=240)
+    # The week's picture (frontend/src/assets/illustrations/vecka-NN.svg) goes after this many blocks of the
+    # theory (a block is a paragraph or a whole list), with this caption.
+    figure_after: Optional[int] = Field(None, ge=1)
+    figure_caption: Optional[str] = None
     theory: str
     safety_note: Optional[str] = None
     exercises: list[ExerciseContent] = Field(..., min_length=1)

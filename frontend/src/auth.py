@@ -122,6 +122,45 @@ def reset_password(username: str, recovery_code: str, password: str, password_ag
     _show_recovery_code(resp.json()["recovery_code"])
     return log_in(username, password)
 
+def request_password_reset_email(email_or_username: str) -> str | None:
+    """
+    Ask the backend to send a password reset email. Returns None on
+    success, or an error message. The backend answers 204 whether the
+    identifier matched or not, so this never reveals whether the account
+    exists.
+    """
+    identifier = email_or_username.strip()
+    if not identifier:
+        return "Fyll i din e-postadress eller ditt användarnamn."
+    resp = _post("/auth/forgot-password", {"email_or_username": identifier})
+    if resp.status_code not in (200, 204):
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return None
+
+
+def reset_password_with_token(token: str, password: str, password_again: str) -> str | None:
+    """
+    Set a new password using a one-time token from the email link.
+    Returns None on success, or an error message. The caller is responsible
+    for stripping the token from the URL afterwards.
+    """
+    if not token:
+        return "Länken saknar en giltig återställningstoken."
+    if error := _check_new_password(password, password_again):
+        return error
+
+    resp = _post(
+        "/auth/reset-password-link",
+        {"token": token, "new_password": password},
+    )
+    if resp.status_code in (400, 422):
+        return "Länken har löpt ut eller är felaktig. Begär en ny återställningslänk."
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    # The one-time token is spent; the backend also hands out a fresh recovery code.
+    _show_recovery_code(resp.json()["recovery_code"])
+    return None
+
 
 def log_out() -> None:
     st.session_state.pop("fk_user", None)
@@ -261,3 +300,76 @@ def admin_change_user_password(user_id: int, new_password: str) -> str | None:
     if not resp.is_success:
         raise BackendUnavailable(f"HTTP {resp.status_code}")
     return None
+
+
+def csv_downloader(kind: str):
+    """A function that fetches one CSV export ("account", "chats" or "diary").
+
+    Meant as st.download_button's data, so the file is only built when the
+    user clicks. Streamlit calls it outside the script run, where session
+    state is unavailable, so the login token is captured now.
+    """
+    token = st.session_state.get("fk_token", "")
+
+    def fetch() -> bytes:
+        try:
+            resp = httpx.get(
+                f"{BACKEND_URL}/users/me/export/{kind}",
+                headers={"Cookie": f"access_token={token}"},
+                timeout=TIMEOUT_SECONDS,
+            )
+        except httpx.HTTPError as exc:
+            raise BackendUnavailable(str(exc)) from exc
+        if not resp.is_success:
+            raise BackendUnavailable(f"HTTP {resp.status_code}")
+        return resp.content
+
+    return fetch
+
+
+EMAIL_NOT_SET_UP = "Mejlutskick är inte inställt på servern än. Prata med en admin."
+
+
+def set_reminders(enabled: bool) -> tuple[dict | None, str | None]:
+    """Turn the weekly program reminder emails on or off. Returns (user, None) or (None, error)."""
+    resp = authed_request("PUT", "/users/me/reminders", {"enabled": enabled})
+    if resp.status_code == 400:
+        return None, "Lägg till din e-postadress först."
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None
+
+
+def send_test_reminder() -> str | None:
+    """Send the weekly reminder to yourself right away. Returns an error message, or None."""
+    resp = authed_request("POST", "/users/me/reminders/test")
+    if resp.status_code == 400:
+        return "Lägg till din e-postadress först."
+    if resp.status_code == 503:
+        return EMAIL_NOT_SET_UP
+    if resp.status_code == 502:
+        return "Mejlservern kunde inte skicka mejlet just nu. Försök igen senare."
+    if resp.status_code in (401, 404):
+        log_out()
+        return SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return None
+
+
+def admin_send_reminders() -> tuple[dict | None, str | None]:
+    """Send this week's reminders now. Returns ({"sent", "already_sent", "failed"}, None) or (None, error)."""
+    resp = authed_request("POST", "/admin/reminders/send")
+    if resp.status_code == 503:
+        return None, "Mejlutskick är inte inställt: sätt SMTP_HOST med flera i backendens .env."
+    if resp.status_code == 403:
+        return None, "Du behöver adminbehörighet."
+    if resp.status_code in (401, 404):
+        log_out()
+        return None, SESSION_EXPIRED
+    if not resp.is_success:
+        raise BackendUnavailable(f"HTTP {resp.status_code}")
+    return resp.json(), None

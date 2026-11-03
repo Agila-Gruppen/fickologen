@@ -11,6 +11,8 @@ week: 3                      # måste matcha filnamnet
 title: "Tankefällor"
 summary: "En mening som visas på översikten."
 minutes: 25                  # ungefär hur lång veckan är
+figure_after: 2              # bilden (frontend/src/assets/illustrations/vecka-NN.svg) läggs efter så här många teoriblock
+figure_caption: "Bildtext under bilden."   # ett block är ett stycke eller en hel lista
 safety_note: "Valfri. Visas inte på sidan, men chatten får veckans säkerhetsråd. Lägg det som användaren behöver veta i teorin."
 exercises:
   - id: w03-namnge           # w + veckonummer + "-" + namn, unikt i hela programmet
