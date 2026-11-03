@@ -3,6 +3,8 @@ week: 11
 title: "Svårare steg och samtal"
 summary: "Du tar ett svårare steg på stegen och övar några enkla samtalsfärdigheter."
 minutes: 40
+figure_after: 3
+figure_caption: "Ett exempel på ett samtal med de tre verktygen."
 safety_note: "Välj ett steg du tror att du klarar, även om det är svårare än tidigare. Det är okej att vänta en vecka med steget om det känns för stort."
 exercises:
   - id: w11-expo
@@ -13,10 +15,11 @@ exercises:
     why: "Nu har du erfarenhet som gör att du klarar mer än förut."
     task: "Välj ett steg som ligger högre upp på din stege än något du gjort hittills, gör det och skriv vad du upptäckte."
     write_label: "Mitt steg och vad jag upptäckte"
+    example: "Steg: säga min åsikt på ett möte (60). Före: 70, efter: 40.\nIngen reagerade negativt och en person nickade."
     steps:
       - "Välj ett steg högre upp på stegen än du har gjort hittills, ett du tror att du klarar."
       - "Gör det, skatta ångesten före och efter, och skriv vad du upptäckte."
-    measure_label: "Hur stor var ångesten (0–100)?"
+    measure_label: "Före: ångesten precis innan du börjar. Efter: ångesten direkt när du är klar. 0 = ingen alls, 100 = värsta tänkbara."
   - id: w11-samtal
     title: "Öva på ett samtal"
     kind: ovning
@@ -25,6 +28,7 @@ exercises:
     why: "Små färdigheter gör det lättare att känna sig trygg i samtal."
     task: "Ställ en öppen fråga till någon och lyssna aktivt. Skriv hur det kändes och vad som hände."
     write_label: "Hur gick samtalet?"
+    example: "Jag frågade en kollega: 'Hur var din helg?' Hon berättade om en vandring och jag frågade: 'Vart gick ni?'\nDet kändes obekvämt först, sedan lättare."
     steps:
       - "Prova att ställa en öppen fråga ('Hur var din helg?' i stället för 'Hade du en bra helg?') till någon."
       - "Lyssna aktivt: nicka, ställ en följdfråga och sammanfatta kort det personen sa."

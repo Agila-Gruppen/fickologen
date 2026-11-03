@@ -3,6 +3,8 @@ week: 7
 title: "Exponering: de första stegen"
 summary: "Du övar på ditt första steg, flera gånger, och ser vad som händer."
 minutes: 40
+figure_after: 2
+figure_caption: "Ångesten sjunker oftast av sig själv om du stannar kvar."
 safety_note: "Om det blir för jobbigt: gör steget mindre, ta en paus eller byt till ett lättare. Du ska aldrig utsätta dig för något farligt. Om du mår mycket dåligt, kontakta vården (1177) eller någon du litar på."
 exercises:
   - id: w07-expo1
@@ -13,11 +15,12 @@ exercises:
     why: "Första gången är oftast svårast. Det blir lättare med upprepning."
     task: "Gör ditt första steg och stanna kvar tills ångesten börjat sjunka. Skatta före och efter och skriv hur det gick."
     write_label: "Vad hände, och blev det som jag trodde?"
+    example: "Steg: fråga om något i ett kafé. Före: 55.\nJag stannade kvar och pratade en minut. Efter: 30.\nDet blev inte som jag trodde: personen var vänlig."
     steps:
       - "Gör ditt första steg från stegen."
       - "Skatta ångesten före (0–100). Stanna kvar i situationen en stund, helst tills den har börjat minska."
       - "Skatta ångesten efteråt. Skriv vad som hände och om det blev som du trodde."
-    measure_label: "Hur stor var ångesten (0–100)?"
+    measure_label: "Före: ångesten precis innan du börjar. Efter: ångesten direkt när du är klar. 0 = ingen alls, 100 = värsta tänkbara."
   - id: w07-expo2
     title: "Samma steg igen"
     kind: exponering
@@ -26,10 +29,11 @@ exercises:
     why: "Upprepning är det som gör att det sjunker."
     task: "Gör samma steg en gång till, helst en annan dag, och skriv vad som skilde sig från första gången."
     write_label: "Vad var annorlunda den här gången?"
+    example: "Torsdag, samma kafé. Före: 45, efter: 25.\nAnnorlunda: jag var mindre skakig och tittade personen i ögonen."
     steps:
       - "Gör samma steg en gång till, helst en annan dag."
       - "Skatta före och efter, och notera om något skilde sig."
-    measure_label: "Hur stor var ångesten (0–100)?"
+    measure_label: "Före: ångesten precis innan du börjar. Efter: ångesten direkt när du är klar. 0 = ingen alls, 100 = värsta tänkbara."
 reflection_prompt: "Vad tog du med dig från första gången?"
 chat_tips:
   - "Hur länge ska jag stanna kvar i situationen?"
@@ -47,6 +51,7 @@ Några tips:
 - Gör samma steg **flera gånger** under veckan. Det är upprepningen som gör skillnad.
 - Ta inte alkohol eller lugnande tabletter för att klara övningen. Då hinner du inte upptäcka att ångesten går över av sig själv. Din vanliga medicin fortsätter du med som vanligt.
 - Kämpa inte emot ångesten. Låt den finnas där och rikta uppmärksamheten mot det som händer omkring dig.
+- Blir det för jobbigt: gör steget mindre eller ta en paus. Du ska aldrig utsätta dig för något farligt. Mår du mycket dåligt, kontakta 1177 eller någon du litar på.
 - Skriv ner hur det gick direkt efteråt, så minns du hur det verkligen var.
 
 Fira att du gjorde det, oavsett hur det kändes.

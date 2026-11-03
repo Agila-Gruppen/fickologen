@@ -18,12 +18,9 @@ NAV_ITEMS = [
     ("chat", "Chatt"),
     ("saved", "Sparade chattar"),
     ("diary", "Dagbok"),
-    # ("history", "Tidigare chattar"),
-]
-
-# Visas bara för inloggade (programmet sparar framsteg per konto).
-LOGGED_IN_NAV_ITEMS = [
+    # Syns för alla. Utan konto visar sidan en uppmaning att logga in (programmet sparar framsteg per konto).
     ("treatment", "12 veckor KBT"),
+    # ("history", "Tidigare chattar"),
 ]
 
 SAFETY_NAV_ITEM = ("safety", "Trygghet & integritet")
@@ -78,8 +75,6 @@ HIDDEN_VIEWS = {"account", "password_reset"}
 
 def _available_nav_items() -> list[tuple[str, str]]:
     items = list(NAV_ITEMS)
-    if auth.current_user():
-        items.extend(LOGGED_IN_NAV_ITEMS)
     items.append(SAFETY_NAV_ITEM)
     if auth.is_admin():
         items.extend(ADMIN_NAV_ITEMS)
@@ -87,7 +82,7 @@ def _available_nav_items() -> list[tuple[str, str]]:
 
 
 def program_available() -> bool:
-    """Whether the logged-in user can see the 12-week program (admins only until it is reviewed)."""
+    """Whether the 12-week program is in the menu (it is, for everyone; a visitor gets a log-in prompt on the page)."""
     return any(key == "treatment" for key, _ in _available_nav_items())
 
 

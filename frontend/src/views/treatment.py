@@ -8,6 +8,8 @@ exercise. The chat shares the user's current conversation and tells the backend
 which week is open.
 """
 import html
+import re
+from pathlib import Path
 
 import streamlit as st
 
@@ -26,6 +28,7 @@ from components import LOGO_MARK, login_prompt, page_header
 from views.chat import render_bubble
 
 PROGRAM_NAME = "12 veckor KBT"
+ILLUSTRATIONS_DIR = Path(__file__).parent.parent / "assets" / "illustrations"
 WEEK_KEY = "fk_program_week"        # the week page that is open, or None for the overview
 FLASH_KEY = "fk_program_flash"      # a message to show once, for example after completing a week
 SCROLL_TOP_KEY = "fk_program_scroll_top"  # set when the page should start at the top (new week)
@@ -33,13 +36,6 @@ EXERCISE_KEY_PREFIX = "fk_ex_"      # widget keys of the exercise forms, cleared
 TOTAL_WEEKS = 12
 CHAT_HEIGHT = 440
 STATUS_MARKS = {"done": "✓", "open": "●", "locked": "–"}
-KIND_LABELS = {
-    "reflektion": "Reflektion",
-    "tankedagbok": "Tankedagbok",
-    "ovning": "Övning",
-    "experiment": "Experiment",
-    "exponering": "Exponering",
-}
 
 # Scroll helpers. Constant scripts, nothing from users or the model goes into them.
 _SCROLL_TOP_JS = """
@@ -135,7 +131,7 @@ def _render_overview() -> None:
                 f"""
                 <div class="fk-eyebrow">Din vecka</div>
                 <div class="fk-card-title">Vecka {current["week"]}: {html.escape(current["title"])}</div>
-                <p class="fk-card-text">{html.escape(current["summary"])} · cirka {current["minutes"]} minuter</p>
+                <p class="fk-card-text">{html.escape(current["summary"])}</p>
                 """,
                 unsafe_allow_html=True,
             )
@@ -286,9 +282,7 @@ def _render_week_navigation(number: int, weeks: list[dict]) -> bool:
         help="Nästa vecka öppnas när du är klar med den här." if next_locked and number < TOTAL_WEEKS else None,
     ):
         _open_week(number + 1)
-    chat_on = chat.toggle("Chatten bredvid", value=True, key="fk_program_chat_on")
-    st.caption("Tryck på Spara längst ner innan du byter vecka, så följer det du skrivit med.")
-    return chat_on
+    return chat.toggle("Chatten bredvid", value=True, key="fk_program_chat_on")
 
 
 def _jump_to_week(current: int, statuses: dict[int, str]) -> None:
@@ -313,24 +307,46 @@ def _render_week_content(week: dict) -> None:
             <div>
                 <div class="fk-eyebrow">Vecka {number} av {TOTAL_WEEKS}</div>
                 <h2>{html.escape(week["title"])}</h2>
-                <p class="fk-card-text">{html.escape(week["summary"])} · cirka {week["minutes"]} minuter</p>
+                <p class="fk-card-text">{html.escape(week["summary"])}</p>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    if week.get("safety_note"):
-        st.markdown(f'<div class="fk-note">{html.escape(week["safety_note"])}</div>', unsafe_allow_html=True)
 
     st.markdown("#### 1. Läs")
     with st.container(border=True, key="fk_program_theory"):
-        st.markdown(week["theory"])
+        _render_theory(week)
 
     st.markdown("#### 2. Gör övningarna")
     _render_todo(week, logs)
     values = _render_week_form(week, logs)
     if values is not None:
         _handle_submit(week, logs, *values)
+
+
+def _illustration(number: int) -> Path | None:
+    """The week's picture (our own SVG file), or None if there is none."""
+    path = ILLUSTRATIONS_DIR / f"vecka-{number:02d}.svg"
+    return path if path.exists() else None
+
+
+def _render_theory(week: dict) -> None:
+    """The theory text, with the week's picture after the block the content file names."""
+    theory = week["theory"]
+    # .get: during a deploy the frontend can be newer than the backend for a few minutes.
+    after = week.get("figure_after")
+    picture = _illustration(week["week"])
+    if not (after and picture):
+        st.markdown(theory)
+        return
+    blocks = re.split(r"\n\s*\n", theory.strip())
+    st.markdown("\n\n".join(blocks[:after]))
+    caption = week.get("figure_caption") or ""
+    # st.image gives the user a button to enlarge the picture, which helps on a small screen.
+    st.image(str(picture), caption=caption or None, alt=caption or None, width="stretch")
+    if blocks[after:]:
+        st.markdown("\n\n".join(blocks[after:]))
 
 
 def _render_todo(week: dict, logs: dict[str, dict]) -> None:
@@ -389,14 +405,11 @@ def _render_week_form(week: dict, logs: dict[str, dict]) -> tuple[dict, bool] | 
 def _render_exercise(exercise: dict, log: dict | None) -> dict:
     """One exercise card with its fields. Returns what is currently typed (only final after a submit)."""
     exercise_id = exercise["id"]
-    required = "Obligatorisk" if exercise["required"] else "Valfri"
+    optional = "" if exercise["required"] else " (valfri)"
     steps = "\n".join(f"{i}. {step}" for i, step in enumerate(exercise["steps"], start=1))
     with st.container(border=True, key=f"{EXERCISE_KEY_PREFIX}box_{exercise_id}"):
         st.markdown(
-            f"""
-            <div class="fk-badge">{required} · {KIND_LABELS.get(exercise["kind"], "Övning")} · cirka {exercise["minutes"]} min</div>
-            <div class="fk-card-title">{html.escape(exercise["title"])}</div>
-            """,
+            f'<div class="fk-card-title">{html.escape(exercise["title"])}{optional}</div>',
             unsafe_allow_html=True,
         )
         # .get: during a deploy the frontend can be newer than the backend for a few minutes.
@@ -407,6 +420,12 @@ def _render_exercise(exercise: dict, log: dict | None) -> dict:
             )
         st.markdown("**Så här gör du**")
         st.markdown(steps)
+        if example := exercise.get("example"):
+            lines = "<br>".join(html.escape(line) for line in example.split("\n"))
+            st.markdown(
+                f'<div class="fk-example"><div class="fk-example-label">Exempel</div>{lines}</div>',
+                unsafe_allow_html=True,
+            )
         st.caption("Varför: " + exercise["why"])
 
         before = after = None

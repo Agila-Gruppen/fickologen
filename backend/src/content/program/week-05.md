@@ -3,6 +3,8 @@ week: 5
 title: "Beteendeexperiment"
 summary: "Du testar en av dina farhågor i verkligheten, i liten skala."
 minutes: 35
+figure_after: 3
+figure_caption: "Ett beteendeexperiment i fyra steg."
 safety_note: "Välj ett experiment som är litet och riskfritt. Du ska aldrig behöva göra något som känns farligt eller kränker någon."
 exercises:
   - id: w05-planera
@@ -13,11 +15,12 @@ exercises:
     why: "En tydlig plan gör att du kan se vad som faktiskt hände."
     task: "Välj en farhåga och planera ett litet test av den: vad tror du händer, och när och var prövar du?"
     write_label: "Min farhåga, min gissning och planen"
+    example: "Farhåga: 'Om jag frågar om vägen tycker personen att jag är konstig.'\nGissning: personen suckar och ser irriterad ut. Före: 70.\nPlan: på torsdag, på väg från bussen, frågar jag första personen jag möter om vägen till biblioteket."
     steps:
       - "Välj en farhåga, till exempel 'Om jag frågar om vägen kommer personen att tycka att jag är konstig.'"
       - "Skriv vad du tror ska hända och hur säker du är (0–100)."
       - "Bestäm när och var du ska testa det."
-    measure_label: "Hur sannolikt tror du att det värsta händer (0–100)?"
+    measure_label: "Fyll bara i Före nu: hur sannolikt tror du att det värsta händer? 0 = aldrig, 100 = helt säker. Efter fyller du i nästa övning."
   - id: w05-genomfor
     title: "Genomför och utvärdera"
     kind: experiment
@@ -26,11 +29,12 @@ exercises:
     why: "Det är i verkligheten som tanken får sin prövning."
     task: "Gör experimentet och skriv direkt efteråt vad som faktiskt hände, jämfört med vad du trodde."
     write_label: "Vad hände, och vad lärde jag mig?"
+    example: "Jag frågade en kvinna om vägen. Hon log och visade. Ingen verkade tycka att jag var konstig. Efter: 20.\nJag lärde mig att folk oftast är hjälpsamma."
     steps:
       - "Gör experimentet."
       - "Skriv direkt efteråt vad som faktiskt hände, och jämför med det du trodde."
       - "Vad lärde du dig? Skatta på nytt hur sannolikt du tycker att det värsta är."
-    measure_label: "Hur sannolikt tror du att det värsta händer (0–100)?"
+    measure_label: "Före: din gissning från planen. Efter: hur sannolikt du tycker att det värsta är nu, när du har testat. 0 = aldrig, 100 = helt säker."
 reflection_prompt: "Vad blev annorlunda mot det du hade förväntat dig?"
 chat_tips:
   - "Kan du ge förslag på små beteendeexperiment?"
