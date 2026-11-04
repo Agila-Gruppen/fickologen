@@ -5,6 +5,7 @@ import streamlit as st
 import auth
 from api import BackendUnavailable
 from components import page_header
+from datetime_utils import to_local
 
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
 
@@ -18,7 +19,7 @@ def render() -> None:
     page_header(
         "Admin",
         "Hantera konton",
-        "Byt lösenord för användare och admins.",
+        "Byt lösenord, skicka påminnelser och radera konton.",
     )
 
     if not auth.current_user():
@@ -35,6 +36,8 @@ def render() -> None:
     _render_change_password_card()
     st.markdown("<div style='height:1.2rem;'></div>", unsafe_allow_html=True)
     _render_reminders_card()
+    st.markdown("<div style='height:1.2rem;'></div>", unsafe_allow_html=True)
+    _render_delete_user_card()
 
 
 def _on_cancel() -> None:
@@ -151,3 +154,85 @@ def _render_reminders_card() -> None:
             st.warning(message + " – se backendens logg.")
         else:
             st.success(message)
+
+
+DELETE_TARGET_KEY = "fk_admin_delete_target"
+DELETE_CONFIRM_KEY = "fk_admin_delete_confirm"
+# Bumped after each delete so the user picker starts empty: Streamlit would
+# otherwise keep showing the deleted account as selected.
+DELETE_ROUND_KEY = "fk_admin_delete_round"
+
+
+def _render_delete_user_card() -> None:
+    with st.container(key="fk_card_admin_delete"):
+        st.markdown('<div class="fk-section-title">Radera konto</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<p class="fk-card-text">Raderar användarens konto och allt som hör till det – '
+            "chattar, dagbok och allt i programmet. Det går inte att ångra. Admins kan inte "
+            "raderas här, och ditt eget konto raderar du under Mitt konto.</p>",
+            unsafe_allow_html=True,
+        )
+
+        try:
+            users, error = auth.admin_list_users()
+        except BackendUnavailable:
+            st.error(BACKEND_ERROR)
+            return
+        if error:
+            st.error(error)
+            return
+
+        me = (auth.current_user() or {}).get("user_id")
+        deletable = [u for u in users or [] if u.get("role") != "admin" and u.get("id") != me]
+        if not deletable:
+            st.info("Det finns inga användarkonton att radera.")
+            return
+
+        by_id = {int(u["id"]): u for u in deletable}
+        delete_round = st.session_state.get(DELETE_ROUND_KEY, 0)
+        user_id = st.selectbox(
+            "Välj användare",
+            options=list(by_id),
+            format_func=lambda i: f"{by_id[i].get('username', '?')} (ID {i})",
+            index=None,
+            placeholder="Välj ett konto",
+            key=f"{DELETE_TARGET_KEY}_{delete_round}",
+        )
+        if user_id is None:
+            return
+
+        user = by_id[user_id]
+        username = str(user.get("username", ""))
+        created = to_local(user.get("created_at", ""))
+        details = [f"Konto-ID {user_id}"]
+        if created:
+            details.append(f"skapat {created:%Y-%m-%d}")
+        if user.get("email"):
+            details.append(f"e-post {user['email']}")
+        st.caption(" · ".join(details))
+
+        typed = st.text_input(
+            f"Skriv användarnamnet **{username}** för att bekräfta",
+            key=f"{DELETE_CONFIRM_KEY}_{user_id}",
+        )
+        if not st.button(
+            "Radera kontot permanent",
+            key="fk_admin_delete_user_btn",
+            disabled=typed.strip() != username,
+            use_container_width=True,
+        ):
+            return
+
+        try:
+            error = auth.admin_delete_user(user_id)
+        except BackendUnavailable:
+            st.error(BACKEND_ERROR)
+            return
+        if error:
+            st.error(error)
+            return
+        st.session_state[DELETE_ROUND_KEY] = delete_round + 1
+        st.session_state.pop(f"{DELETE_TARGET_KEY}_{delete_round}", None)
+        st.session_state.pop(f"{DELETE_CONFIRM_KEY}_{user_id}", None)
+        st.session_state[FLASH_KEY] = f"Kontot {username} och all dess data är raderat."
+        st.rerun()
