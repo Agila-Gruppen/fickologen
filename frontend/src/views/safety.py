@@ -19,8 +19,8 @@ SECTIONS = [
     ),
     (
         "Hur vi hanterar dina uppgifter",
-        "Allt du skriver lagras krypterat och används bara för att Fickologen ska kunna svara dig." 
-        "Ingen hos oss läser dina samtal, och de delas aldrig vidare i syfte att identifiera dig." 
+        "Allt du skriver lagras krypterat och används bara för att Fickologen ska kunna svara dig. " 
+        "Ingen hos oss läser dina samtal, och de delas aldrig vidare i syfte att identifiera dig. " 
         "Du kan alltid se, exportera och radera din data, och vi samlar bara in det som behövs "
         "för att Fickologen ska fungera för dig.",
  
