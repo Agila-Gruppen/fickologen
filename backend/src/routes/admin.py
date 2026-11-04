@@ -6,6 +6,7 @@ from ..models.user import User
 from ..schemas.user import AdminPasswordUpdate, AdminUserUpdate, ReminderRunResult, UserData
 from ..services import email
 from ..services.reminders import send_weekly_reminders
+from ..services.user_data import delete_account
 from ..utils.auth import get_current_admin
 from ..utils.password import hash_password
 
@@ -94,3 +95,44 @@ async def send_reminders_now(admin: User = Depends(get_current_admin), db: Sessi
     result = send_weekly_reminders(db)
     print(f"Admin {admin.username} sent the weekly reminders by hand")
     return ReminderRunResult(sent=result.sent, already_sent=result.already_sent, failed=result.failed)
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def admin_delete_user(
+    user_id: int,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Deletes a user's account and all data tied to it. Admin only.
+
+    Admins cannot delete themselves here (that is done from their own
+    account page) or other admins: admin rights come from ADMIN_USERNAMES,
+    so remove the name there first.
+
+    Raises:
+        HTTPException: 400 if trying to delete yourself or another admin
+        HTTPException: 404 if there is no such user
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID {user_id} not found"
+        )
+    if user.id == admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Admins delete their own account from the account page"
+        )
+    if user.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Admins cannot be deleted here; remove them from ADMIN_USERNAMES first"
+        )
+
+    username = user.username
+    delete_account(user.id, db)
+    db.commit()
+    print(f"Admin {admin.username} deleted user {username} (ID {user_id})")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,4 +1,4 @@
-streamlit>=1.60
+streamlit>=1.65
 google-genai
 python-dotenv
 agent-detector==2.0.0

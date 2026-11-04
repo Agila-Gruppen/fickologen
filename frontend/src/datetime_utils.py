@@ -4,6 +4,11 @@ from zoneinfo import ZoneInfo
 
 STOCKHOLM = ZoneInfo("Europe/Stockholm")
 
+MONTHS = [
+    "januari", "februari", "mars", "april", "maj", "juni",
+    "juli", "augusti", "september", "oktober", "november", "december",
+]
+
 
 def to_local(value: str | datetime) -> datetime | None:
     """
@@ -17,3 +22,8 @@ def to_local(value: str | datetime) -> datetime | None:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(STOCKHOLM)
+
+
+def format_day(dt: datetime) -> str:
+    """A date the way you would say it: 31 oktober 2026."""
+    return f"{dt.day} {MONTHS[dt.month - 1]} {dt.year}"

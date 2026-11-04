@@ -13,6 +13,8 @@ from ..models.conversation import Conversation
 from ..models.diary_entry import DiaryEntry
 from ..models.exercise_log import ExerciseLog
 from ..models.message import Message
+from ..models.password_reset_token import PasswordResetToken
+from ..models.user import User
 
 
 def delete_conversations(user_id: int, db: Session) -> int:
@@ -37,3 +39,17 @@ def delete_program_logs(user_id: int, db: Session) -> int:
 def delete_cbt_progress(user_id: int, db: Session) -> int:
     """Deletes the user's CBT program progress. Returns how many rows (0 or 1)."""
     return db.query(CbtProgress).filter(CbtProgress.user_id == user_id).delete(synchronize_session=False)
+
+
+def delete_account(user_id: int, db: Session) -> None:
+    """
+    Deletes a user and everything tied to them: chats and messages, diary
+    entries, everything written in the CBT program, password reset links
+    and finally the account itself.
+    """
+    delete_conversations(user_id, db)
+    delete_diary_entries(user_id, db)
+    delete_program_logs(user_id, db)
+    delete_cbt_progress(user_id, db)
+    db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
+    db.query(User).filter(User.id == user_id).delete(synchronize_session=False)

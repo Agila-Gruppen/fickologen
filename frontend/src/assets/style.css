@@ -1,54 +1,146 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap');
 
 :root {
   --bg: #FAF7F1;
-  --surface: #FFFFFF;
-  --surface-muted: #F4EFE6;
+  --surface: #FFFDF9;
+  --surface-muted: #F7F2E9;
   --sidebar-bg: #F6F2EA;
   --border: #EAE3D7;
+  --border-strong: #DACFBE;
   --text: #33312D;
-  --text-muted: #7A7468;
-  --heading: #211F1A;
+  --text-muted: #686255;
+  --heading: #2A2720;
   --sage: #7C9885;
   --sage-dark: #5F7A69;
+  --sage-deep: #4A6354;
   --sage-tint: #E7EFE8;
   --peach: #E8B792;
   --peach-tint: #FBEDE0;
+  --beige: #F1E6D6;
+  --beige-strong: #E9DBC6;
   --terracotta: #C57A5F;
+  --terracotta-deep: #94503A;
   --terracotta-tint: #F6E6DF;
-  --shadow-soft: 0 2px 10px rgba(58, 55, 51, 0.04);
-  --shadow-soft-lg: 0 16px 40px rgba(58, 55, 51, 0.10);
+  --stitch-line: #D8C3AB;
+  /* Layered, warm-neutral shadows: a tight contact shadow plus a soft ambient one. */
+  --shadow-soft: 0 1px 2px rgba(74, 58, 40, 0.05);
+  --shadow-card: 0 1px 2px rgba(74, 58, 40, 0.05), 0 12px 28px -16px rgba(74, 58, 40, 0.16);
+  --shadow-soft-lg: 0 2px 4px rgba(74, 58, 40, 0.04), 0 28px 56px -24px rgba(74, 58, 40, 0.24);
+  --focus-ring: 0 0 0 3px rgba(124, 152, 133, 0.22);
   --radius-lg: 20px;
   --radius-md: 14px;
-  --radius-btn: 14px;
+  --radius-btn: 12px;
   --radius-pill: 999px;
+  /* The pocket seam from the logo: used for dividers and the program's week thread. */
+  --stitch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='3'%3E%3Cline x1='1.5' y1='1.5' x2='8' y2='1.5' stroke='%23D8C3AB' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  /* Source Sans ships with Streamlit, so the interface font needs no network request. */
+  --font-body: 'Source Sans', 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
 }
 
 /* The app has one look, light, whatever the browser or OS theme. The Streamlit
-   theme itself is pinned in .streamlit/config.toml (base = "light"); this
+   theme itself is pinned in frontend/src/.streamlit/config.toml (base = "light"); this
    keeps the browser's own controls (scrollbars, autofill, pickers) light too. */
 :root {
   color-scheme: light only;
 }
+/* A safety net should that file not be read: Streamlit's dark theme would otherwise paint
+   these nearly white on our light surfaces. */
+[data-testid="stWidgetLabel"] p,
+[role="dialog"] [role="tab"],
+[role="dialog"] [role="tab"] p {
+  color: var(--text) !important;
+}
+[role="dialog"] [role="tab"][aria-selected="true"],
+[role="dialog"] [role="tab"][aria-selected="true"] p {
+  color: var(--sage-deep) !important;
+}
 
 html, body, [class*="css"] {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-body);
   color: var(--text);
 }
 
 /* !important: Streamlit's own markdown-container styles target h1/h2/h3 with
    higher specificity ([data-testid="stMarkdownContainer"] h1, etc.) and would
    otherwise silently win over these plain tag selectors. */
-h1, h2, h3, .fk-heading {
-  font-family: 'Sora', 'Inter', sans-serif !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.02em !important;
+h1, h2, h3, h4 {
+  font-family: var(--font-display) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.012em !important;
   color: var(--heading) !important;
 }
 
+/* Streamlit's link icon beside headings takes up room and pulls centered titles off center. */
+[data-testid="stHeaderActionElements"] {
+  display: none !important;
+}
+
+/* Shown on a keyboard focus only, for every control the styles below strip the default from. */
+button:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--sage-dark) !important;
+  outline-offset: 2px;
+}
+
 /* ---------- App shell ---------- */
+/* Open and close the menu. Streamlit hides the close button until the sidebar is hovered,
+   which never happens on a touch screen, so it is always shown here, with a tap-sized target
+   and our own icons in place of the faint double arrows. */
+[data-testid="stSidebarCollapseButton"] {
+  visibility: visible !important;
+  width: auto !important;
+}
+[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarCollapseButton"] button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  width: 44px !important;
+  height: 44px !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--beige-strong) !important;
+  box-shadow: 0 1px 2px rgba(74, 58, 40, 0.06), 0 6px 14px -8px rgba(150, 96, 56, 0.4) !important;
+  color: var(--sage-deep) !important;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+[data-testid="stExpandSidebarButton"]:hover,
+[data-testid="stSidebarCollapseButton"] button:hover {
+  background: var(--beige) !important;
+  border-color: var(--border-strong) !important;
+}
+[data-testid="stExpandSidebarButton"] > span,
+[data-testid="stSidebarCollapseButton"] button > span {
+  display: none !important;
+}
+[data-testid="stExpandSidebarButton"]::before,
+[data-testid="stSidebarCollapseButton"] button::before {
+  content: "";
+  flex: none;
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  -webkit-mask: var(--fk-toggle-icon) center / contain no-repeat;
+  mask: var(--fk-toggle-icon) center / contain no-repeat;
+}
+/* Three soft lines, the last one shorter: "there is a menu here". */
+[data-testid="stExpandSidebarButton"] {
+  --fk-toggle-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M5 7h14M5 12h14M5 17h8.5'/%3E%3C/svg%3E");
+}
+/* A soft chevron back towards the edge: "put the menu away". */
+[data-testid="stSidebarCollapseButton"] button {
+  --fk-toggle-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 6 8.5 12l6 6'/%3E%3C/svg%3E");
+}
+
+/* Morning light: a warm, very low wash from the top of the page. */
 .stApp {
-  background: var(--bg);
+  background:
+    radial-gradient(1100px 560px at 58% -12%, rgba(232, 183, 146, 0.17), transparent 70%),
+    var(--bg);
 }
 
 #MainMenu { visibility: hidden; }
@@ -57,25 +149,32 @@ header[data-testid="stHeader"] {
   background: transparent;
 }
 div[data-testid="stAppDeployButton"] { display: none; }
+/* On a phone the menu icon stays on screen, so text scrolling under it needs a backdrop. */
+@media (max-width: 640px) {
+  header[data-testid="stHeader"] {
+    background: linear-gradient(to bottom, rgba(250, 247, 241, 0.95) 55%, rgba(250, 247, 241, 0));
+  }
+}
 
 .block-container {
-  padding-top: 2.75rem;
+  padding-top: 2.5rem;
   padding-bottom: 4rem;
   max-width: 760px;
 }
 
-/* soft ambient glow behind the logo/eyebrow only - fades out before the heading */
-.fk-glow {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 440px;
-  height: 260px;
-  background: radial-gradient(ellipse at center, rgba(124,152,133,0.14) 0%, rgba(232,183,146,0.08) 45%, rgba(250,247,241,0) 72%);
-  filter: blur(14px);
-  pointer-events: none;
-  z-index: 0;
+@keyframes fk-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fk-breathe {
+  from { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1.07); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* ---------- Sidebar ---------- */
@@ -84,84 +183,48 @@ section[data-testid="stSidebar"] {
   border-right: 1px solid var(--border);
 }
 section[data-testid="stSidebar"] > div {
-  padding-top: 1.5rem;
+  padding-top: 0;
+}
+[data-testid="stSidebarUserContent"] {
+  padding-top: 0.25rem;
 }
 
+/* A wordmark only: the logo itself belongs in the middle of the page. */
 .fk-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0 0.25rem 1.4rem 0.25rem;
-  margin-bottom: 0.6rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0 0.25rem 1.5rem 0.8rem;
 }
-.fk-brand-mark {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-  display: block;
-  flex-shrink: 0;
-}
-.fk-brand-text .fk-brand-title {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+.fk-brand-title {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
   color: var(--heading);
   display: block;
 }
-.fk-brand-text .fk-brand-tagline {
-  font-size: 0.72rem;
+.fk-brand-tagline {
+  font-size: 0.86rem;
   color: var(--text-muted);
   display: block;
-  margin-top: 0.05rem;
+  margin-top: 0.2rem;
 }
-
-a.fk-nav-link {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.5rem 0.75rem 0.5rem 0.9rem;
-  margin-bottom: 0.15rem;
-  border-radius: 10px;
-  text-decoration: none !important;
-  color: var(--text-muted) !important;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-left: 2px solid transparent;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-a.fk-nav-link:hover {
-  background: rgba(124, 152, 133, 0.10);
-  color: var(--text) !important;
-}
-a.fk-nav-link.active {
-  background: var(--sage-tint);
-  color: var(--sage-dark) !important;
-  font-weight: 600;
-  border-left: 2px solid var(--sage);
-}
-.fk-nav-icon { font-size: 1rem; opacity: 0.9; }
 
 /* Sidebar nav buttons, targeted via Streamlit's auto key-class */
-div[class*="st-key-nav_"],
-div[class*="st-key-navactive_"] {
-  margin-bottom: -0.75rem;
+div[class*="st-key-fk_nav"] {
+  gap: 0.12rem;
 }
 div[class*="st-key-nav_"] button,
 div[class*="st-key-navactive_"] button {
+  position: relative;
   justify-content: flex-start !important;
-  gap: 0.65rem;
-  padding: 0.5rem 0.75rem 0.5rem 0.9rem !important;
+  padding: 0.52rem 0.8rem !important;
   min-height: 0 !important;
   border-radius: 10px !important;
   background: transparent !important;
   color: var(--text-muted) !important;
-  border: none !important;
-  border-left: 2px solid transparent !important;
+  border: 1px solid transparent !important;
   box-shadow: none !important;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 div[class*="st-key-nav_"] button > div,
 div[class*="st-key-navactive_"] button > div {
@@ -169,45 +232,52 @@ div[class*="st-key-navactive_"] button > div {
 }
 div[class*="st-key-nav_"] button p,
 div[class*="st-key-navactive_"] button p {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 div[class*="st-key-nav_"] button:hover {
-  background: rgba(124, 152, 133, 0.10) !important;
-  color: var(--text) !important;
+  background: rgba(116, 94, 66, 0.07) !important;
+  color: var(--heading) !important;
 }
 div[class*="st-key-navactive_"] button {
-  background: var(--sage-tint) !important;
-  color: var(--sage-dark) !important;
-  border-left: 2px solid var(--sage) !important;
+  background: var(--surface) !important;
+  color: var(--heading) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+div[class*="st-key-navactive_"] button::after {
+  content: "";
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: var(--sage-dark);
 }
 div[class*="st-key-navactive_"] button p { font-weight: 600; }
 
-.fk-sidebar-spacer { height: 1.4rem; }
-
-.fk-sidebar-footer {
-  margin-top: 1.2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
+/* Crisis button, targeted via Streamlit's auto key-class. Deep terracotta on the tint: this has to be easy to read. */
+div[class*="st-key-crisis_btn"] {
+  margin-top: 1.1rem;
 }
-
-/* Crisis button, targeted via Streamlit's auto key-class */
 div[class*="st-key-crisis_btn"] button {
   background: var(--terracotta-tint) !important;
-  color: var(--terracotta) !important;
-  border: 1px solid rgba(197, 122, 95, 0.3) !important;
-  border-radius: var(--radius-pill) !important;
-  font-weight: 500 !important;
-  font-size: 0.83rem !important;
-  padding: 0.5rem 0.9rem !important;
+  color: var(--terracotta-deep) !important;
+  border: 1px solid rgba(197, 122, 95, 0.28) !important;
+  border-radius: var(--radius-btn) !important;
+  padding: 0.55rem 0.9rem !important;
   box-shadow: none !important;
-  transform: none !important;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+div[class*="st-key-crisis_btn"] button p {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
 }
 div[class*="st-key-crisis_btn"] button:hover {
-  background: var(--terracotta) !important;
-  color: #FFFFFF !important;
-  border-color: var(--terracotta) !important;
-  transform: none !important;
+  background: #F1DAD0 !important;
+  border-color: rgba(148, 80, 58, 0.45) !important;
 }
 
 /* Account box, pinned to the bottom of the sidebar */
@@ -226,9 +296,13 @@ div[class*="st-key-crisis_btn"] button:hover {
 }
 [data-testid="stLayoutWrapper"]:has(> div[class*="st-key-fk_account"]) {
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 1.1rem;
   border-top: 1px solid var(--border);
 }
+div[class*="st-key-fk_account"] {
+  gap: 0.7rem;
+}
+/* The margin makes up for the negative one Streamlit puts under markdown blocks. */
 .fk-account {
   display: flex;
   align-items: center;
@@ -243,9 +317,11 @@ div[class*="st-key-crisis_btn"] button:hover {
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 50%;
-  background: var(--sage-tint);
-  color: var(--sage-dark);
-  font-weight: 600;
+  background: var(--peach-tint);
+  color: var(--terracotta-deep);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 .fk-account-text {
   display: flex;
@@ -255,68 +331,201 @@ div[class*="st-key-crisis_btn"] button:hover {
 }
 .fk-account-name {
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .fk-account-label {
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
 }
-div[class*="st-key-login_btn"] button,
-div[class*="st-key-mydata_btn"] button,
+div[class*="st-key-login_btn"] button p,
+div[class*="st-key-account_btn"] button p,
+div[class*="st-key-logout_btn"] button p {
+  font-size: 0.92rem;
+}
+div[class*="st-key-account_btn"] button,
 div[class*="st-key-logout_btn"] button {
-  font-size: 0.83rem !important;
-  padding: 0.45rem 0.9rem !important;
+  padding: 0.38rem 0.5rem !important;
+  min-height: 0 !important;
+  white-space: nowrap;
 }
 
 /* ---------- Buttons (general) ---------- */
-.stButton > button {
+/* Matched on data-testid so that form submit and download buttons get the same look. */
+[data-testid^="stBaseButton-primary"],
+[data-testid^="stBaseButton-secondary"] {
   border-radius: var(--radius-btn);
-  padding: 0.55rem 1.35rem;
-  font-weight: 500;
-  font-size: 0.92rem;
-  border: none;
-  box-shadow: none;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  padding: 0.55rem 1.25rem;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
-.stButton > button:hover {
-  transform: translateY(-1px);
+[data-testid^="stBaseButton-primary"] p,
+[data-testid^="stBaseButton-secondary"] p {
+  font-weight: 600;
+  font-size: 0.97rem;
 }
-.stButton > button[kind="primary"] {
-  background: var(--sage);
+/* sage-dark rather than sage: white text on plain sage is too faint to read comfortably. */
+[data-testid^="stBaseButton-primary"] {
+  background: linear-gradient(180deg, #66826F 0%, var(--sage-dark) 100%);
   color: #FFFFFF;
-  box-shadow: 0 6px 18px rgba(95, 122, 105, 0.28);
+  border: 1px solid var(--sage-dark);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(74, 58, 40, 0.14), 0 8px 18px -12px rgba(74, 58, 40, 0.4);
 }
-.stButton > button[kind="primary"]:hover {
-  background: var(--sage-dark);
-  box-shadow: 0 8px 22px rgba(95, 122, 105, 0.34);
+[data-testid^="stBaseButton-primary"]:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--sage-dark) 0%, var(--sage-deep) 100%);
+  border-color: var(--sage-deep);
+  color: #FFFFFF;
 }
-.stButton > button[kind="secondary"] {
+[data-testid^="stBaseButton-primary"]:active:not(:disabled) {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+[data-testid^="stBaseButton-secondary"] {
   background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
+  color: var(--heading);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-soft);
 }
-.stButton > button[kind="secondary"]:hover {
-  border-color: var(--sage);
-  color: var(--sage-dark);
+[data-testid^="stBaseButton-secondary"]:hover:not(:disabled) {
+  background: #FFFFFF;
+  border-color: var(--sage-dark);
+  color: var(--sage-deep);
+}
+[data-testid^="stBaseButton-primary"]:disabled,
+[data-testid^="stBaseButton-secondary"]:disabled {
+  background: transparent;
+  border-color: var(--border);
+  color: #A39C8E;
+  box-shadow: none;
+}
+
+/* Quiet actions: present when you look for them, silent otherwise. */
+div[class*="st-key-diary_edit_"] button,
+div[class*="st-key-diary_delete_"] button,
+div[class*="st-key-diary_canceldelete_"] button,
+div[class*="st-key-fk_new_chat"] button,
+div[class*="st-key-fk_program_new_chat"] button,
+div[class*="st-key-account_btn"] button,
+div[class*="st-key-logout_btn"] button {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--text-muted) !important;
+}
+div[class*="st-key-diary_edit_"] button:hover,
+div[class*="st-key-diary_delete_"] button:hover,
+div[class*="st-key-diary_canceldelete_"] button:hover,
+div[class*="st-key-fk_new_chat"] button:hover,
+div[class*="st-key-fk_program_new_chat"] button:hover,
+div[class*="st-key-account_btn"] button:hover,
+div[class*="st-key-logout_btn"] button:hover {
+  background: rgba(116, 94, 66, 0.07) !important;
+  color: var(--heading) !important;
+}
+
+/* ---------- Form fields ---------- */
+/* Paper-white fields with a hairline, instead of Streamlit's filled tan blocks. */
+[data-testid="stTextInputRootElement"],
+[data-testid="stTextAreaRootElement"],
+[data-testid="stNumberInputContainer"],
+[data-testid="stSelectbox"] div:has(> input[role="combobox"]) {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-btn) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+[data-testid="stTextInputRootElement"]:focus-within,
+[data-testid="stTextAreaRootElement"]:focus-within,
+[data-testid="stNumberInputContainer"]:focus-within,
+[data-testid="stSelectbox"] div:has(> input[role="combobox"]):focus-within {
+  border-color: var(--sage-dark) !important;
+  box-shadow: var(--focus-ring) !important;
+}
+[data-testid="stNumberInputContainer"] [data-testid="stTextInputRootElement"] {
+  border: none !important;
+  box-shadow: none !important;
+}
+input, textarea {
+  background: transparent !important;
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+  -webkit-text-fill-color: var(--text-muted) !important;
+  opacity: 0.85 !important;
+}
+[data-testid="stWidgetLabel"] p {
+  color: var(--text);
+  font-size: 0.93rem;
+  font-weight: 500;
+}
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] p {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Segmented control: the chosen option is the only one with colour. */
+[data-testid="stButtonGroup"] button[data-variant="segmented_control"] {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+[data-testid="stButtonGroup"] button[data-variant="segmented_control"]:hover {
+  color: var(--heading);
+}
+[data-testid="stButtonGroup"] button[data-variant="segmented_control"][data-selected="true"] {
+  background: var(--sage-tint);
+  border-color: var(--sage-dark);
+  color: var(--sage-deep);
+}
+[data-testid="stButtonGroup"] button[data-variant="segmented_control"][data-selected="true"] p {
+  font-weight: 600;
+}
+
+/* Status boxes in the palette: Streamlit's defaults are a cold blue, green and red. */
+[data-testid="stAlertContainer"] {
+  border-radius: var(--radius-md) !important;
+  color: var(--text) !important;
+}
+[data-testid="stAlertContainer"] p {
+  color: var(--text) !important;
+}
+[data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) [data-testid="stAlertContainer"],
+[data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) [data-testid="stAlertContainer"] {
+  background: var(--sage-tint) !important;
+}
+[data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) [data-testid="stAlertContainer"] {
+  background: var(--peach-tint) !important;
+}
+[data-testid="stAlert"]:has([data-testid="stAlertContentError"]) [data-testid="stAlertContainer"] {
+  background: var(--terracotta-tint) !important;
+}
+[data-testid="stToast"] {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-soft-lg) !important;
 }
 
 /* ---------- Cards ---------- */
-.fk-card {
+.fk-card,
+div[class*="st-key-fk_card_"] {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.8rem 1.9rem;
-  box-shadow: var(--shadow-soft);
-  margin-bottom: 1.2rem;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  box-shadow: var(--shadow-card);
 }
-.fk-card:hover {
-  box-shadow: var(--shadow-soft-lg);
-  border-color: rgba(124, 152, 133, 0.3);
+.fk-card {
+  padding: 1.8rem 1.9rem;
+  margin-bottom: 1.2rem;
+}
+div[class*="st-key-fk_card_"] {
+  padding: 1.5rem 1.7rem;
 }
 .fk-card-icon {
   font-size: 1.6rem;
@@ -324,160 +533,221 @@ div[class*="st-key-logout_btn"] button {
   display: inline-block;
 }
 .fk-card-title {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.12rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 500;
   letter-spacing: -0.01em;
+  line-height: 1.25;
   color: var(--heading);
   margin: 0 0 0.4rem 0;
 }
 .fk-card-text {
   color: var(--text-muted) !important;
-  font-size: 0.93rem;
-  line-height: 1.65;
+  font-size: 1rem;
+  line-height: 1.6;
   margin: 0 0 0.9rem 0 !important;
+}
+.fk-card-text-small {
+  font-size: 0.9rem;
 }
 
 .fk-badge {
   display: inline-block;
   background: var(--peach-tint);
-  color: #9C6B3F;
-  font-size: 0.66rem;
+  color: #85552F;
+  font-size: 0.82rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.28rem 0.7rem;
+  padding: 0.16rem 0.7rem;
   border-radius: var(--radius-pill);
   margin-bottom: 0.7rem;
+}
+
+/* Logged-out and other "nothing here yet" states. */
+div[class*="st-key-fk_card_login_"] {
+  text-align: center;
+  padding-top: 2.1rem;
+  padding-bottom: 2.1rem;
+}
+div[class*="st-key-fk_card_login_"] .fk-card-title,
+div[class*="st-key-fk_card_login_"] .fk-card-text {
+  text-align: center;
+}
+div[class*="st-key-fk_card_login_"] .fk-card-text {
+  max-width: 440px;
+  margin: 0 auto 1.1rem auto !important;
+}
+
+/* ---------- The logo ---------- */
+/* One copy of the image (--fk-logo, set by load_css), wherever the logo appears. */
+.fk-logo {
+  background: var(--fk-logo) center / contain no-repeat;
+  /* A warm halo all the way around, with a little more weight underneath. */
+  filter: drop-shadow(0 0 14px rgba(214, 150, 96, 0.42)) drop-shadow(0 8px 14px rgba(150, 96, 56, 0.22));
 }
 
 /* ---------- Hero (Home) ---------- */
 .fk-hero {
   position: relative;
   text-align: center;
-  padding: 0.5rem 0 0.2rem 0;
-  z-index: 1;
+  padding: 0;
+  animation: fk-rise 0.5s ease-out both;
 }
-.fk-hero-logo {
-  width: 252px;
-  height: 252px;
-  max-width: 70%;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto 0.5rem auto;
+.fk-hero-mark {
   position: relative;
-  z-index: 1;
+  width: min(264px, 68vw);
+  aspect-ratio: 1;
+  margin: 0 auto;
 }
-.fk-hero-eyebrow {
-  color: var(--sage-dark);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
+/* The light the logo sits in: warm and slowly breathing. */
+.fk-hero-mark::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 170%;
+  height: 150%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(251, 226, 200, 0.85) 0%, rgba(251, 237, 224, 0.5) 48%, rgba(250, 247, 241, 0) 100%);
+  animation: fk-breathe 8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.fk-hero-mark .fk-logo {
+  position: absolute;
+  inset: 0;
+}
+.fk-hero-wordmark {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-style: italic;
+  color: var(--sage-deep);
+  margin: 0.5rem 0 0.2rem 0;
 }
 .fk-hero h1 {
-  font-size: 2.35rem;
-  line-height: 1.22;
-  margin-bottom: 0.5rem;
+  position: relative;
+  font-size: clamp(2.3rem, 5.4vw, 3.2rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em !important;
+  padding: 0.25rem 0 0.7rem 0;
 }
 /* !important on margin: Streamlit's own p{margin:...} rule for markdown
    content otherwise beats this and zeroes out the auto centering. */
 .fk-hero-sub {
+  position: relative;
   color: var(--text-muted) !important;
-  font-size: 1.02rem;
-  line-height: 1.65;
-  max-width: 480px;
-  margin: 0 auto 0.3rem auto !important;
+  font-size: 1.12rem;
+  line-height: 1.55;
+  max-width: 500px;
+  margin: 0 auto 0.4rem auto !important;
 }
 
-/* ---------- Composer (big LLM-style prompt box) ---------- */
-div[class*="st-key-fk_composer"] {
-  position: relative;
-  z-index: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 26px;
-  padding: 0.5rem 0.6rem 0.5rem 1.4rem;
-  box-shadow: var(--shadow-soft-lg);
-  margin: 0.9rem 0 0.6rem 0;
+/* ---------- Page header (every page but Home) ---------- */
+.fk-page-head {
+  text-align: center;
+  margin-bottom: 2.2rem;
+  animation: fk-rise 0.4s ease-out both;
 }
-div[class*="st-key-fk_composer"] [data-testid="stTextAreaRootElement"],
-div[class*="st-key-fk_composer"] textarea {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
+.fk-page-mark {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 0.5rem auto;
 }
-div[class*="st-key-fk_composer"] textarea {
-  resize: none !important;
-  font-family: 'Inter', sans-serif !important;
-  font-size: 1rem !important;
-  line-height: 1.55 !important;
-  padding: 0.65rem 0.2rem !important;
-  color: var(--text) !important;
+.fk-eyebrow {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.12rem;
+  color: var(--sage-deep);
+  margin-bottom: 0.1rem;
 }
-div[class*="st-key-fk_composer"] textarea:focus {
-  outline: none !important;
-  box-shadow: none !important;
+.fk-page-head h1 {
+  font-size: clamp(2rem, 4.6vw, 2.6rem);
+  line-height: 1.15;
+  padding: 0.1rem 0 0.55rem 0;
 }
-div[class*="st-key-fk_composer"] textarea::placeholder {
+.fk-page-sub {
   color: var(--text-muted) !important;
-  opacity: 0.85;
+  font-size: 1.08rem;
+  line-height: 1.55;
+  max-width: 540px;
+  margin: 0 auto !important;
 }
-div[class*="st-key-fk_composer"] div[data-testid="stForm"] {
-  border: none !important;
-  padding: 0 !important;
+/* A running conversation needs the room: the logo stays, the rest steps back. */
+.fk-page-head-compact {
+  margin-bottom: 1.4rem;
 }
-div[class*="st-key-fk_composer"] .stButton > button,
-div[class*="st-key-fk_composer"] button[kind="formSubmit"],
-div[class*="st-key-fk_composer"] button[kind="secondaryFormSubmit"] {
-  background: var(--sage) !important;
-  color: #FFFFFF !important;
-  border: none !important;
-  border-radius: 50% !important;
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  padding: 0 !important;
-  font-size: 1.05rem !important;
-  box-shadow: none !important;
+.fk-page-head-compact .fk-page-mark {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 0.2rem;
 }
-div[class*="st-key-fk_composer"] .stButton > button:hover {
-  background: var(--sage-dark) !important;
+
+/* ---------- Composer (the big prompt box on Home) ---------- */
+/* The same chat input as on the Chat page (styled below), just roomier. */
+div[class*="st-key-fk_composer"] {
+  margin: 1rem 0 0.9rem 0;
+}
+div[class*="st-key-fk_composer"] [data-testid="stChatInput"] {
+  border-radius: 24px;
+  padding: 0.4rem 0.4rem 0.4rem 0.6rem;
+}
+div[class*="st-key-fk_composer"] [data-testid="stChatInput"] textarea {
+  font-size: 1.1rem !important;
+  min-height: 3.2rem;
+}
+
+/* The word stays for screen readers; the icon is what you see. */
+div[class*="st-key-conv_edit_"] button [data-testid="stMarkdownContainer"],
+div[class*="st-key-conv_del_"] button [data-testid="stMarkdownContainer"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 .fk-composer-hint {
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.78rem;
-  margin: 0 0 0.9rem 0;
+  font-size: 0.92rem;
+  margin: 1.1rem 0 0 0;
 }
 
-div[class*="st-key-fk_chips_row"] {
-  margin-bottom: 0.3rem;
-}
 div[class*="st-key-fk_chip_"] button {
-  background: var(--surface-muted) !important;
-  color: var(--text-muted) !important;
-  border: 1px solid var(--border) !important;
+  background: var(--beige) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--beige-strong) !important;
   border-radius: var(--radius-pill) !important;
-  font-size: 0.82rem !important;
-  font-weight: 500 !important;
-  padding: 0.4rem 0.95rem !important;
+  padding: 0.34rem 0.8rem !important;
+  min-height: 0 !important;
   box-shadow: none !important;
 }
+div[class*="st-key-fk_chip_"] button p {
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
+}
 div[class*="st-key-fk_chip_"] button:hover {
-  border-color: var(--sage) !important;
-  color: var(--sage-dark) !important;
-  background: var(--sage-tint) !important;
+  background: var(--beige-strong) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--heading) !important;
+  box-shadow: var(--shadow-soft) !important;
 }
 
 /* ---------- Chat ---------- */
 .fk-reflect-label {
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display);
   font-style: italic;
-  margin: 0.2rem 0 0.4rem 0.15rem;
+  font-size: 1.02rem;
+  color: var(--sage-deep);
+  margin: 0.2rem 0 0.35rem 0;
+}
+.fk-reflect-label .fk-logo {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  filter: none;
 }
 
 div[data-testid="stChatMessage"] {
@@ -487,8 +757,8 @@ div[data-testid="stChatMessage"] {
 }
 
 .fk-bubble {
-  line-height: 1.68;
-  font-size: 0.96rem;
+  line-height: 1.62;
+  font-size: 1.05rem;
 }
 .fk-bubble-bot {
   padding: 0;
@@ -497,27 +767,41 @@ div[data-testid="stChatMessage"] {
 }
 .fk-bubble-user {
   background: var(--sage-tint);
-  border: 1px solid rgba(124, 152, 133, 0.22);
-  border-radius: var(--radius-lg);
-  border-top-right-radius: 6px;
-  padding: 0.85rem 1.1rem;
+  border-radius: 18px;
+  border-bottom-right-radius: 5px;
+  padding: 0.75rem 1.1rem;
+  width: fit-content;
   max-width: 100%;
+  margin-left: auto;
   color: var(--text) !important;
 }
 
 .fk-chat-intro {
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.92rem;
+  margin-bottom: 1.6rem;
+}
+.fk-chat-note {
+  margin-top: 1.6rem;
+}
+.fk-empty-note {
+  color: var(--text-muted) !important;
+  font-size: 1rem;
   margin-bottom: 1.6rem;
 }
 
 /* Native chat input (used on the Chat page) restyled to match the composer */
 div[data-testid="stChatInput"] {
-  border-radius: var(--radius-lg);
+  border-radius: 22px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft-lg);
   background: var(--surface);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+div[data-testid="stChatInput"]:focus-within {
+  border-color: var(--sage);
+  box-shadow: var(--focus-ring), var(--shadow-soft-lg);
 }
 div[data-testid="stChatInput"] > div,
 div[data-testid="stChatInput"] textarea {
@@ -526,23 +810,18 @@ div[data-testid="stChatInput"] textarea {
   box-shadow: none !important;
 }
 div[data-testid="stChatInput"] textarea {
-  font-family: 'Inter', sans-serif !important;
-  color: var(--text) !important;
-  -webkit-text-fill-color: var(--text) !important;
-}
-div[data-testid="stChatInput"] textarea::placeholder {
-  color: var(--text-muted) !important;
-  -webkit-text-fill-color: var(--text-muted) !important;
-  opacity: 1 !important;
+  font-family: var(--font-body) !important;
+  font-size: 1.05rem !important;
 }
 /* Note: this is a real <button>, not a div - no tag qualifier here. */
 [data-testid="stChatInputSubmitButton"] {
-  background: var(--sage) !important;
+  background: var(--sage-dark) !important;
   border: none !important;
+  border-radius: 50% !important;
   color: #FFFFFF !important;
 }
 [data-testid="stChatInputSubmitButton"]:hover {
-  background: var(--sage-dark) !important;
+  background: var(--sage-deep) !important;
 }
 [data-testid="stChatInputSubmitButton"] svg {
   fill: #FFFFFF !important;
@@ -551,36 +830,74 @@ div[data-testid="stChatInput"] textarea::placeholder {
    muddy tan/gray, which reads as broken against our palette. */
 [data-testid="stChatInputSubmitButton"]:disabled {
   background: var(--sage-tint) !important;
-  color: var(--sage) !important;
+  color: var(--sage-dark) !important;
   opacity: 1 !important;
 }
 [data-testid="stChatInputSubmitButton"]:disabled svg {
-  fill: var(--sage) !important;
+  fill: var(--sage-dark) !important;
+}
+/* The bar under the chat (behind the message box) takes the page background instead of
+   Streamlit's dark default, and the expander body follows its surroundings. */
+[data-testid="stBottom"],
+[data-testid="stBottom"] > div,
+[data-testid="stBottomBlockContainer"] {
+  background: var(--bg) !important;
 }
 
 /* ---------- Timeline (Treatment) ---------- */
+.fk-program-status {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+.fk-program-status strong {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--heading);
+}
+/* The twelve weeks, sewn together along the same seam as the logo. */
 .fk-timeline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin: 1.1rem 0 0.4rem 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  justify-items: center;
+  margin: 0.8rem 0 1.4rem 0;
+}
+.fk-timeline::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 4%;
+  right: 4%;
+  height: 3px;
+  margin-top: -1.5px;
+  background: var(--stitch) left center / auto repeat-x;
 }
 .fk-week {
-  width: 40px;
-  height: 40px;
+  position: relative;
+  width: min(100%, 40px);
+  max-width: calc(100% - 3px);
+  aspect-ratio: 1;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-muted);
-  color: var(--text-muted);
-  font-size: 0.8rem;
+  background: var(--bg);
+  color: #766E60;
+  font-size: 0.92rem;
   font-weight: 600;
   border: 1px solid var(--border);
 }
 .fk-week.fk-week-active {
-  background: var(--sage);
+  background: var(--sage-dark);
   color: #fff;
+  border-color: var(--sage-dark);
+  box-shadow: 0 0 0 4px var(--sage-tint);
+}
+.fk-week.fk-week-done {
+  background: var(--sage-tint);
+  color: var(--sage-deep);
   border-color: var(--sage);
 }
 
@@ -589,26 +906,101 @@ div[data-testid="stChatInput"] textarea::placeholder {
 .block-container:has(.fk-wide) {
   max-width: 1240px;
 }
-.fk-week.fk-week-done {
-  background: var(--sage-tint);
-  color: var(--sage-dark);
-  border-color: var(--sage);
+
+/* All weeks: a quiet list where only the open weeks ask for anything. */
+.fk-week-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: var(--text);
 }
-.fk-week.fk-week-locked {
-  opacity: 0.5;
+.fk-week-row-mark {
+  flex: none;
+  width: 1rem;
+  text-align: center;
+  color: var(--sage-dark);
+  font-weight: 700;
+}
+.fk-week-row-number {
+  flex: none;
+  font-weight: 600;
+}
+.fk-week-row-locked {
+  color: #766E60;
+}
+div[class*="st-key-fk_program_weeks"] {
+  gap: 0.3rem;
+}
+/* Without Streamlit's negative margin under markdown, the text and the action share a center line. */
+div[class*="st-key-fk_program_weeks"] [data-testid="stMarkdownContainer"] {
+  margin-bottom: 0 !important;
+}
+div[class*="st-key-fk_program_weeks"] [data-testid="stHorizontalBlock"] {
+  min-height: 2.1rem;
+}
+.fk-week-row-note {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+/* On a phone: one line per week. The dimmed row and the note below the list say the rest. */
+@media (max-width: 640px) {
+  div[class*="st-key-fk_program_weeks"] [data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+  div[class*="st-key-fk_program_weeks"] [data-testid="stColumn"] {
+    min-width: 0 !important;
+    width: auto !important;
+    flex: 1 1 auto !important;
+  }
+  div[class*="st-key-fk_program_weeks"] [data-testid="stColumn"]:last-child {
+    flex: 0 0 auto !important;
+  }
+  .fk-week-row-note {
+    display: none;
+  }
+}
+div[class*="st-key-fk_program_open_"] button {
+  padding: 0.22rem 0.8rem !important;
+  min-height: 0 !important;
 }
 .fk-note {
   background: var(--peach-tint);
   color: var(--text);
   border-radius: var(--radius-md);
-  padding: 0.8rem 1.1rem;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  padding: 0.85rem 1.15rem;
+  font-size: 1rem;
+  line-height: 1.55;
   margin-bottom: 1.1rem;
 }
+.fk-week-head {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.3rem;
+}
+.fk-week-head .fk-logo {
+  flex: none;
+  width: 72px;
+  height: 72px;
+}
+.fk-week-head h2 {
+  font-size: 2rem;
+  line-height: 1.15;
+  padding: 0 0 0.25rem 0;
+  margin: 0;
+}
+.fk-week-head .fk-eyebrow {
+  font-size: 1.05rem;
+}
+.fk-week-head .fk-card-text {
+  margin-bottom: 0 !important;
+}
 .fk-program-chat-title {
-  font-family: 'Sora', sans-serif;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
   color: var(--heading);
   margin-bottom: 0.5rem;
 }
@@ -619,24 +1011,22 @@ div[class*="st-key-fk_program_chatbox"] {
   background: var(--surface) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-card);
 }
 div[class*="st-key-fk_ex_box_"],
 div[class*="st-key-fk_program_theory"] {
-  padding: 0.6rem 0.9rem;
-  margin-bottom: 0.9rem;
+  padding: 1.1rem 1.4rem;
+  margin-bottom: 1rem;
+}
+div[class*="st-key-fk_program_theory"] p {
+  font-size: 1.06rem;
+  line-height: 1.65;
 }
 div[class*="st-key-fk_ex_box_"] label,
 div[class*="st-key-fk_ex_box_"] label *,
 div[class*="st-key-fk_ex_box_"] [data-testid="stWidgetLabel"] *,
 div[class*="st-key-fk_program_theory"] * {
   color: var(--text);
-}
-div[class*="st-key-fk_ex_box_"] textarea,
-div[class*="st-key-fk_ex_box_"] input {
-  background: var(--surface-muted) !important;
-  color: var(--text) !important;
-  -webkit-text-fill-color: var(--text) !important;
 }
 div[class*="st-key-fk_ex_box_"] div[data-testid="stForm"] {
   border: none !important;
@@ -646,16 +1036,33 @@ div[class*="st-key-fk_ex_box_"] div[data-testid="stForm"] {
 /* What the exercise asks you to do: the first thing you see in it. */
 .fk-task {
   background: var(--sage-tint);
-  border-left: 4px solid var(--sage);
   border-radius: var(--radius-md);
   color: var(--text);
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1.1rem 0.9rem 1.1rem;
   margin: 0.4rem 0 0.9rem 0;
-  font-size: 0.97rem;
-  line-height: 1.55;
+  font-size: 1.04rem;
+  line-height: 1.5;
 }
 .fk-task-label {
-  color: var(--sage-dark);
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--sage-deep);
+  font-size: 1.05rem;
+  margin-bottom: 0.1rem;
+}
+/* A made-up example of a filled-in answer. */
+.fk-example {
+  background: var(--surface-muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  padding: 0.65rem 1rem;
+  margin: 0.5rem 0 0.9rem 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.fk-example-label {
+  color: var(--text-muted);
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -670,17 +1077,17 @@ div[class*="st-key-fk_ex_box_"] div[data-testid="stForm"] {
   margin: 0.2rem 0 0.9rem 0;
 }
 .fk-todo-item {
-  background: var(--surface-muted);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   color: var(--text-muted);
-  font-size: 0.84rem;
-  padding: 0.25rem 0.8rem;
+  font-size: 0.92rem;
+  padding: 0.2rem 0.8rem;
 }
 .fk-todo-item.fk-todo-done {
   background: var(--sage-tint);
   border-color: var(--sage);
-  color: var(--sage-dark);
+  color: var(--sage-deep);
 }
 
 /* The chat beside a week follows you down the page on wide screens. */
@@ -696,129 +1103,237 @@ div[class*="st-key-fk_program_chatpanel"] div[class*="st-key-fk_chip_program"] b
   justify-content: flex-start;
   height: auto;
   white-space: normal;
+  border-radius: var(--radius-md) !important;
+}
+div[class*="st-key-fk_program_chatpanel"] .fk-bubble {
+  font-size: 1rem;
 }
 
 /* ---------- Safety page ---------- */
+/* One sheet of paper, read like a letter from the people behind the product. */
+.fk-safety-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 0.6rem 2.6rem;
+}
 .fk-safety-section {
-  margin-bottom: 1.6rem;
+  padding: 1.7rem 0;
+  background: var(--stitch) left bottom / auto 3px repeat-x;
+}
+.fk-safety-section:last-child {
+  background: none;
 }
 .fk-safety-section h3 {
-  font-size: 1.05rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  padding: 0 0 0.45rem 0;
 }
 .fk-safety-section p {
-  color: var(--text-muted) !important;
-  line-height: 1.75;
-  font-size: 0.95rem;
+  color: var(--text) !important;
+  line-height: 1.68;
+  font-size: 1.07rem;
+  margin: 0 !important;
+}
+@media (max-width: 600px) {
+  .fk-safety-sheet { padding: 0.3rem 1.3rem; }
 }
 
 /* ---------- Dialogs ---------- */
 /* Pin the dialog to the site palette so it never follows a dark browser theme. */
-div[role="dialog"] {
+[role="dialog"] {
   background: var(--bg) !important;
   color: var(--text) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--shadow-soft-lg) !important;
 }
-div[role="dialog"] p,
-div[role="dialog"] label,
-div[role="dialog"] span {
+[role="dialog"] p,
+[role="dialog"] label,
+[role="dialog"] span {
   color: inherit;
 }
-div[role="dialog"] button[aria-label="Close"] {
+[role="dialog"] button[aria-label="Close"] {
   color: var(--text-muted) !important;
 }
-
-/* ---------- My data dialog ---------- */
-.fk-data-list {
+/* Crisis contacts: the number or name is what someone in a hurry looks for. */
+.fk-resource {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-soft);
-  padding: 0.2rem 1.1rem;
-  margin-bottom: 0.9rem;
+  padding: 0.85rem 1.15rem;
+  margin-bottom: 0.6rem;
 }
-.fk-data-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-  padding: 0.7rem 0;
-  border-bottom: 1px solid var(--border);
+.fk-resource-label {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--terracotta-deep);
 }
-.fk-data-row:last-child {
-  border-bottom: none;
-}
-.fk-data-label {
-  font-size: 0.85rem;
+.fk-resource-text {
   color: var(--text-muted);
-}
-.fk-data-value {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text);
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-.fk-data-note {
-  background: var(--sage-tint);
-  border: 1px solid rgba(124, 152, 133, 0.22);
-  border-radius: var(--radius-md);
-  padding: 0.8rem 1rem;
-  color: var(--sage-dark);
-  font-size: 0.85rem;
-  line-height: 1.6;
+  font-size: 0.97rem;
+  line-height: 1.45;
 }
 
-/* Delete account button: terracotta like the crisis button, to signal care */
-div[class*="st-key-delete_account_btn"] button,
-div[class*="st-key-delete_data_btn"] button {
+/* ---------- Account page ---------- */
+.fk-profile {
+  display: flex;
+  align-items: center;
+  gap: 1.3rem;
+}
+.fk-profile-avatar {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--peach-tint);
+  color: var(--terracotta-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+}
+.fk-profile-name {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--heading);
+  overflow-wrap: anywhere;
+}
+.fk-profile-name .fk-badge {
+  font-family: var(--font-body);
+  margin: 0 0 0 0.5rem;
+  vertical-align: middle;
+}
+.fk-profile-meta {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+  line-height: 1.45;
+}
+
+.fk-data-note {
+  background: var(--sage-tint);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 1rem;
+  color: var(--sage-deep);
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+
+/* Delete buttons: terracotta like the crisis button, to signal care */
+div[class*="st-key-fk_account_delete_acc_btn"] button,
+div[class*="st-key-fk_account_delete_data_btn"] button,
+div[class*="st-key-fk_admin_delete_user_btn"] button,
+div[class*="st-key-diary_confirmdelete_"] button {
   background: var(--terracotta-tint) !important;
-  color: var(--terracotta) !important;
+  color: var(--terracotta-deep) !important;
   border: 1px solid rgba(197, 122, 95, 0.3) !important;
-  font-weight: 500 !important;
   box-shadow: none !important;
 }
-div[class*="st-key-delete_account_btn"] button:hover:not(:disabled),
-div[class*="st-key-delete_data_btn"] button:hover:not(:disabled) {
-  background: var(--terracotta) !important;
+div[class*="st-key-fk_account_delete_acc_btn"] button:hover:not(:disabled),
+div[class*="st-key-fk_account_delete_data_btn"] button:hover:not(:disabled),
+div[class*="st-key-fk_admin_delete_user_btn"] button:hover:not(:disabled),
+div[class*="st-key-diary_confirmdelete_"] button:hover {
+  background: var(--terracotta-deep) !important;
   color: #FFFFFF !important;
-  border-color: var(--terracotta) !important;
+  border-color: var(--terracotta-deep) !important;
 }
-div[class*="st-key-delete_account_btn"] button:disabled,
-div[class*="st-key-delete_data_btn"] button:disabled {
-  background: var(--surface-muted) !important;
-  color: var(--text-muted) !important;
+div[class*="st-key-fk_account_delete_acc_btn"] button:disabled,
+div[class*="st-key-fk_account_delete_data_btn"] button:disabled,
+div[class*="st-key-fk_admin_delete_user_btn"] button:disabled {
+  background: transparent !important;
+  color: #A39C8E !important;
   border-color: var(--border) !important;
-  opacity: 0.7;
-  transform: none !important;
 }
 
 /* ---------- Recovery code dialog ---------- */
 .fk-recovery-code {
-  font-family: 'Sora', 'Inter', monospace;
-  font-size: 1.35rem;
+  font-family: var(--font-body);
+  font-size: 1.45rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
   text-align: center;
   color: var(--heading);
   background: var(--surface);
-  border: 1px dashed var(--sage);
+  border: 1.5px dashed var(--stitch-line);
   border-radius: var(--radius-md);
   padding: 1rem;
   margin: 0.4rem 0 0.9rem 0;
   user-select: all;
 }
 
+/* ---------- Saved chats ---------- */
+div[class*="st-key-fk_card_saved_"] {
+  padding: 1rem 1.3rem;
+  box-shadow: var(--shadow-soft);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+div[class*="st-key-fk_card_saved_"]:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+}
+.fk-saved-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1.25;
+  color: var(--heading);
+  overflow-wrap: anywhere;
+}
+.fk-saved-open {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sage-deep);
+  background: var(--sage-tint);
+  border-radius: var(--radius-pill);
+  padding: 0.05rem 0.6rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+div[class*="st-key-conv_edit_"] button,
+div[class*="st-key-conv_del_"] button {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  padding: 0.5rem !important;
+}
+div[class*="st-key-conv_edit_"] button:hover,
+div[class*="st-key-conv_del_"] button:hover {
+  color: var(--heading) !important;
+  background: rgba(116, 94, 66, 0.07) !important;
+}
+@media (max-width: 640px) {
+  div[class*="st-key-fk_card_saved_"] [data-testid="stHorizontalBlock"] {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  div[class*="st-key-fk_card_saved_"] [data-testid="stColumn"] {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+  div[class*="st-key-fk_card_saved_"] [data-testid="stColumn"]:first-child {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+}
+
 /* ---------- Diary ---------- */
+/* The diary is the one place you write and read in the serif, as on paper. */
 div[class*="st-key-fk_diary_composer"],
 div[class*="st-key-fk_diary_editbox_"] {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.4rem 1.5rem 1.2rem 1.5rem;
-  box-shadow: var(--shadow-soft);
+  padding: 1.5rem 1.7rem 1.4rem 1.7rem;
+  box-shadow: var(--shadow-card);
   margin-bottom: 1.2rem;
 }
 div[class*="st-key-fk_diary_composer"] div[data-testid="stForm"],
@@ -826,13 +1341,19 @@ div[class*="st-key-fk_diary_editbox_"] div[data-testid="stForm"] {
   border: none !important;
   padding: 0 !important;
 }
+div[class*="st-key-fk_diary_composer"] textarea,
+div[class*="st-key-fk_diary_editbox_"] textarea {
+  font-family: var(--font-display) !important;
+  font-size: 1.15rem !important;
+  line-height: 1.55 !important;
+}
 .fk-diary-entry {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.3rem 1.5rem;
-  box-shadow: var(--shadow-soft);
-  margin-bottom: 0.6rem;
+  padding: 1.25rem 1.7rem 1.4rem 1.7rem;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 0.15rem;
 }
 .fk-diary-meta {
   display: flex;
@@ -841,61 +1362,88 @@ div[class*="st-key-fk_diary_editbox_"] div[data-testid="stForm"] {
   gap: 0.8rem;
   flex-wrap: wrap;
   color: var(--text-muted);
-  font-size: 0.8rem;
-  margin-bottom: 0.6rem;
+  font-size: 0.92rem;
+  margin-bottom: 0.45rem;
 }
 .fk-diary-mood {
-  background: var(--sage-tint);
-  color: var(--sage-dark);
-  border-radius: var(--radius-pill);
-  padding: 0.2rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
   font-weight: 500;
 }
+.fk-diary-entry .fk-card-title {
+  font-size: 1.45rem;
+  margin-bottom: 0.3rem;
+}
 .fk-diary-content {
+  font-family: var(--font-display);
   color: var(--text);
-  font-size: 0.95rem;
-  line-height: 1.7;
+  font-size: 1.17rem;
+  line-height: 1.55;
   overflow-wrap: anywhere;
+}
+.fk-diary-mark {
+  background: rgba(232, 183, 146, 0.4);
+  color: inherit;
+  padding: 0 0.15em;
+  border-radius: 3px;
 }
 div[class*="st-key-diary_edit_"] button,
 div[class*="st-key-diary_delete_"] button,
-div[class*="st-key-diary_canceldelete_"] button {
-  font-size: 0.8rem !important;
-  padding: 0.3rem 0.8rem !important;
-  min-height: 0 !important;
-}
+div[class*="st-key-diary_canceldelete_"] button,
 div[class*="st-key-diary_confirmdelete_"] button {
-  background: var(--terracotta-tint) !important;
-  color: var(--terracotta) !important;
-  border: 1px solid rgba(197, 122, 95, 0.3) !important;
-  font-size: 0.8rem !important;
-  padding: 0.3rem 0.8rem !important;
+  padding: 0.22rem 0.7rem !important;
   min-height: 0 !important;
-  box-shadow: none !important;
 }
-div[class*="st-key-diary_confirmdelete_"] button:hover {
-  background: var(--terracotta) !important;
-  color: #FFFFFF !important;
+div[class*="st-key-diary_edit_"] button p,
+div[class*="st-key-diary_delete_"] button p,
+div[class*="st-key-diary_canceldelete_"] button p,
+div[class*="st-key-diary_confirmdelete_"] button p {
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
 }
+.fk-spacer-entry {
+  height: 0.8rem;
+}
+
+/* Mood: a soft dot that warms from terracotta to sage, instead of yellow emoji faces. */
+.fk-mood-dot {
+  display: inline-block;
+  flex: none;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+.fk-mood-1 { background: var(--terracotta); }
+.fk-mood-2 { background: #D79A78; }
+.fk-mood-3 { background: var(--peach); }
+.fk-mood-4 { background: #A9BDA6; }
+.fk-mood-5 { background: var(--sage-dark); }
 
 /* ---------- Diary week view ---------- */
 .fk-week-label {
   text-align: center;
-  font-family: 'Sora', 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 0.98rem;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
   color: var(--heading);
 }
 div[class*="st-key-diary_week_prev"] button,
 div[class*="st-key-diary_week_next"] button {
-  padding: 0.35rem 0.6rem !important;
+  padding: 0.3rem 0.6rem !important;
   min-height: 0 !important;
+}
+div[class*="st-key-diary_week_prev"] button p,
+div[class*="st-key-diary_week_next"] button p {
+  font-size: 1.3rem !important;
+  line-height: 1.2;
 }
 .fk-week-strip {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.4rem;
-  margin: 0.8rem 0 0.5rem 0;
+  margin: 0.8rem 0 0.6rem 0;
 }
 .fk-week-day {
   display: flex;
@@ -908,245 +1456,97 @@ div[class*="st-key-diary_week_next"] button {
   border-radius: var(--radius-md);
 }
 .fk-week-today {
-  border-color: var(--sage);
-  background: var(--sage-tint);
+  border-color: var(--sage-dark);
+  box-shadow: var(--focus-ring);
 }
 .fk-week-future {
-  opacity: 0.45;
+  background: transparent;
+  opacity: 0.55;
 }
 .fk-week-weekday {
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 .fk-week-date {
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1.2;
   color: var(--heading);
 }
-.fk-week-mood {
-  font-size: 1.25rem;
-  line-height: 1.6rem;
-}
-.fk-week-dot {
-  color: var(--sage);
-  font-size: 0.7rem;
-  line-height: 1.6rem;
-}
-.fk-week-none {
-  height: 1.6rem;
+.fk-week-marker {
+  display: flex;
+  align-items: center;
+  height: 1.25rem;
 }
 .fk-week-summary {
   text-align: center;
   color: var(--text-muted) !important;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   margin: 0 0 1rem 0 !important;
 }
 .fk-week-day-heading {
-  font-family: 'Sora', 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 0.92rem;
-  color: var(--sage-dark);
-  margin: 1.1rem 0 0.5rem 0.15rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--sage-deep);
+  margin: 1.3rem 0 0.45rem 0.15rem;
 }
 @media (max-width: 600px) {
   .fk-week-strip { gap: 0.2rem; }
   .fk-week-day { padding: 0.45rem 0.1rem; }
-  .fk-week-weekday { font-size: 0.62rem; letter-spacing: 0; }
-  .fk-week-mood { font-size: 1.05rem; }
+  .fk-week-weekday { font-size: 0.78rem; }
 }
 
 /* ---------- Misc ---------- */
 .fk-divider {
   border: none;
-  border-top: 1px solid var(--border);
+  height: 3px;
+  background: var(--stitch) left center / auto repeat-x;
   margin: 1rem 0;
 }
 .fk-section-title {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.02rem;
-  font-weight: 600;
-  margin: 1.6rem 0 0.9rem 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.25;
+  margin: 1.8rem 0 0.8rem 0;
   color: var(--heading);
 }
+div[class*="st-key-fk_card_admin_"] .fk-section-title {
+  margin-top: 0;
+}
 
-/* ---------- Demo settings (expander, radio, checkbox, tech caption) ----------
+/* ---------- Expanders ----------
    Explicit colors so the labels stay readable even when Streamlit falls back to
    its dark theme (for example when .streamlit/config.toml is not picked up). */
 [data-testid="stExpander"] {
-  background: transparent !important;
+  background: var(--surface) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-soft);
+}
+[data-testid="stExpander"] details {
+  background: transparent !important;
+  border: none !important;
 }
 [data-testid="stExpander"] summary,
 [data-testid="stExpander"] summary * {
   background: transparent !important;
   color: var(--text) !important;
 }
+[data-testid="stExpander"] summary p {
+  font-size: 1rem;
+  font-weight: 500;
+}
 [data-testid="stExpander"] label,
 [data-testid="stExpander"] label *,
 [data-testid="stExpander"] [data-testid="stWidgetLabel"] * {
   color: var(--text) !important;
 }
-[data-testid="stExpander"] [data-baseweb="checkbox"] > span:first-of-type {
-  background: var(--surface) !important;
-  border: 2px solid var(--sage) !important;
-}
-[data-testid="stExpander"] [data-baseweb="checkbox"]:has(input:checked) > span:first-of-type {
-  background: var(--sage) !important;
-  border-color: var(--sage) !important;
-}
-[data-testid="stExpander"] [data-baseweb="radio"] > div:first-child {
-  background: var(--surface) !important;
-  border-color: var(--sage) !important;
-}
-[data-testid="stExpander"] [data-baseweb="radio"]:has(input:checked) > div:first-child {
-  background: var(--sage) !important;
-  border-color: var(--sage) !important;
-}
-[data-testid="stCaptionContainer"] {
-  color: var(--text-muted) !important;
-}
-.fk-diary-entry {
-  background:
-    radial-gradient(ellipse 400px 200px at top right, rgba(197, 122, 95, 0.05) 0%, transparent 70%),
-    radial-gradient(ellipse 300px 180px at bottom left, rgba(197, 122, 95, 0.035) 0%, transparent 60%),
-    #FEFCF7;
-  border: 1px solid rgba(197, 122, 95, 0.14);
-  border-radius: 20px;
-  box-shadow:
-    0 1px 2px rgba(58, 55, 51, 0.03),
-    0 14px 36px rgba(58, 55, 51, 0.07);
-  margin-bottom: 1.4rem;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Mjuk terracotta-wash i övre vänstra hörnet, som en subtil akvarell */
-.fk-diary-entry::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 90px;
-  height: 90px;
-  background: radial-gradient(circle at top left, rgba(197, 122, 95, 0.14), transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Diskret citationstecken längst ned till höger, som vattenstämpel */
-.fk-diary-entry::after {
-  content: "\201D";
-  position: absolute;
-  bottom: -1.5rem;
-  right: 1rem;
-  font-family: Georgia, serif;
-  font-size: 5rem;
-  color: var(--terracotta);
-  opacity: 0.07;
-  line-height: 1;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* === SEKTION 1: Datum + mood === */
-.fk-diary-entry .fk-diary-meta {
-  padding: 1.2rem 1.75rem 0.9rem 1.75rem;
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-  font-style: normal;
-  text-transform: none;
-  letter-spacing: 0;
-  border-bottom: 1px solid rgba(197, 122, 95, 0.12);
-  position: relative;
-  z-index: 1;
-}
-
-.fk-diary-entry .fk-diary-mood {
-  background: var(--terracotta-tint);
-  color: var(--terracotta);
-  padding: 0.35rem 0.9rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid rgba(197, 122, 95, 0.2);
-  letter-spacing: 0;
-}
-
-/* === SEKTION 2: Titel === */
-.fk-diary-entry .fk-card-title {
-  padding: 1rem 1.75rem 1rem 1.75rem;
-  margin: 0;
-  font-family: 'Sora', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--heading);
-  letter-spacing: -0.01em;
-  line-height: 1.35;
-  border: none;
-  border-bottom: 1px solid rgba(197, 122, 95, 0.12);
-  background: transparent;
-  position: relative;
-  z-index: 1;
-}
-
-.fk-diary-entry .fk-card-title:empty {
-  display: none;
-}
-
-/* === SEKTION 3: Innehåll === */
-.fk-diary-entry .fk-diary-content {
-  padding: 1.1rem 1.75rem 1.4rem 1.75rem;
-  margin: 0;
-  color: var(--text);
-  font-size: 0.95rem;
-  line-height: 1.7;
-  background: transparent;
-  position: relative;
-  z-index: 1;
-}
-/* The bar under the chat (behind the message box) takes the page background instead of
-   Streamlit's dark default, and the expander body follows its surroundings. */
-[data-testid="stBottom"],
-[data-testid="stBottom"] > div,
-[data-testid="stBottomBlockContainer"] {
-  background: var(--bg) !important;
-}
-[data-testid="stExpander"] details,
-[data-testid="stExpander"] summary {
+section[data-testid="stSidebar"] [data-testid="stExpander"] {
   background: transparent !important;
+  box-shadow: none;
 }
-
-/* ---------- Saved chats: readable title and light icon buttons ----------
-   Explicit colors, so they hold even when Streamlit falls back to its dark theme. */
-.fk-saved-title {
-  color: var(--text);
-  font-weight: 600;
-  line-height: 1.5;
-}
-div[class*="st-key-conv_edit_"] button,
-div[class*="st-key-conv_del_"] button {
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--border) !important;
-}
-div[class*="st-key-conv_edit_"] button:hover,
-div[class*="st-key-conv_del_"] button:hover {
-  border-color: var(--sage) !important;
-  background: var(--sage-tint) !important;
-}
-
-.fk-diary-mark {
-    background: rgba(201, 102, 73, 0.18);  /* ljus terrakotta-ton */
-    color: inherit;
-    padding: 0 0.15em;
-    border-radius: 3px;
-    font-weight: 500;
+.fk-chat-intro-panel {
+  margin: 0.6rem 0 0.8rem 0;
 }

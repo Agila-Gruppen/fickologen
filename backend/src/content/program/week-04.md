@@ -3,6 +3,8 @@ week: 4
 title: "Pröva tankarna"
 summary: "Du lär dig ställa frågor till tankarna i stället för att ta dem för sanna."
 minutes: 30
+figure_after: 3
+figure_caption: "Att pröva en tanke: vad som talar för och emot, och hur mycket du tror på den före och efter."
 exercises:
   - id: w04-prova
     title: "Pröva två tankar"
@@ -12,12 +14,13 @@ exercises:
     why: "Det handlar inte om att tänka positivt, utan om att komma närmare vad som är rimligt."
     task: "Pröva två tankar: skatta hur mycket du tror på dem, skriv vad som talar för och emot, och formulera en mer rimlig tanke."
     write_label: "Tanke 1 och 2: vad talar för, vad talar emot och min mer rimliga tanke"
+    example: "Tanke: 'Alla tycker att jag är dum om jag säger fel.' Före: 80.\nTalar för: jag har blivit rättad förut.\nTalar emot: de flesta märker inte små fel, och en vän som sa fel skulle jag inte döma.\nMer rimlig tanke: 'Någon kanske märker det, men det går över snabbt.' Efter: 50."
     steps:
       - "Välj två tankar som ger dig mycket ångest."
       - "Skatta först hur mycket du tror på tanken (0–100)."
       - "Skriv vad som talar för tanken och vad som talar emot, och vad du skulle säga till en vän med samma tanke."
       - "Skriv en mer rimlig tanke, och skatta sedan om hur mycket du tror på den ursprungliga tanken."
-    measure_label: "Hur mycket tror du på tanken (0–100)?"
+    measure_label: "Före: hur mycket du tror på tanken innan du prövat den. Efter: hur mycket du tror på den när du är klar. 0 = inte alls, 100 = helt säker."
 reflection_prompt: "Hände något med din tro på tanken när du prövade den?"
 chat_tips:
   - "Hjälp mig hitta motbevis till en tanke. Jag fastnar."

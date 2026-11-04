@@ -3,6 +3,8 @@ week: 2
 title: "Tankar, känslor och kropp"
 summary: "Du lär dig upptäcka de automatiska tankar som sätter igång ångesten."
 minutes: 25
+figure_after: 1
+figure_caption: "En händelse sätter igång en tanke, en känsla och en reaktion i kroppen. De påverkar varandra."
 exercises:
   - id: w02-tankedagbok
     title: "Tankedagbok: tre tillfällen"
@@ -12,6 +14,7 @@ exercises:
     why: "När du ser tanken på papper får du lättare lite avstånd till den."
     task: "Skriv ner tre tillfällen då du blev nervös. För varje: vad hände, vilken tanke kom och vilken känsla fick du?"
     write_label: "Tillfälle 1, 2 och 3: händelse, tanke, känsla"
+    example: "Händelse: Jag kom in i fikarummet och det blev tyst.\nTanke: 'De pratade om mig.'\nKänsla: skamsen och spänd."
     steps:
       - "Vid tre tillfällen under veckan när du blir obehagligt nervös: skriv vad som hände."
       - "Skriv sedan vilken tanke som for genom huvudet och vilken känsla du fick."
@@ -24,6 +27,7 @@ exercises:
     why: "Du övar på att vara nyfiken på tankarna i stället för att dras med av dem."
     task: "Lyssna efter dina tankar i fem minuter en dag och skriv ner vilka som kom."
     write_label: "Vilka tankar märkte du?"
+    example: "Under en promenad: 'Där kom en tanke: de tittar på mig.' 'Där kom en till: jag ser konstig ut i den här jackan.'"
     steps:
       - "Under fem minuter en dag: lägg märke till vilka tankar som dyker upp om vad andra tänker om dig."
       - "Säg tyst för dig själv: 'Där kom en tanke.' Gör inget mer med den."

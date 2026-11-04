@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, status
@@ -58,7 +59,8 @@ def allow_chat(
             detail="Account no longer exists"
         )
 
-    if user.role != "admin" and not user.can_chat:
+    chat_open = os.environ.get("OPEN_CHAT_BETA") == "1"
+    if user.role != "admin" and not user.can_chat and not chat_open:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chat access not granted for this account"

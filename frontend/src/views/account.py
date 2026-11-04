@@ -10,8 +10,8 @@ import conversations as conv_api
 import diary_api
 from api import BackendUnavailable
 from chat_engine import start_new_conversation
-from components import page_header, program_available
-from datetime_utils import to_local
+from components import login_prompt, page_header, program_available
+from datetime_utils import format_day, to_local
 
 BACKEND_ERROR = "Kunde inte nå servern just nu. Försök igen om en liten stund."
 PROFILE_FIELDS = [
@@ -35,7 +35,11 @@ def render() -> None:
     )
 
     if not auth.current_user():
-        st.info("Logga in för att se dina kontouppgifter.")
+        login_prompt(
+            "Logga in för att se ditt konto",
+            "Här hanterar du dina uppgifter, ditt lösenord och din data när du är inloggad.",
+            key="account_login_btn",
+        )
         return
 
     if flash := st.session_state.pop("fk_account_flash_main", None):
@@ -68,33 +72,34 @@ def _format_member_since(iso: str | None) -> str | None:
     if not iso:
         return None
     dt = to_local(iso)
-    return dt.strftime("%Y-%m-%d") if dt else None
+    return format_day(dt) if dt else None
 
 
 def _render_profile_header(data: dict[str, Any]) -> None:
-    username = data.get("username") or "?"
+    username = html.escape(data.get("username") or "?")
     initial = username[:1].upper()
     role = data.get("role", "user")
     member_since = _format_member_since(data.get("created_at"))
     can_chat = data.get("can_chat") or role == "admin"
 
-    with st.container(border=True):
-        c1, c2 = st.columns([1, 4], vertical_alignment="center")
-        with c1:
-            st.markdown(
-                f'<div style="width:72px;height:72px;border-radius:50%;background:var(--terracotta-tint);'
-                f'color:var(--terracotta);display:flex;align-items:center;justify-content:center;'
-                f'font-size:1.9rem;font-weight:700;">{initial}</div>',
-                unsafe_allow_html=True,
-            )
-        with c2:
-            role_tag = " 🛡️ Admin" if role == "admin" else ""
-            st.markdown(f"### {username}{role_tag}")
-            st.caption(f"Konto-ID {data['id']}")
-            if member_since:
-                st.caption(f"Medlem sedan {member_since}")
-            chat_state = "aktiv ✓" if can_chat else "väntar på godkännande"
-            st.caption(f"Chatt-tillgång: {chat_state}")
+    role_tag = '<span class="fk-badge">Admin</span>' if role == "admin" else ""
+    details = [f"Konto-ID {data['id']}"]
+    if member_since:
+        details.append(f"Medlem sedan {member_since}")
+    details.append(f"Chatt-tillgång: {'aktiv' if can_chat else 'väntar på godkännande'}")
+    with st.container(key="fk_card_profile"):
+        st.markdown(
+            f"""
+            <div class="fk-profile">
+                <div class="fk-profile-avatar">{initial}</div>
+                <div>
+                    <div class="fk-profile-name">{username}{role_tag}</div>
+                    <div class="fk-profile-meta">{" · ".join(details)}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def _render_profile_form(data: dict[str, Any]) -> None:
@@ -158,7 +163,7 @@ def _render_profile_form(data: dict[str, Any]) -> None:
     if error:
         st.error(error)
         return
-    st.session_state["fk_account_flash_main"] = "Dina uppgifter är sparade. ✓"
+    st.session_state["fk_account_flash_main"] = "Dina uppgifter är sparade."
     st.rerun()
 
 
@@ -186,7 +191,7 @@ def _render_change_password() -> None:
         if error:
             st.error(error)
             return
-        st.session_state["fk_account_flash_main"] = "Lösenordet är ändrat. ✓"
+        st.session_state["fk_account_flash_main"] = "Lösenordet är ändrat."
         st.rerun()
 
 
@@ -219,27 +224,38 @@ def _render_new_recovery_code() -> None:
 def _render_reminders_section(data: dict[str, Any]) -> None:
     st.markdown('<div class="fk-section-title">Påminnelser</div>', unsafe_allow_html=True)
     email = data.get("email")
+    enabled = data.get("reminders_enabled", False)
+
+    st.markdown(
+        '<p class="fk-card-text">Få ett mejl på söndagskvällar när en ny vecka i '
+        "programmet börjar – med en länk direkt till ditt nästa steg.</p>",
+        unsafe_allow_html=True,
+    )
+
+    wanted = st.toggle(
+    "Mejla mig på söndagar när en ny programvecka börjar",
+        value=enabled if email else False,
+        key="fk_account_reminders",
+        disabled=not email,
+        help="Du behöver registrera en e-postadress för att aktivera veckopåminnelser." if not email else None,
+    )
+
     if not email:
-        st.markdown(
-            '<p class="fk-card-text">Vill du ha ett mejl på söndagar när en ny vecka i '
-            "programmet börjar? Lägg till din e-postadress under Personuppgifter ovan, "
-            "så kan du slå på det här.</p>",
-            unsafe_allow_html=True,
+        st.info(
+            "**För att aktivera detta behöver du registrera en e-postadress.** "
+            "Lägg till din e-post under **Personuppgifter** ovan, så kan du slå på "
+            "veckopåminnelser här.",
+            icon="📧",
         )
         return
 
-    enabled = data.get("reminders_enabled", False)
-    wanted = st.toggle(
-        "Mejla mig på söndagar när en ny programvecka börjar",
-        value=enabled,
-        key="fk_account_reminders",
-    )
     st.markdown(
         f'<p class="fk-card-text">Mejlet går till <strong>{html.escape(email)}</strong> på '
         "söndagskvällen, med en länk till din nästa vecka. Vi använder bara adressen till "
         "det här, och du kan stänga av det när du vill.</p>",
         unsafe_allow_html=True,
     )
+
     if wanted != enabled:
         try:
             _, error = auth.set_reminders(wanted)
@@ -249,7 +265,7 @@ def _render_reminders_section(data: dict[str, Any]) -> None:
             st.error(error)
             return
         st.session_state["fk_account_flash_main"] = (
-            "Påminnelser är påslagna. ✓" if wanted else "Påminnelser är avstängda."
+            "Påminnelser är påslagna." if wanted else "Påminnelser är avstängda."
         )
         st.rerun()
 

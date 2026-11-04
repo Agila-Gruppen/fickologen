@@ -117,7 +117,7 @@ def sparade_ovningar(user_id):
         db.close()
 
 
-def test_programmet_syns_for_alla_inloggade_men_inte_for_besokare():
+def test_programmet_finns_i_menyn_for_alla_men_besokare_far_logga_in():
     admin, _ = starta("admin", "home")
     vanlig, _ = starta("user", "home")
     besokare = AppTest.from_file(APP, default_timeout=60)
@@ -126,8 +126,9 @@ def test_programmet_syns_for_alla_inloggade_men_inte_for_besokare():
     assert not besokare.exception, besokare.exception
     assert any("12 veckor KBT" in b.label for b in admin.sidebar.button)
     assert any("12 veckor KBT" in b.label for b in vanlig.sidebar.button)
-    assert not any("12 veckor KBT" in b.label for b in besokare.sidebar.button)
-    # utan konto hamnar man på startsidan, inte i programmet
+    assert any("12 veckor KBT" in b.label for b in besokare.sidebar.button)
+    # utan konto ser man en uppmaning att logga in, inte programmet
+    assert "Logga in för att börja" in alla_texter(besokare)
     assert not any("Starta programmet" in b.label for b in besokare.button)
     assert not any("Hantera konton" in b.label for b in vanlig.sidebar.button)
 
@@ -163,6 +164,27 @@ def test_varje_ovning_visar_en_tydlig_uppgift_och_vad_man_ska_skriva():
     assert "Beskriv tre situationer där du blir nervös" in text
     etiketter = {t.key: t.label for t in at.text_area}
     assert etiketter["fk_ex_note_w01-mal"] == "Mitt mål och mitt första lilla steg"
+
+
+def test_veckans_bild_visas_i_lasrutan_efter_ratt_stycke():
+    at, _ = starta_vecka_1()
+    bilder = at.get("image")
+    assert len(bilder) == 1
+    assert "Cirkeln: situation, tanke, kropp och skydd" in bilder[0].captions[0]
+    # bilden ligger efter andra stycket (cirkeln) och före det tredje
+    markdown = [m.value for m in at.markdown]
+    assert any("Ångesten hålls oftast vid liv av en cirkel" in m for m in markdown)
+    assert any("Programmet bryter cirkeln" in m for m in markdown)
+
+
+def test_varje_ovning_har_ett_exempel_och_inga_sma_extratexter():
+    at, _ = starta_vecka_1()
+    text = " ".join(m.value for m in at.markdown)
+    assert text.count("Exempel</div>") == 2  # veckans två övningar
+    assert "Alla ser att jag är nervös" in text
+    for borttaget in ("Obligatorisk", "cirka", "Tryck på Spara längst ner", "riskfritt"):
+        assert borttaget not in text, borttaget
+    assert not [c for c in at.caption if "Tryck på Spara" in c.value]
 
 
 def test_att_spara_en_ovning_hamnar_i_databasen():

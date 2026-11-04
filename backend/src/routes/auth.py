@@ -1,9 +1,18 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Cookie, Response
 from sqlalchemy.orm import Session
-from ..schemas.auth import LoginRequest, TokenResponse, CurrentUser, PasswordReset, PasswordResetResponse
 
+from ..schemas.auth import (
+    LoginRequest,
+    TokenResponse,
+    CurrentUser,
+    PasswordReset,
+    PasswordResetResponse,
+    ForgotPasswordRequest,
+    PasswordResetWithToken,
+)
 from ..models.user import User
 from ..config.database import get_db
+from ..services import email, password_reset
 from ..utils.password import generate_recovery_code, hash_password, normalize_recovery_code, verify_password
 from ..utils.auth import create_access_token, decode_access_token, get_current_user
 
@@ -150,4 +159,69 @@ async def reset_password(reset: PasswordReset, db: Session = Depends(get_db)):
     return PasswordResetResponse(
         message="Password reset. Log in with the new password.",
         recovery_code=new_code
+    )
+
+
+
+@router.post("/forgot-password", status_code=status.HTTP_204_NO_CONTENT)
+async def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Starts the email-based password reset flow. If the identifier matches a
+    user with an email on file, a reset mail is sent. The response is always
+    204, whether the identifier matched or not, so the endpoint cannot be
+    used to probe which usernames or emails are registered.
+
+    Args:
+        payload: ForgotPasswordRequest with email_or_username
+        db: Database session (injected by FastAPI)
+
+    Returns:
+        204 (no content), always.
+    """
+    user = password_reset.find_user(db, payload.email_or_username)
+    if user and user.email and email.is_configured():
+        try:
+            token = password_reset.issue_token(user, db)
+            password_reset.send_reset_email(user, token)
+            print(f"Password reset mail sent for user {user.id}")
+        except Exception as exc:
+            print(f"Password reset mail failed for user {user.id}: {exc!r}")
+            # Don't leak the failure to the caller — same 204 either way.
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/reset-password-link")
+async def reset_password_with_token(payload: PasswordResetWithToken, db: Session = Depends(get_db)):
+    """
+    Completes the email-based password reset flow using the one-time token
+    received by email. Also generates a fresh recovery code so the user has
+    a working one going forward.
+
+    Args:
+        payload: PasswordResetWithToken with token and new_password
+        db: Database session (injected by FastAPI)
+
+    Returns:
+        PasswordResetResponse with a fresh recovery code
+
+    Raises:
+        HTTPException: 400 if the token is invalid, expired, or already used.
+    """
+    user = password_reset.redeem_token(payload.token, db)
+    if user is None:
+        print("Password reset by link failed: invalid or expired token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset link"
+        )
+
+    new_code = generate_recovery_code()
+    user.password = hash_password(payload.new_password)
+    user.recovery_code = hash_password(new_code)
+    db.commit()
+
+    print(f"User {user.username} reset their password via email link")
+    return PasswordResetResponse(
+        message="Password reset. Log in with the new password.",
+        recovery_code=new_code,
     )
